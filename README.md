@@ -1,4 +1,4 @@
-# Transivo
+# TransLogix
 
 Transport management web app (Java 21, Spring Boot, PostgreSQL).
 
@@ -14,3 +14,5 @@ Transport management web app (Java 21, Spring Boot, PostgreSQL).
 ## Rules
 - Never push to `main`; open a Pull Request from a feature branch.
 - Schema changes = a new Flyway file `V<n>__description.sql`. Never edit an old one.
+
+Note: the dev database listens on port 5455 (not 5432) to avoid clashing with a local PostgreSQL install.

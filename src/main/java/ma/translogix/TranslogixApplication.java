@@ -1,13 +1,13 @@
-package ma.transivo;
+package ma.translogix;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TransivoApplication {
+public class TranslogixApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TransivoApplication.class, args);
+		SpringApplication.run(TranslogixApplication.class, args);
 	}
 
 }

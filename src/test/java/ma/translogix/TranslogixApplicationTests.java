@@ -1,10 +1,10 @@
-package ma.transivo;
+package ma.translogix;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TransivoApplicationTests {
+class TranslogixApplicationTests {
 
 	@Test
 	void contextLoads() {
