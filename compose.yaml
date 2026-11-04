@@ -1,15 +1,22 @@
 services:
   db:
-    image: postgres:16
+    image: mysql:8.0
+    container_name: translogix-db
+    restart: always
     environment:
-      POSTGRES_DB: transivo
-      POSTGRES_USER: transivo
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-transivo_dev}
-    ports: ["5455:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+      MYSQL_DATABASE: translogix_db
+      MYSQL_USER: translogix_user
+      MYSQL_PASSWORD: translogix_pass
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U transivo"]
-      interval: 5s
-      retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
-  pgdata:
+  mysql_data:
