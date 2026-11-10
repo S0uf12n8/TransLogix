@@ -102,3 +102,4 @@ git checkout -b feature/<feature-name>
 2. Open a Pull Request targeting `main`.
 3. Wait for the automated **GitHub Actions CI check** to turn green (`BUILD SUCCESS`).
 4. Request a review from the team lead before squashing and merging.
+5. 
