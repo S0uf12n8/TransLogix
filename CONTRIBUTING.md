@@ -24,4 +24,4 @@ Examples: `feat: add mission entity`, `fix: reject overlapping assignments`
 ## Database
 - Schema changes are new Flyway files: `src/main/resources/db/migration/V<n>__description.sql`.
 - Never edit a migration that is already on `main` keep it always in the branch.
-- The dev database listens on port 5455 (`docker compose up -d db`).
+- The dev database listens on port   5455 (`docker compose up -d db`).
