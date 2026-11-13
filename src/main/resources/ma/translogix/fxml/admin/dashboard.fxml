@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.admin.DashboardController"
+      spacing="16" styleClass="page">
+    <Label text="Tableau de bord" styleClass="page-title"/>
+    <HBox spacing="16">
+        <VBox styleClass="card" spacing="4">
+            <Label text="Utilisateurs"/>
+            <Label fx:id="nbUtilisateurs" text="0" styleClass="card-value"/>
+        </VBox>
+        <VBox styleClass="card" spacing="4">
+            <Label text="Missions en cours"/>
+            <Label text="-" styleClass="card-value"/>
+        </VBox>
+    </HBox>
+    <Label text="Les graphiques arrivent &#224; l'it&#233;ration 3." styleClass="muted"/>
+</VBox>
