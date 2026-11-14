@@ -78,6 +78,7 @@ public class ShellController {
             Parent page = FXMLLoader.load(vue);
             contenu.getChildren().setAll(page);
         } catch (IOException | RuntimeException e) {
+            e.printStackTrace();
             Alert alerte = new Alert(Alert.AlertType.ERROR,
                     "Impossible d'ouvrir " + vue.getPath() + "\n" + e.getMessage());
             alerte.setHeaderText(null);

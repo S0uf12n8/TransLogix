@@ -95,7 +95,7 @@
                     <Label text="Conformit&#233; RH" styleClass="kpi-title"/>
                     <HBox alignment="BASELINE_LEFT" spacing="5">
                         <Label text="95" styleClass="kpi-value"/>
-                        <Label text="%" styleClass="kpi-unit-large"/>
+                        <Label text="\%" styleClass="kpi-unit-large"/>
                     </HBox>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
