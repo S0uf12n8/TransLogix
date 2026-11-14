@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Shared banner for every role. Do not copy it into your pages: pages contain only their own content. -->
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.common.ShellController"
+            stylesheets="@../../css/app.css">
+    <left>
+        <VBox styleClass="sidebar" prefWidth="250">
+            <VBox styleClass="sidebar-brand" spacing="2">
+                <Label text="Translogix" styleClass="brand-title"/>
+                <Label fx:id="sousTitre" styleClass="brand-subtitle"/>
+            </VBox>
+            <HBox styleClass="user-card" alignment="CENTER_LEFT" spacing="10">
+                <Label fx:id="initiales" styleClass="avatar"/>
+                <VBox spacing="2">
+                    <Label fx:id="nomUtilisateur" styleClass="user-name"/>
+                    <Label fx:id="roleUtilisateur" styleClass="user-role"/>
+                </VBox>
+            </HBox>
+            <Label text="ESPACE DE TRAVAIL" styleClass="eyebrow"/>
+            <VBox fx:id="menu" spacing="4" VBox.vgrow="ALWAYS"/>
+            <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="logout"/>
+        </VBox>
+    </left>
+    <center>
+        <BorderPane>
+            <top>
+                <HBox styleClass="topbar" alignment="CENTER_LEFT" spacing="12">
+                    <VBox spacing="2">
+                        <Label fx:id="kicker" styleClass="eyebrow"/>
+                        <Label fx:id="titrePage" styleClass="topbar-title"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="dateDuJour" styleClass="muted"/>
+                </HBox>
+            </top>
+            <center>
+                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll">
+                    <StackPane fx:id="contenu"/>
+                </ScrollPane>
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>
