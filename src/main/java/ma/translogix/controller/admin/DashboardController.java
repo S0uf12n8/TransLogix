@@ -68,7 +68,9 @@ public class DashboardController {
                 nom.getStyleClass().add("cell-strong");
                 Label camion = new Label(ligne.camion());
                 camion.getStyleClass().add("cell-sub");
-                setGraphic(new VBox(2, nom, camion));
+                VBox bloc = new VBox(2, nom, camion);
+                bloc.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                setGraphic(bloc);
             }
         });
 
