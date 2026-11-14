@@ -7,43 +7,56 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 
-<!-- Shared banner for every role. Do not copy it into your pages: pages contain only their own content. -->
+<!-- Shared banner for every role (sidebar + top bar). Pages are loaded into "contenu".
+     Do not rename the fx:id values or #deconnexion: ShellController uses them. -->
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ma.translogix.controller.common.ShellController"
             stylesheets="@../../css/app.css">
     <left>
-        <VBox styleClass="sidebar" prefWidth="250">
-            <VBox styleClass="sidebar-brand" spacing="2">
-                <Label text="Translogix" styleClass="brand-title"/>
-                <Label fx:id="sousTitre" styleClass="brand-subtitle"/>
-            </VBox>
-            <HBox styleClass="user-card" alignment="CENTER_LEFT" spacing="10">
-                <Label fx:id="initiales" styleClass="avatar"/>
-                <VBox spacing="2">
-                    <Label fx:id="nomUtilisateur" styleClass="user-name"/>
-                    <Label fx:id="roleUtilisateur" styleClass="user-role"/>
+        <VBox styleClass="sidebar" prefWidth="258" minWidth="258">
+            <HBox styleClass="sidebar-brand" spacing="12" alignment="CENTER_LEFT">
+                <Label text="TL" styleClass="logo-tile"/>
+                <VBox spacing="3">
+                    <Label text="Translogix" styleClass="brand-title"/>
+                    <Label fx:id="sousTitre" text="ERP LOGISTIQUE" styleClass="brand-subtitle"/>
                 </VBox>
             </HBox>
-            <Label text="ESPACE DE TRAVAIL" styleClass="eyebrow"/>
-            <VBox fx:id="menu" spacing="4" VBox.vgrow="ALWAYS"/>
-            <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="logout"/>
+            <HBox styleClass="user-card" alignment="CENTER_LEFT" spacing="10">
+                <Label fx:id="initiales" text="MB" styleClass="avatar"/>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label fx:id="nomUtilisateur" text="M. Bennani" styleClass="user-name"/>
+                    <Label fx:id="roleUtilisateur" text="Administrateur" styleClass="user-role"/>
+                </VBox>
+                <Circle radius="4" styleClass="online-dot"/>
+            </HBox>
+            <Label text="ESPACE DE TRAVAIL" styleClass="sidebar-eyebrow"/>
+            <VBox fx:id="menu" spacing="4"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <VBox styleClass="sidebar-footer" spacing="8">
+                <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="logout"/>
+                <Label text="Translogix v2.0" styleClass="version"/>
+            </VBox>
         </VBox>
     </left>
     <center>
         <BorderPane>
             <top>
-                <HBox styleClass="topbar" alignment="CENTER_LEFT" spacing="12">
-                    <VBox spacing="2">
-                        <Label fx:id="kicker" styleClass="eyebrow"/>
-                        <Label fx:id="titrePage" styleClass="topbar-title"/>
+                <HBox styleClass="topbar" alignment="CENTER_LEFT" spacing="16">
+                    <VBox spacing="3">
+                        <Label fx:id="kicker" text="VUE G&#201;N&#201;RALE" styleClass="eyebrow"/>
+                        <Label fx:id="titrePage" text="Tableau de bord" styleClass="topbar-title"/>
                     </VBox>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="dateDuJour" styleClass="muted"/>
+                    <VBox alignment="CENTER_RIGHT" spacing="3">
+                        <Label fx:id="dateDuJour" styleClass="topbar-date"/>
+                        <Label text="Donn&#233;es de d&#233;monstration" styleClass="topbar-meta"/>
+                    </VBox>
                 </HBox>
             </top>
             <center>
-                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll">
+                <ScrollPane fitToWidth="true" styleClass="content-scroll">
                     <StackPane fx:id="contenu"/>
                 </ScrollPane>
             </center>

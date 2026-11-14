@@ -19,16 +19,23 @@ public final class NavigationMenu {
 
     public static List<Entree> pour(Role role) {
         return switch (role) {
+            // Gerant menu, from admine.html. Entries pointing to other modules turn on
+            // automatically when their owners add the FXML file.
             case GERANT -> List.of(
                     new Entree("Tableau de bord", "admin/dashboard.fxml"),
-                    new Entree("Utilisateurs", "admin/utilisateurs.fxml"));
+                    new Entree("Utilisateurs", "admin/utilisateurs.fxml"),
+                    new Entree("Ressources humaines", "rh/employes.fxml"),
+                    new Entree("Comptabilité & finance", "comptable/factures.fxml"),
+                    new Entree("Dispatching & flotte", "dispatcher/missions.fxml"),
+                    new Entree("Rapports & analytics", "admin/rapports.fxml"),
+                    new Entree("Journal d'audit", "admin/audit.fxml"));
             default -> List.of(); // other roles: added by their owner
         };
     }
 
     public static String sousTitre(Role role) {
         return switch (role) {
-            case GERANT -> "CENTRE DE CONTR\u00d4LE";
+            case GERANT -> "ERP LOGISTIQUE · MAROC";
             default -> "TRANSLOGIX";
         };
     }

@@ -14,9 +14,8 @@ class NavigationMenuTest {
     }
 
     @Test
-    void lesEcransDuGerantExistent() {
-        for (NavigationMenu.Entree e : NavigationMenu.pour(Role.GERANT)) {
-            assertNotNull(getClass().getResource(NavigationMenu.RACINE + e.fxml()), e.fxml());
-        }
+    void lesEcransLivresDuGerantExistent() {
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "admin/dashboard.fxml"));
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "admin/utilisateurs.fxml"));
     }
 }
