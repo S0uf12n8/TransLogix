@@ -8,9 +8,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
 
 <!-- Shared banner for every role (sidebar + top bar). Pages are loaded into "contenu".
-     Do not rename the fx:id values or #deconnexion: ShellController uses them. -->
+     Do not rename the fx:id values, #deconnexion or #imprimer: ShellController uses them.
+     Pages navigate with Navigator.ouvrir("folder/page.fxml"), never with FXMLLoader. -->
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ma.translogix.controller.common.ShellController"
             stylesheets="@../../css/app.css">
@@ -36,7 +38,7 @@
             <Region VBox.vgrow="ALWAYS"/>
             <VBox styleClass="sidebar-footer" spacing="8">
                 <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="logout"/>
-                <Label text="Translogix v2.0" styleClass="version"/>
+                <Label text="Translogix v2.0 &#183; D&#233;mo" styleClass="version"/>
             </VBox>
         </VBox>
     </left>
@@ -51,8 +53,13 @@
                     <Region HBox.hgrow="ALWAYS"/>
                     <VBox alignment="CENTER_RIGHT" spacing="3">
                         <Label fx:id="dateDuJour" styleClass="topbar-date"/>
-                        <Label text="Donn&#233;es de d&#233;monstration" styleClass="topbar-meta"/>
+                        <Label fx:id="metaDemo" text="Donn&#233;es de d&#233;monstration" styleClass="topbar-meta"/>
                     </VBox>
+                    <Button text="Imprimer" onAction="#imprimer" styleClass="btn-secondary">
+                        <graphic>
+                            <SVGPath content="M6 2h12v6H6z M3 9h18v8h-3v5H6v-5H3z M8 14v6h8v-6z" fillRule="EVEN_ODD" styleClass="btn-icon"/>
+                        </graphic>
+                    </Button>
                 </HBox>
             </top>
             <center>

@@ -403,3 +403,154 @@
 .cell-strong { -fx-font-weight: bold; -fx-text-fill: #1e293b; }
 .cell-normal { -fx-text-fill: #475569; }
 .cell-sub    { -fx-font-size: 10px; -fx-text-fill: #94a3b8; }
+.flat-table .table-cell {
+    -fx-padding: 0 12;
+}
+.table-row-cell:empty {
+    -fx-background-color: white;
+    -fx-border-color: transparent;
+}
+.empty-placeholder {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+    -fx-padding: 24;
+}
+
+/* =========================== SHELL: ICONS & PRINT =========================== */
+.nav-item {
+    -fx-graphic-text-gap: 12;
+}
+.nav-icon {
+    -fx-fill: #aeb8c9;
+    -fx-scale-x: 0.68;
+    -fx-scale-y: 0.68;
+}
+.nav-item:hover .nav-icon, .nav-item.active .nav-icon {
+    -fx-fill: white;
+}
+.btn-icon {
+    -fx-fill: #334155;
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+}
+.btn-icon-white {
+    -fx-fill: white;
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+}
+
+/* =========================== KPI DECOR (mockup .kpi:after) =========================== */
+.kpi-decor-orange { -fx-fill: #fff1e7; }
+.kpi-decor-sky    { -fx-fill: #e0f2fe; }
+.kpi-decor-red    { -fx-fill: #fee2e2; }
+.kpi-decor-green  { -fx-fill: #dcfce7; }
+
+/* =========================== CHIPS, BADGES, LINKS =========================== */
+.chip-demo {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+    -fx-background-radius: 999;
+    -fx-padding: 3 8;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+}
+.badge-orange {
+    -fx-background-radius: 999;
+    -fx-padding: 4 9;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-background-color: #ffedd5;
+    -fx-text-fill: #c2410c;
+}
+.link-orange, .link-red {
+    -fx-background-color: transparent;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 6;
+    -fx-cursor: hand;
+}
+.link-orange { -fx-text-fill: #ea580c; }
+.link-red    { -fx-text-fill: #b91c1c; }
+.link-orange:hover, .link-red:hover {
+    -fx-underline: true;
+}
+
+/* =========================== SEARCH FIELD =========================== */
+.search-field {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 9;
+    -fx-background-radius: 9;
+    -fx-padding: 8 12;
+    -fx-font-size: 12px;
+    -fx-prompt-text-fill: #94a3b8;
+}
+.search-field:focused {
+    -fx-border-color: #fb923c;
+    -fx-effect: dropshadow(gaussian, rgba(254, 215, 170, 0.8), 6, 0.5, 0, 0);
+}
+
+/* =========================== REPORT CARDS =========================== */
+.report-icon-orange, .report-icon-sky, .report-icon-green {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-radius: 12;
+}
+.report-icon-orange { -fx-background-color: #ffedd5; }
+.report-icon-sky    { -fx-background-color: #e0f2fe; }
+.report-icon-green  { -fx-background-color: #d1fae5; }
+.report-icon-orange .svg { -fx-fill: #ea580c; }
+.report-icon-sky .svg    { -fx-fill: #0284c7; }
+.report-icon-green .svg  { -fx-fill: #059669; }
+.report-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+.report-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-line-spacing: 3;
+}
+.report-card {
+    -fx-padding: 24;
+}
+
+/* =========================== FORM DIALOG (mockup #actionModal) =========================== */
+.form-dialog {
+    -fx-background-color: white;
+    -fx-padding: 0;
+}
+.form-dialog-header {
+    -fx-padding: 24 24 4 24;
+    -fx-background-color: white;
+}
+.form-dialog > .content {
+    -fx-padding: 16 24 8 24;
+}
+.form-dialog > .button-bar > .container {
+    -fx-padding: 8 24 24 24;
+}
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+.form-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #475569;
+}
+.form-note {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+}
+.form-combo {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 9;
+    -fx-background-radius: 9;
+    -fx-font-size: 12px;
+}

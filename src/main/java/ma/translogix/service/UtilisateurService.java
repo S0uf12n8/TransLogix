@@ -3,6 +3,7 @@ package ma.translogix.service;
 import java.util.List;
 import java.util.regex.Pattern;
 import ma.translogix.dao.UtilisateurDao;
+import ma.translogix.model.ResultatAudit;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.PasswordHasher;
@@ -13,10 +14,15 @@ public class UtilisateurService {
     private static final Pattern EMAIL = Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$");
     private static final int MOT_DE_PASSE_MIN = 8;
 
-    private final UtilisateurDao dao;
+    /** Module name written in the audit log. */
+    public static final String MODULE_AUDIT = "Utilisateurs";
 
-    public UtilisateurService(UtilisateurDao dao) {
+    private final UtilisateurDao dao;
+    private final AuditService audit;
+
+    public UtilisateurService(UtilisateurDao dao, AuditService audit) {
         this.dao = dao;
+        this.audit = audit;
     }
 
     public List<Utilisateur> lister() {
@@ -35,7 +41,10 @@ public class UtilisateurService {
         }
         Utilisateur utilisateur = new Utilisateur(null, nom.trim(), prenom.trim(), emailNormalise,
                 PasswordHasher.hash(motDePasse), role, true);
-        return dao.save(utilisateur);
+        Utilisateur cree = dao.save(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Création du compte " + emailNormalise
+                + " (" + role.getLibelle() + ")", ResultatAudit.REUSSI);
+        return cree;
     }
 
     public void modifier(Long id, String nom, String prenom, String email, Role role, boolean actif) {
@@ -56,14 +65,18 @@ public class UtilisateurService {
         utilisateur.setRole(role);
         utilisateur.setActif(actif);
         dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Modification du compte " + emailNormalise, ResultatAudit.REUSSI);
     }
 
     public void supprimer(Long id) {
         Utilisateur utilisateur = trouver(id);
         if (utilisateur.getRole() == Role.GERANT && estDernierGerant(id)) {
+            audit.enregistrer(MODULE_AUDIT, "Suppression refusée : dernier gérant ("
+                    + utilisateur.getEmail() + ")", ResultatAudit.REFUSE);
             throw new ValidationException("Impossible de supprimer le dernier gérant.");
         }
         dao.delete(id);
+        audit.enregistrer(MODULE_AUDIT, "Suppression du compte " + utilisateur.getEmail(), ResultatAudit.REUSSI);
     }
 
     private Utilisateur trouver(Long id) {

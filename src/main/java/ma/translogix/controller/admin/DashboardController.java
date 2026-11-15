@@ -5,12 +5,15 @@ import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
+import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
 /**
@@ -39,6 +42,10 @@ public class DashboardController {
             "Planifié", "badge-amber");
 
     @FXML private Label salutation;
+    @FXML private StackPane kpiChiffre;
+    @FXML private StackPane kpiFlotte;
+    @FXML private StackPane kpiCreances;
+    @FXML private StackPane kpiConformite;
     @FXML private TableView<LigneTrajet> tableTrajets;
     @FXML private TableColumn<LigneTrajet, String> colReference;
     @FXML private TableColumn<LigneTrajet, String> colChauffeur;
@@ -49,6 +56,9 @@ public class DashboardController {
     @FXML
     private void initialize() {
         salutation.setText("Bonjour, " + nomAffiche());
+        for (Region carte : List.of(kpiChiffre, kpiFlotte, kpiCreances, kpiConformite)) {
+            arrondir(carte);
+        }
 
         colReference.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().reference()));
         colReference.setCellFactory(col -> celluleTexte("cell-strong"));
@@ -100,13 +110,34 @@ public class DashboardController {
         tableTrajets.setItems(FXCollections.observableArrayList(DEMO));
     }
 
-    /** Buttons that lead to modules other members are still building. */
+    // Targets owned by other members. Until their FXML exists, Navigator shows "Module pas encore livré".
+
+    /** "+ Nouvel ordre de transport", "Voir la flotte", alert "Maintenance flotte". */
     @FXML
-    private void moduleNonLivre() {
-        Alert info = new Alert(Alert.AlertType.INFORMATION,
-                "Ce module (Dispatching & flotte) n'est pas encore livré.");
-        info.setHeaderText(null);
-        info.showAndWait();
+    private void ouvrirDispatching() {
+        Navigator.ouvrir("dispatcher/missions.fxml");
+    }
+
+    /** Alert "Permis à renouveler". */
+    @FXML
+    private void ouvrirConformite() {
+        Navigator.ouvrir("rh/conformite.fxml");
+    }
+
+    /** Alert "Factures impayées". */
+    @FXML
+    private void ouvrirFactures() {
+        Navigator.ouvrir("comptable/factures.fxml");
+    }
+
+    /** Rounded clip so the tinted circle stays inside the card, like overflow:hidden in the mockup. */
+    private static void arrondir(Region carte) {
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(28);
+        clip.setArcHeight(28);
+        clip.widthProperty().bind(carte.widthProperty());
+        clip.heightProperty().bind(carte.heightProperty());
+        carte.setClip(clip);
     }
 
     private static TableCell<LigneTrajet, String> celluleTexte(String styleClass) {
