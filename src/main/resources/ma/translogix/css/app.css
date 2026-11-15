@@ -554,3 +554,91 @@
     -fx-background-radius: 9;
     -fx-font-size: 12px;
 }
+
+/* =========================== DASHBOARD CHARTS (scoped: .dashboard-chart) ===========================
+   Palette: orange #f97316 (brand), navy #172033, then sky / green / amber / slate / red. */
+.dashboard-chart {
+    -fx-padding: 8 16 12 8;
+    -fx-background-color: transparent;
+}
+.dashboard-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+.dashboard-chart .chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+.dashboard-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #eef2f7;
+}
+.dashboard-chart .chart-alternative-row-fill,
+.dashboard-chart .chart-alternative-column-fill {
+    -fx-fill: transparent;
+}
+.dashboard-chart .chart-vertical-zero-line,
+.dashboard-chart .chart-horizontal-zero-line {
+    -fx-stroke: #e2e8f0;
+}
+.dashboard-chart .axis {
+    -fx-tick-label-fill: #64748b;
+    -fx-tick-label-font-size: 11px;
+    -fx-border-color: transparent;
+}
+.dashboard-chart .chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+}
+.dashboard-chart .chart-legend-item {
+    -fx-text-fill: #475569;
+    -fx-font-size: 11px;
+}
+
+/* Bars: flat, rounded on the value side */
+.dashboard-chart .chart-bar {
+    -fx-background-color: -fx-bar-fill;
+    -fx-background-radius: 6 6 0 0;
+}
+.dashboard-chart:horizontal .chart-bar {
+    -fx-background-radius: 0 6 6 0;
+}
+.dashboard-chart .default-color0.chart-bar { -fx-bar-fill: #f97316; }
+.dashboard-chart .chart-bar.barre-courante { -fx-bar-fill: #172033; }
+.dashboard-chart .chart-bar.flotte-mission     { -fx-bar-fill: #0284c7; }
+.dashboard-chart .chart-bar.flotte-disponible  { -fx-bar-fill: #16a34a; }
+.dashboard-chart .chart-bar.flotte-maintenance { -fx-bar-fill: #f59e0b; }
+
+/* Pie: one colour per mission status, in DashboardService.STATUTS_MISSION order
+   (Créée, Planifiée, En cours, Suspendue, Livrée, Facturée, Annulée). Also colours the legend symbols. */
+.dashboard-chart .chart-pie {
+    -fx-background-color: -fx-pie-color;
+    -fx-border-color: white;
+    -fx-border-width: 1.5;
+}
+.dashboard-chart .default-color0.chart-pie { -fx-pie-color: #cbd5e1; }
+.dashboard-chart .default-color1.chart-pie { -fx-pie-color: #f59e0b; }
+.dashboard-chart .default-color2.chart-pie { -fx-pie-color: #0284c7; }
+.dashboard-chart .default-color3.chart-pie { -fx-pie-color: #f97316; }
+.dashboard-chart .default-color4.chart-pie { -fx-pie-color: #16a34a; }
+.dashboard-chart .default-color5.chart-pie { -fx-pie-color: #172033; }
+.dashboard-chart .default-color6.chart-pie { -fx-pie-color: #dc2626; }
+
+.chart-total {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+
+/* "Dernières actions" rows */
+.audit-row {
+    -fx-padding: 8 2;
+    -fx-border-color: transparent transparent #eef2f7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.audit-action {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+.audit-meta {
+    -fx-font-size: 10px;
+    -fx-text-fill: #94a3b8;
+}

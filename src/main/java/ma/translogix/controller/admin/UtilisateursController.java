@@ -80,7 +80,14 @@ public class UtilisateursController {
             protected void updateItem(Utilisateur u, boolean empty) {
                 super.updateItem(u, empty);
                 setText(null);
-                setGraphic(empty || u == null ? null : boutons);
+                if (empty || u == null) {
+                    setGraphic(null);
+                    return;
+                }
+                // The Gérant account cannot be deleted: no dead "Supprimer" link on its row.
+                supprimer.setVisible(u.getRole() != Role.GERANT);
+                supprimer.setManaged(u.getRole() != Role.GERANT);
+                setGraphic(boutons);
             }
         });
 

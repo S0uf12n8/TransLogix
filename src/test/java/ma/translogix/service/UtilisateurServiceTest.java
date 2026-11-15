@@ -118,8 +118,93 @@ class UtilisateurServiceTest {
 
         EvenementAudit dernier = audit.lister().get(0);
         assertEquals(ResultatAudit.REFUSE, dernier.getResultat());
-        assertTrue(dernier.getAction().contains("dernier gérant"));
+        assertTrue(dernier.getAction().contains("compte Gérant"));
         assertEquals(1, service.lister().size());
+    }
+
+    // ---------------------------------------------------------------- single, protected Gérant
+
+    private Utilisateur gerant() {
+        return service.creer("Bennani", "Karim", "pdg@translogix.ma", "motdepasse1", Role.GERANT);
+    }
+
+    @Test
+    void premierGerantEstAccepte() {
+        Utilisateur g = gerant();
+
+        assertEquals(Role.GERANT, g.getRole());
+        assertEquals(g.getId(), service.gerantExistant().orElseThrow().getId());
+    }
+
+    @Test
+    void unSecondGerantEstRefuseEtJournalise() {
+        gerant();
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.GERANT));
+
+        assertTrue(e.getMessage().contains("déjà un compte Gérant"));
+        assertEquals(1, service.lister().size());
+        assertEquals(ResultatAudit.REFUSE, audit.lister().get(0).getResultat());
+    }
+
+    @Test
+    void promouvoirUnAutreUtilisateurEnGerantEstRefuse() {
+        gerant();
+        Utilisateur sara = service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+
+        assertThrows(ValidationException.class,
+                () -> service.modifier(sara.getId(), "Alami", "Sara", "sara@translogix.ma", Role.GERANT, true));
+
+        assertEquals(Role.DISPATCHER, sara.getRole());
+        assertEquals(ResultatAudit.REFUSE, audit.lister().get(0).getResultat());
+    }
+
+    @Test
+    void leGerantNePeutPasEtreRetrograde() {
+        Utilisateur g = gerant();
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.modifier(g.getId(), "Bennani", "Karim", "pdg@translogix.ma", Role.RH, true));
+
+        assertTrue(e.getMessage().contains("rôle du Gérant"));
+        assertEquals(Role.GERANT, g.getRole());
+        assertEquals(ResultatAudit.REFUSE, audit.lister().get(0).getResultat());
+    }
+
+    @Test
+    void leGerantNePeutPasEtreDesactive() {
+        Utilisateur g = gerant();
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.modifier(g.getId(), "Bennani", "Karim", "pdg@translogix.ma", Role.GERANT, false));
+
+        assertTrue(e.getMessage().contains("désactivé"));
+        assertTrue(g.isActif());
+        assertEquals(ResultatAudit.REFUSE, audit.lister().get(0).getResultat());
+    }
+
+    @Test
+    void leGerantNePeutPasEtreSupprimeMemeSIlNEstPasSeul() {
+        Utilisateur g = gerant();
+        service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+
+        ValidationException e = assertThrows(ValidationException.class, () -> service.supprimer(g.getId()));
+
+        assertTrue(e.getMessage().contains("ne peut pas être supprimé"));
+        assertTrue(service.gerantExistant().isPresent());
+    }
+
+    @Test
+    void leGerantPeutModifierSonNomEtSonEmail() {
+        Utilisateur g = gerant();
+
+        service.modifier(g.getId(), "Bennani", "Karim-Ali", "karim@translogix.ma", Role.GERANT, true);
+
+        Utilisateur modifie = service.gerantExistant().orElseThrow();
+        assertEquals("Karim-Ali", modifie.getPrenom());
+        assertEquals("karim@translogix.ma", modifie.getEmail());
+        assertEquals(ResultatAudit.REUSSI, audit.lister().get(0).getResultat());
     }
 
     @Test

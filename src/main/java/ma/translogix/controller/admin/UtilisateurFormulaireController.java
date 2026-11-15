@@ -1,5 +1,6 @@
 package ma.translogix.controller.admin;
 
+import java.util.Arrays;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
@@ -30,7 +31,9 @@ public class UtilisateurFormulaireController {
 
     @FXML
     private void initialize() {
-        champRole.setItems(FXCollections.observableArrayList(Role.values()));
+        // GERANT is never offered: there is exactly one CEO account (rule enforced by UtilisateurService).
+        champRole.setItems(FXCollections.observableArrayList(
+                Arrays.stream(Role.values()).filter(r -> r != Role.GERANT).toList()));
     }
 
     /** Fills the form for an edit, or empties it for a creation (utilisateur == null). */
@@ -45,6 +48,13 @@ public class UtilisateurFormulaireController {
         blocMotDePasse.setManaged(creation);
         champActif.setVisible(!creation);
         champActif.setManaged(!creation);
+        if (!creation && utilisateur.getRole() == Role.GERANT) {
+            // The CEO account: role and status are locked, only name and email can change.
+            champRole.setItems(FXCollections.observableArrayList(Role.GERANT));
+            champRole.setDisable(true);
+            champActif.setDisable(true);
+            description.setText("Compte du Gérant : le rôle et le statut ne peuvent pas être modifiés.");
+        }
         if (!creation) {
             champNom.setText(utilisateur.getNom());
             champPrenom.setText(utilisateur.getPrenom());

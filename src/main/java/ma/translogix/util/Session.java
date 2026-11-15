@@ -1,5 +1,6 @@
 package ma.translogix.util;
 
+import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 
 /** The user currently logged in. Set by login, read by the shell and by any screen that needs it. */
@@ -22,6 +23,14 @@ public final class Session {
 
     public static boolean estConnecte() {
         return courant != null;
+    }
+
+    /**
+     * True when the logged-in user is the Gérant (the CEO). Other modules use it to hide edit buttons:
+     * the Gérant sees every module, read-only. Real access control still belongs in the services.
+     */
+    public static boolean estGerant() {
+        return courant != null && courant.getRole() == Role.GERANT;
     }
 
     public static void fermer() {

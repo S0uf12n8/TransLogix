@@ -6,6 +6,8 @@ import ma.translogix.dao.memory.InMemoryUtilisateurDao;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.service.AuditService;
+import ma.translogix.service.DashboardService;
+import ma.translogix.service.DemoDashboardService;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.UtilisateurService;
 import ma.translogix.util.Session;
@@ -20,6 +22,8 @@ public final class AppContext {
     private static final UtilisateurService UTILISATEUR_SERVICE =
             new UtilisateurService(new InMemoryUtilisateurDao(), AUDIT_SERVICE);
     private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE);
+    private static final DashboardService DASHBOARD_SERVICE =
+            new DemoDashboardService(AUDIT_SERVICE, Clock.systemDefaultZone());
 
     /** False while the seed runs. This class loads lazily, often after login, so the session alone is not enough. */
     private static boolean demarrageTermine;
@@ -44,6 +48,10 @@ public final class AppContext {
 
     public static RapportService rapportService() {
         return RAPPORT_SERVICE;
+    }
+
+    public static DashboardService dashboardService() {
+        return DASHBOARD_SERVICE;
     }
 
     /** Who the audit log names: the logged-in user, or "Système" for actions done at startup. */
