@@ -21,6 +21,7 @@
         <VBox styleClass="sidebar" spacing="4">
             <Button text="Tableau de bord" onAction="#afficherTableauDeBord" maxWidth="Infinity" styleClass="nav-button"/>
             <Button text="Utilisateurs" onAction="#afficherUtilisateurs" maxWidth="Infinity" styleClass="nav-button"/>
+            <Button text="Espace RH" onAction="#afficherRh" maxWidth="Infinity" styleClass="nav-button"/>
             <Button text="V&#233;hicules" disable="true" maxWidth="Infinity" styleClass="nav-button"/>
             <Button text="Chauffeurs" disable="true" maxWidth="Infinity" styleClass="nav-button"/>
             <Button text="Clients" disable="true" maxWidth="Infinity" styleClass="nav-button"/>

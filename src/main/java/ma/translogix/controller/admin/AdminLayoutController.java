@@ -27,6 +27,11 @@ public class AdminLayoutController {
         charger("utilisateurs.fxml");
     }
 
+    @FXML
+    private void afficherRh() {
+        charger("rh/rh-layout.fxml");
+    }
+
     private void charger(String fichier) {
         try {
             Parent vue = FXMLLoader.load(getClass().getResource("/ma/translogix/fxml/admin/" + fichier));
