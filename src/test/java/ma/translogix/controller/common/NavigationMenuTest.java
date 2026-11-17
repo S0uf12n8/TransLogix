@@ -98,4 +98,28 @@ class NavigationMenuTest {
         assertFalse(e.demo());
         assertEquals(null, e.kicker());
     }
+    @Test
+    void menuComptableDansLOrdreDeLaMaquette() {
+        assertEquals(List.of("Tableau de bord", "Facturation clients", "Clients", "Valider dépenses",
+                        "Créances & recouvrement", "Trésorerie & bilan", "Paiement des employés", "Journal comptable"),
+                NavigationMenu.pour(Role.COMPTABLE).stream().map(NavigationMenu.Entree::libelle).toList());
+        for (NavigationMenu.Entree e : NavigationMenu.pour(Role.COMPTABLE)) {
+            assertNotNull(e.kicker(), e.libelle());
+            assertNotNull(e.icone(), e.libelle());
+        }
+    }
+
+    @Test
+    void lesEcransLivresDuComptableExistent() {
+        for (String page : List.of("dashboard", "factures", "facture-dialog", "paiement-dialog", "clients",
+                "client-dialog")) {
+            assertNotNull(getClass().getResource(NavigationMenu.RACINE + "comptable/" + page + ".fxml"), page);
+        }
+    }
+
+    @Test
+    void comptabiliteDuGerantOuvreLaFacturation() {
+        assertTrue(NavigationMenu.pour(Role.GERANT).stream()
+                .anyMatch(e -> e.libelle().equals("Comptabilité & finance") && e.fxml().equals("comptable/factures.fxml")));
+    }
 }

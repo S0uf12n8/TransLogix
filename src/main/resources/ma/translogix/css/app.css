@@ -683,3 +683,22 @@
     -fx-border-radius: 12;
     -fx-padding: 12;
 }
+
+/* =========================== Comptable =========================== */
+/* Live VAT / TTC preview in the invoice dialog (mockup: "calcul automatique TVA 14%"). */
+.apercu-tva {
+    -fx-background-color: #fff7ed;
+    -fx-border-color: #fed7aa;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 14;
+}
+.apercu-libelle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9a3412;
+}
+.apercu-total {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}

@@ -1,0 +1,224 @@
+package ma.translogix.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import ma.translogix.dao.memory.InMemoryClientDao;
+import ma.translogix.dao.memory.InMemoryFactureDao;
+import ma.translogix.dao.memory.InMemoryPaiementDao;
+import ma.translogix.model.Client;
+import ma.translogix.model.Facture;
+import ma.translogix.model.ModePaiement;
+import ma.translogix.model.StatutFacture;
+import ma.translogix.util.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+class FactureServiceTest {
+
+    private static final LocalDate AUJOURDHUI = LocalDate.of(2026, 11, 17);
+    private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-17T10:00:00Z"), ZoneOffset.UTC);
+
+    private InMemoryPaiementDao paiementDao;
+    private FactureService service;
+    private Client client;
+
+    @BeforeEach
+    void setUp() {
+        InMemoryClientDao clientDao = new InMemoryClientDao();
+        InMemoryFactureDao factureDao = new InMemoryFactureDao();
+        paiementDao = new InMemoryPaiementDao();
+        service = new FactureService(factureDao, clientDao, paiementDao, HORLOGE);
+        client = clientDao.save(new Client(null, "LogiMaroc SARL", null, null, null, null, 30));
+    }
+
+    private Facture facture(String ht) {
+        return service.creer(client.getId(), new BigDecimal(ht), "TRJ-9081", null);
+    }
+
+    @Test
+    void milleHtDonne140DeTvaEt1140Ttc() {
+        Facture f = facture("1000.00");
+
+        assertEquals(new BigDecimal("1000.00"), f.getMontantHT());
+        assertEquals(new BigDecimal("140.00"), f.getMontantTva());
+        assertEquals(new BigDecimal("1140.00"), f.getMontantTtc());
+        assertEquals(new BigDecimal("14.00"), f.getTauxTva());
+    }
+
+    @Test
+    void tvaArrondieHalfUpADeuxDecimales() {
+        assertEquals(new BigDecimal("46.67"), facture("333.33").getMontantTva()); // 46.6662 -> 46.67
+        assertEquals(new BigDecimal("380.00"), facture("333.33").getMontantTtc()); // 333.33 + 46.67
+    }
+
+    @ParameterizedTest
+    @CsvSource({"21052.63, 24000.00", "39473.68, 45000.00", "17894.74, 20400.00", "33333.33, 38000.00"})
+    void montantsDeLaMaquetteRetombentSurLeTtcAffiche(String ht, String ttc) {
+        assertEquals(new BigDecimal(ttc), FactureService.calculerTtc(new BigDecimal(ht)));
+    }
+
+    @Test
+    void echeanceEgaleEmissionPlusDelaiDuClient() {
+        Facture f = facture("1000");
+
+        assertEquals(AUJOURDHUI, f.getDateEmission());
+        assertEquals(AUJOURDHUI.plusDays(30), f.getDateEcheance());
+    }
+
+    @Test
+    void conditionChoisieRemplaceLeDelaiDuClient() {
+        assertEquals(AUJOURDHUI.plusDays(60),
+                service.creer(client.getId(), BigDecimal.TEN, null, 60).getDateEcheance());
+        assertEquals(AUJOURDHUI, // comptant
+                service.creer(client.getId(), BigDecimal.TEN, null, 0).getDateEcheance());
+    }
+
+    @Test
+    void numerosGeneresParAnnee() {
+        assertEquals("FACT-2026-001", facture("10").getNumero());
+        assertEquals("FACT-2026-002", facture("10").getNumero());
+        assertEquals("FACT-2025-001", service.creer(client.getId(), BigDecimal.TEN, null, null,
+                LocalDate.of(2025, 12, 30)).getNumero());
+        assertEquals("FACT-2026-003", facture("10").getNumero());
+    }
+
+    @Test
+    void nouvelleFactureEnAttenteSansMission() {
+        Facture f = facture("1000");
+
+        assertEquals(StatutFacture.EN_ATTENTE, f.getStatut());
+        assertNull(f.getMissionId()); // TODO [H2]
+        assertEquals("TRJ-9081", f.getReferenceTrajet());
+    }
+
+    @Test
+    void montantNulOuNegatifEstRefuse() {
+        assertThrows(ValidationException.class, () -> facture("0"));
+        assertThrows(ValidationException.class, () -> facture("-5"));
+        assertThrows(ValidationException.class,
+                () -> service.creer(null, BigDecimal.TEN, null, null));
+        assertThrows(ValidationException.class,
+                () -> service.creer(client.getId(), null, null, null));
+    }
+
+    @Test
+    void factureDontLEcheanceEstPasseeEstEnRetard() {
+        Facture echue = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(31));
+        Facture echueAujourdhui = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(30));
+        Facture recente = facture("10");
+
+        assertTrue(service.estEnRetard(echue));
+        assertEquals("En retard", service.libelleStatut(echue));
+        assertFalse(service.estEnRetard(echueAujourdhui)); // due today: not late yet
+        assertFalse(service.estEnRetard(recente));
+        assertEquals("En attente", service.libelleStatut(recente));
+        assertEquals(StatutFacture.EN_ATTENTE, echue.getStatut()); // never stored as a status
+    }
+
+    @Test
+    void factureRegleeOuAnnuleeNEstJamaisEnRetard() {
+        Facture payee = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(60));
+        Facture annulee = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(60));
+        service.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
+        service.annuler(annulee.getId());
+
+        assertFalse(service.estEnRetard(payee));
+        assertFalse(service.estEnRetard(annulee));
+    }
+
+    @Test
+    void paiementPasseLaFactureAPayee() {
+        Facture f = facture("1000");
+
+        service.enregistrerPaiement(f.getId(), ModePaiement.CHEQUE, " CHQ-4521 ", AUJOURDHUI);
+
+        assertEquals(StatutFacture.PAYEE, service.trouver(f.getId()).getStatut());
+        assertEquals(1, paiementDao.findByFacture(f.getId()).size());
+        assertEquals("CHQ-4521", paiementDao.findByFacture(f.getId()).get(0).getReference());
+    }
+
+    @Test
+    void factureAnnuleeNePeutPasEtreReglee() {
+        Facture f = facture("1000");
+        service.annuler(f.getId());
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI));
+        assertEquals("Une facture annulée ne peut pas être réglée.", e.getMessage());
+        assertTrue(paiementDao.findAll().isEmpty());
+    }
+
+    @Test
+    void factureDejaRegleeNePeutPasEtreRegleeDeuxFois() {
+        Facture f = facture("1000");
+        service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
+
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-2", AUJOURDHUI));
+        assertEquals(1, paiementDao.findAll().size());
+    }
+
+    @Test
+    void paiementIncompletOuDateIncoherenteEstRefuse() {
+        Facture f = facture("1000");
+
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), null, "VIR-1", AUJOURDHUI));
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, " ", AUJOURDHUI));
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", null));
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI.plusDays(1)));
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI.minusDays(1)));
+        assertEquals(StatutFacture.EN_ATTENTE, service.trouver(f.getId()).getStatut());
+    }
+
+    @Test
+    void factureRegleeNePeutPasEtreAnnulee() {
+        Facture f = facture("1000");
+        service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
+
+        assertThrows(ValidationException.class, () -> service.annuler(f.getId()));
+    }
+
+    @Test
+    void syntheseCalculeeDepuisLesFactures() {
+        Facture payee = facture("1000");                     // this month, paid today
+        facture("2000");                                     // this month, pending
+        service.creer(client.getId(), new BigDecimal("500"), null, 30, AUJOURDHUI.minusDays(45)); // overdue
+        Facture annulee = facture("9999");
+        service.annuler(annulee.getId());
+        service.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
+
+        FactureService.Synthese s = service.synthese();
+
+        assertEquals(new BigDecimal("3000.00"), s.chiffreAffairesMoisHT()); // cancelled excluded
+        assertEquals(2, s.facturesDuMois());
+        assertEquals(new BigDecimal("3420.00"), s.factureMoisTtc());
+        assertEquals(new BigDecimal("1140.00"), s.encaissementsMois());
+        assertEquals(new BigDecimal("570.00"), s.creancesEnRetard());
+        assertEquals(1, s.facturesEnRetard());
+    }
+
+    @Test
+    void listeTrieeDeLaPlusRecenteALaPlusAncienne() {
+        Facture ancienne = service.creer(client.getId(), BigDecimal.TEN, null, null, AUJOURDHUI.minusDays(10));
+        Facture recente = facture("10");
+
+        assertEquals(recente.getId(), service.lister().get(0).getId());
+        assertEquals(ancienne.getId(), service.dernieres(5).get(1).getId());
+    }
+}
