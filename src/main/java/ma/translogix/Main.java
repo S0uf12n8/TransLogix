@@ -9,8 +9,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        //FXMLLoader loader = new FXMLLoader(Main.class.getResource("fxml/admin/login.fxml"));
-        FXMLLoader loader = new FXMLLoader(Main.class.getResource("fxml/admin/Dashboard.fxml"));
+        FXMLLoader loader = new FXMLLoader(Main.class.getResource("fxml/auth/login.fxml"));
         stage.setScene(new Scene(loader.load(), 900, 600));
         stage.setTitle("TransLogix");
         stage.show();

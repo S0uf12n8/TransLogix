@@ -19,11 +19,8 @@ public class ComptabiliteController {
     private final StackPane contentArea = new StackPane();
     private final Label pageTitle = new Label("Tableau de bord");
 
+    /** Builds the whole layout once (sidebar left, title top, page center) and opens the dashboard. */
     public ComptabiliteController() {
-        createSidebar();
-    }
-
-    public BorderPane createMainLayout() {
 
         VBox topBar = new VBox(pageTitle);
         topBar.setPadding(new Insets(20, 28, 20, 28));
@@ -35,6 +32,11 @@ public class ComptabiliteController {
         mainLayout.setTop(topBar);
         mainLayout.setCenter(contentArea);
 
+        showDashboard();
+    }
+
+    /** The layout built by the constructor, to put in a Scene. */
+    public BorderPane createMainLayout() {
         return mainLayout;
     }
 
@@ -105,52 +107,52 @@ public class ComptabiliteController {
     }
 
     public void showDashboard() {
-        loadPage("/fxml/comptabilite/Dashboard.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Dashboard.fxml",
             "Tableau de bord");
     }
 
     public void showFacturation() {
-        loadPage("/fxml/comptabilite/Facturation.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Facturation.fxml",
             "Facturation");
     }
 
     public void showRecouvrement() {
-        loadPage("/fxml/comptabilite/Recouvrement.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Recouvrement.fxml",
             "Recouvrement B2B");
     }
 
     public void showFournisseurs() {
-        loadPage("/fxml/comptabilite/Fournisseurs.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Fournisseurs.fxml",
             "Dettes fournisseurs");
     }
 
     public void showReglements() {
-        loadPage("/fxml/comptabilite/Reglements.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Reglements.fxml",
             "Règlements fournisseurs");
     }
 
     public void showDepenses() {
-        loadPage("/fxml/comptabilite/Depenses.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Depenses.fxml",
             "Dépenses");
     }
 
     public void showPaie() {
-        loadPage("/fxml/comptabilite/Paie.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Paie.fxml",
             "Paie et primes");
     }
 
     public void showJournal() {
-        loadPage("/fxml/comptabilite/Journal.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Journal.fxml",
             "Journal comptable");
     }
 
     public void showTVA() {
-        loadPage("/fxml/comptabilite/TVA.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/TVA.fxml",
             "TVA et impôts");
     }
 
     public void showTresorerie() {
-        loadPage("/fxml/comptabilite/Tresorerie.fxml",
+        loadPage("/ma/translogix/fxml/comptabilite/Tresorerie.fxml",
             "Trésorerie");
     }
 }
