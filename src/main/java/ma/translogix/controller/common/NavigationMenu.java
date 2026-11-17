@@ -36,6 +36,10 @@ public final class NavigationMenu {
             + "M15 17a2 2 0 1 0 4 0a2 2 0 1 0-4 0z";
     static final String ICONE_COLONNES = "M3 3h2v16h16v2H3z M7 11h3v6H7z M12 7h3v10h-3z M17 13h3v4h-3z";
     static final String ICONE_BOUCLIER = "M12 2l9 3.5v6c0 5.2-3.8 9.3-9 10.5c-5.2-1.2-9-5.3-9-10.5v-6z";
+    static final String ICONE_FACTURE = "M5 2h10l5 5v15H5z M8 10h9v2H8z M8 14h9v2H8z M8 18h6v1.5H8z";
+    static final String ICONE_RECU = "M4 2h16v20l-2.7-1.8L14.7 22L12 20.2L9.3 22l-2.6-1.8L4 22z "
+            + "M7 7h10v2H7z M7 11h10v2H7z M7 15h6v2H7z";
+    static final String ICONE_LIVRE = "M3 4h7a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H3z M21 4h-7a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h7z";
 
     private NavigationMenu() {
     }
@@ -55,6 +59,24 @@ public final class NavigationMenu {
                     new Entree("Rapports & analytics", "admin/rapports.fxml", "Pilotage & indicateurs",
                             ICONE_COLONNES, false),
                     new Entree("Journal d'audit", "admin/audit.fxml", "Sécurité & traçabilité", ICONE_BOUCLIER, false));
+            // Comptable menu, in contable.html order (+ "Clients", issue [C2]). Pages not delivered yet
+            // stay clickable and show "Module pas encore livré" (Iteration 3 scope).
+            case COMPTABLE -> List.of(
+                    new Entree("Tableau de bord", "comptable/dashboard.fxml", "Synthèse financière",
+                            ICONE_TABLEAU, false),
+                    new Entree("Facturation clients", "comptable/factures.fxml", "Ventes & chiffre d'affaires",
+                            ICONE_FACTURE, false),
+                    new Entree("Clients", "comptable/clients.fxml", "Portefeuille clients", ICONE_EQUIPE, false),
+                    new Entree("Valider dépenses", "comptable/depenses.fxml", "Contrôle des charges de route",
+                            ICONE_RECU, false),
+                    new Entree("Créances & recouvrement", "comptable/recouvrement.fxml", "Balance âgée & relances",
+                            ICONE_BOUCLIER, false),
+                    new Entree("Trésorerie & bilan", "comptable/tresorerie.fxml", "Analyse financière & marges",
+                            ICONE_COLONNES, false),
+                    new Entree("Paiement des employés", "comptable/paie.fxml", "Salaires du personnel",
+                            ICONE_PORTEFEUILLE, false),
+                    new Entree("Journal comptable", "comptable/journal.fxml", "Traçabilité & écritures",
+                            ICONE_LIVRE, false));
             default -> List.of(); // other roles: added by their owner
         };
     }
@@ -79,6 +101,7 @@ public final class NavigationMenu {
     public static String sousTitre(Role role) {
         return switch (role) {
             case GERANT -> "ERP LOGISTIQUE · MAROC";
+            case COMPTABLE -> "COMPTA & FINANCE";
             default -> "TRANSLOGIX";
         };
     }
