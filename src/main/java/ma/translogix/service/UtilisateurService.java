@@ -1,22 +1,34 @@
 package ma.translogix.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import ma.translogix.dao.UtilisateurDao;
+import ma.translogix.model.ResultatAudit;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.PasswordHasher;
 import ma.translogix.util.ValidationException;
 
-/** Business rules for user accounts. No JavaFX and no SQL here. */
+/**
+ * Business rules for user accounts. No JavaFX and no SQL here.
+ * Gérant rules: exactly one GERANT account (the CEO); it cannot be deleted, demoted or deactivated.
+ */
 public class UtilisateurService {
     private static final Pattern EMAIL = Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$");
     private static final int MOT_DE_PASSE_MIN = 8;
 
-    private final UtilisateurDao dao;
+    private static final String GERANT_UNIQUE = "Il existe déjà un compte Gérant (un seul compte dirigeant).";
 
-    public UtilisateurService(UtilisateurDao dao) {
+    /** Module name written in the audit log. */
+    public static final String MODULE_AUDIT = "Utilisateurs";
+
+    private final UtilisateurDao dao;
+    private final AuditService audit;
+
+    public UtilisateurService(UtilisateurDao dao, AuditService audit) {
         this.dao = dao;
+        this.audit = audit;
     }
 
     public List<Utilisateur> lister() {
@@ -33,9 +45,16 @@ public class UtilisateurService {
         if (dao.findByEmail(emailNormalise).isPresent()) {
             throw new ValidationException("Cet email est déjà utilisé.");
         }
+        if (role == Role.GERANT && gerantExistant().isPresent()) {
+            refuser("Création refusée : un compte Gérant existe déjà (" + emailNormalise + ")",
+                    GERANT_UNIQUE);
+        }
         Utilisateur utilisateur = new Utilisateur(null, nom.trim(), prenom.trim(), emailNormalise,
                 PasswordHasher.hash(motDePasse), role, true);
-        return dao.save(utilisateur);
+        Utilisateur cree = dao.save(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Création du compte " + emailNormalise
+                + " (" + role.getLibelle() + ")", ResultatAudit.REUSSI);
+        return cree;
     }
 
     public void modifier(Long id, String nom, String prenom, String email, Role role, boolean actif) {
@@ -47,8 +66,18 @@ public class UtilisateurService {
                 .ifPresent(autre -> {
                     throw new ValidationException("Cet email est déjà utilisé.");
                 });
-        if (utilisateur.getRole() == Role.GERANT && role != Role.GERANT && estDernierGerant(id)) {
-            throw new ValidationException("Impossible de retirer le rôle du dernier gérant.");
+        boolean estLeGerant = utilisateur.getRole() == Role.GERANT;
+        if (estLeGerant && role != Role.GERANT) {
+            refuser("Modification refusée : rôle du Gérant (" + utilisateur.getEmail() + ")",
+                    "Le rôle du Gérant ne peut pas être modifié.");
+        }
+        if (estLeGerant && !actif) {
+            refuser("Modification refusée : désactivation du Gérant (" + utilisateur.getEmail() + ")",
+                    "Le compte Gérant ne peut pas être désactivé.");
+        }
+        if (!estLeGerant && role == Role.GERANT) {
+            refuser("Modification refusée : promotion de " + utilisateur.getEmail() + " en Gérant",
+                    GERANT_UNIQUE);
         }
         utilisateur.setNom(nom.trim());
         utilisateur.setPrenom(prenom.trim());
@@ -56,14 +85,17 @@ public class UtilisateurService {
         utilisateur.setRole(role);
         utilisateur.setActif(actif);
         dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Modification du compte " + emailNormalise, ResultatAudit.REUSSI);
     }
 
     public void supprimer(Long id) {
         Utilisateur utilisateur = trouver(id);
-        if (utilisateur.getRole() == Role.GERANT && estDernierGerant(id)) {
-            throw new ValidationException("Impossible de supprimer le dernier gérant.");
+        if (utilisateur.getRole() == Role.GERANT) {
+            refuser("Suppression refusée : compte Gérant (" + utilisateur.getEmail() + ")",
+                    "Le compte Gérant ne peut pas être supprimé.");
         }
         dao.delete(id);
+        audit.enregistrer(MODULE_AUDIT, "Suppression du compte " + utilisateur.getEmail(), ResultatAudit.REUSSI);
     }
 
     private Utilisateur trouver(Long id) {
@@ -71,9 +103,15 @@ public class UtilisateurService {
                 .orElseThrow(() -> new ValidationException("Utilisateur introuvable."));
     }
 
-    private boolean estDernierGerant(Long id) {
-        return dao.findAll().stream()
-                .noneMatch(u -> u.getRole() == Role.GERANT && !u.getId().equals(id));
+    /** The single CEO account, if it exists yet. */
+    public Optional<Utilisateur> gerantExistant() {
+        return dao.findAll().stream().filter(u -> u.getRole() == Role.GERANT).findFirst();
+    }
+
+    /** Logs a refused Gérant-protection action, then rejects it. */
+    private void refuser(String actionAudit, String message) {
+        audit.enregistrer(MODULE_AUDIT, actionAudit, ResultatAudit.REFUSE);
+        throw new ValidationException(message);
     }
 
     private void validerChamps(String nom, String prenom, String email, Role role) {

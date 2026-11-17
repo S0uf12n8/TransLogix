@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f97316">
+  <title>Translogix | ERP Logistique</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f5f7fb}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .sidebar{background:#172033;color:#e2e8f0;width:258px;transition:transform .25s ease;z-index:40}
+    .nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:10px;text-align:left;color:#aeb8c9;font-size:13px;transition:.18s}
+    .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-item:hover{background:#263248;color:white}
+    .nav-item.active{background:var(--orange);color:white;box-shadow:0 5px 14px #f9731633}
+    .tab-content{display:none;animation:fade .18s ease}
+    .tab-content.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #17203305}
+    .kpi{position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:-20px;top:-24px;width:90px;height:90px;border-radius:50%;background:var(--tint,#fff1e7)}
+    .kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tint,#fff1e7);color:var(--accent,var(--orange))}
+    .section-title{font-size:20px;font-weight:750;letter-spacing:-.035em}
+    .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#7c8799}
+    .btn-primary{background:var(--orange);color:white;border:1px solid var(--orange);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s}
+    .btn-primary:hover{background:var(--orange-dark)}
+    .btn-secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:650;color:#334155}
+    .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:650px}
+    th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;font-weight:750;padding:13px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:14px 16px;border-bottom:1px solid #eef2f7;font-size:12px;color:#475569;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbfcfe}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .green{background:#dcfce7;color:#15803d}.amber{background:#fef3c7;color:#b45309}.red{background:#fee2e2;color:#b91c1c}.blue{background:#dbeafe;color:#1d4ed8}.gray{background:#f1f5f9;color:#475569}
+    .search{border:1px solid var(--line);border-radius:9px;background:white;padding:9px 12px;font-size:12px;outline:none;width:100%}
+    .search:focus,input:focus,select:focus{border-color:#fb923c;box-shadow:0 0 0 3px #fed7aa66;outline:none}
+    .progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;border-radius:99px;background:var(--orange)}
+    .mobile-overlay{display:none}
+    @media(max-width:900px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0f172a88;z-index:30}.main-area{width:100%}.desktop-only{display:none}}
+    @media(max-width:640px){.content-pad{padding:16px!important}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.section-title{font-size:18px}.topbar-meta{display:none}.report-grid{grid-template-columns:1fr!important}}
+    @media print{.sidebar,.topbar-actions,.no-print{display:none!important}.main-area{overflow:visible!important}.content-scroll{overflow:visible!important;padding:0!important}.tab-content{display:none!important}.tab-content.active{display:block!important}.panel{box-shadow:none;break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar(false)"></div>
+  <div class="flex min-h-screen">
+    <aside id="sidebar" class="sidebar flex flex-col shrink-0 min-h-screen">
+      <div class="px-5 py-6 flex items-center gap-3 border-b border-white/10">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-lg shadow-orange-900/20"><img src="./logo.jpeg" alt="Translogix logo" class="w-full h-full object-cover"></div>
+        <div><h1 class="font-extrabold text-white tracking-tight">Translogix</h1><p class="text-[10px] text-slate-400 mt-1">ERP LOGISTIQUE · MAROC</p></div>
+        <button class="ml-auto lg:hidden text-slate-300" onclick="toggleSidebar(false)" aria-label="Fermer le menu"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-4 py-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 grid place-items-center font-bold text-xs">MB</div>
+          <div class="min-w-0 flex-1"><p class="text-xs font-bold text-white">M. Bennani</p><p class="text-[10px] text-slate-400 mt-1">Administrateur</p></div>
+          <span class="w-2 h-2 bg-emerald-400 rounded-full" title="En ligne"></span>
+        </div>
+      </div>
+      <nav class="px-3 py-2 space-y-1 flex-1" aria-label="Navigation principale">
+        <p class="eyebrow px-3 pb-2 pt-1 text-slate-500">Espace de travail</p>
+        <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)"><i class="fa-solid fa-chart-pie"></i><span>Tableau de bord</span></button>
+        <button class="nav-item" data-tab="rh" onclick="switchTab('rh',this)"><i class="fa-solid fa-users"></i><span>Ressources humaines</span><span class="ml-auto text-[10px] bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full">2</span></button>
+        <button class="nav-item" data-tab="compta" onclick="switchTab('compta',this)"><i class="fa-solid fa-wallet"></i><span>Comptabilité & finance</span></button>
+        <button class="nav-item" data-tab="dispatch" onclick="switchTab('dispatch',this)"><i class="fa-solid fa-truck-fast"></i><span>Dispatching & flotte</span></button>
+        <button class="nav-item" data-tab="rapports" onclick="switchTab('rapports',this)"><i class="fa-solid fa-chart-column"></i><span>Rapports & analytics</span></button>
+        <button class="nav-item" data-tab="audit" onclick="switchTab('audit',this)"><i class="fa-solid fa-shield-halved"></i><span>Journal d'audit</span></button>
+        <div class="mt-6 px-3 py-4 rounded-xl bg-gradient-to-br from-orange-500/15 to-transparent border border-orange-400/15">
+          <i class="fa-solid fa-circle-info text-orange-300 mb-2"></i><p class="text-xs font-semibold text-white">Centre de contrôle</p><p class="text-[10px] leading-5 text-slate-400 mt-1">Suivez les opérations, la flotte et les indicateurs clés depuis un seul espace.</p>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <button onclick="logout()" class="nav-item hover:bg-red-500/15 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Déconnexion</span></button>
+        <p class="text-[10px] text-slate-600 px-3 mt-3">Translogix v2.0 · Démo</p>
+      </div>
+    </aside>
+
+    <main class="main-area flex-1 min-w-0 flex flex-col min-h-screen">
+      <header class="h-[72px] bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <button class="lg:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600" onclick="toggleSidebar(true)" aria-label="Ouvrir le menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="min-w-0"><p id="pageKicker" class="eyebrow">Vue générale</p><h2 id="pageTitle" class="font-bold text-sm md:text-base truncate">Tableau de bord</h2></div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4 topbar-actions">
+          <div class="topbar-meta text-right"><p class="text-xs font-semibold text-slate-700" id="currentDate"></p><p class="text-[10px] text-slate-400 mt-1">Données de démonstration</p></div>
+          <button class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i><span class="desktop-only">Imprimer</span></button>
+          <button class="w-9 h-9 rounded-xl border border-slate-200 text-slate-500 relative" aria-label="Notifications" onclick="showToast('Vous êtes à jour : 2 alertes à vérifier.')"><i class="fa-regular fa-bell"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white"></span></button>
+        </div>
+      </header>
+
+      <div class="content-scroll content-pad p-5 md:p-8 flex-1 max-w-[1600px] w-full mx-auto">
+        <section id="tab-dashboard" class="tab-content active space-y-6">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div><p class="eyebrow mb-2">Synthèse exécutive</p><h1 class="section-title">Bonjour, M. Bennani <span>👋</span></h1><p class="text-sm text-slate-500 mt-1">Voici l'état de vos opérations logistiques.</p></div>
+            <button class="btn-primary" onclick="switchTab('dispatch',document.querySelector('[data-tab=dispatch]'))"><i class="fa-solid fa-plus mr-2"></i>Nouvel ordre de transport</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 kpi-grid">
+            <div class="panel kpi p-5" style="--tint:#fff1e7;--accent:#ea580c"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Chiffre d'affaires</p><p class="text-2xl font-extrabold mt-3 tracking-tight">452 000 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div><div class="kpi-icon"><i class="fa-solid fa-coins"></i></div></div><p class="text-[11px] mt-4 text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i>+14 % <span class="text-slate-400 font-normal">vs mois dernier</span></p></div>
+            <div class="panel kpi p-5" style="--tint:#e0f2fe;--accent:#0284c7"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Flotte opérationnelle</p><p class="text-2xl font-extrabold mt-3">18 <span class="text-sm font-semibold text-slate-400">/ 22</span></p></div><div class="kpi-icon"><i class="fa-solid fa-truck"></i></div></div><div class="progress mt-4"><span style="width:82%"></span></div><p class="text-[11px] mt-2 text-slate-400">4 véhicules en maintenance</p></div>
+            <div class="panel kpi p-5" style="--tint:#fee2e2;--accent:#dc2626"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Créances clients</p><p class="text-2xl font-extrabold mt-3">89 400 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div><div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div></div><p class="text-[11px] mt-4 text-red-600 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i>3 factures en retard</p></div>
+            <div class="panel kpi p-5" style="--tint:#dcfce7;--accent:#16a34a"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Conformité RH</p><p class="text-2xl font-extrabold mt-3">95 <span class="text-sm font-semibold text-slate-400">%</span></p></div><div class="kpi-icon"><i class="fa-solid fa-shield-check"></i></div></div><p class="text-[11px] mt-4 text-amber-600 font-semibold"><i class="fa-solid fa-clock mr-1"></i>1 permis à renouveler</p></div>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div class="panel xl:col-span-2 overflow-hidden">
+              <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-bold text-sm">Trajets récents</h3><p class="text-xs text-slate-400 mt-1">Suivi des derniers ordres de transport</p></div><button class="btn-secondary" onclick="switchTab('dispatch',document.querySelector('[data-tab=dispatch]'))">Voir la flotte <i class="fa-solid fa-arrow-right ml-2"></i></button></div>
+              <div class="table-wrap"><table><thead><tr><th>Référence</th><th>Chauffeur / Camion</th><th>Trajet</th><th>Statut</th><th>Marge estimée</th></tr></thead><tbody>
+                <tr><td class="font-bold text-slate-800">TRJ-9081</td><td><p class="font-semibold text-slate-700">Mohammed Bennani</p><p class="text-[10px] text-slate-400 mt-1">12345-A-6 · Volvo</p></td><td>Casablanca <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Tanger</td><td><span class="status blue">En cours</span></td><td class="font-bold text-slate-800">8 400 MAD</td></tr>
+                <tr><td class="font-bold text-slate-800">TRJ-9082</td><td><p class="font-semibold text-slate-700">Abderrahim El Amrani</p><p class="text-[10px] text-slate-400 mt-1">67890-B-2 · Scania</p></td><td>Agadir <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Marrakech</td><td><span class="status green">Terminé</span></td><td class="font-bold text-slate-800">12 100 MAD</td></tr>
+                <tr><td class="font-bold text-slate-800">TRJ-9083</td><td><p class="font-semibold text-slate-700">Youssef Amrani</p><p class="text-[10px] text-slate-400 mt-1">45678-C-1 · MAN</p></td><td>Rabat <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Fès</td><td><span class="status amber">Planifié</span></td><td class="font-bold text-slate-800">6 700 MAD</td></tr>
+              </tbody></table></div>
+            </div>
+            <div class="panel p-5">
+              <div class="flex items-center justify-between"><div><h3 class="font-bold text-sm">Alertes prioritaires</h3><p class="text-xs text-slate-400 mt-1">Éléments nécessitant votre attention</p></div><span class="bg-orange-100 text-orange-700 rounded-full px-2 py-1 text-[10px] font-bold">3 alertes</span></div>
+              <div class="mt-4 space-y-3">
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-red-50 hover:bg-red-100/70 transition" onclick="switchTab('rh',document.querySelector('[data-tab=rh]'))"><span class="w-9 h-9 rounded-lg bg-white text-red-600 grid place-items-center shrink-0"><i class="fa-solid fa-id-card"></i></span><span><b class="block text-xs text-slate-800">Permis à renouveler</b><span class="block text-[11px] text-slate-500 mt-1">1 permis nécessite une vérification.</span></span><i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i></button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-amber-50 hover:bg-amber-100/70 transition" onclick="switchTab('compta',document.querySelector('[data-tab=compta]'))"><span class="w-9 h-9 rounded-lg bg-white text-amber-600 grid place-items-center shrink-0"><i class="fa-solid fa-file-invoice"></i></span><span><b class="block text-xs text-slate-800">Factures impayées</b><span class="block text-[11px] text-slate-500 mt-1">89 400 MAD à suivre.</span></span><i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i></button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-sky-50 hover:bg-sky-100/70 transition" onclick="switchTab('dispatch',document.querySelector('[data-tab=dispatch]'))"><span class="w-9 h-9 rounded-lg bg-white text-sky-600 grid place-items-center shrink-0"><i class="fa-solid fa-screwdriver-wrench"></i></span><span><b class="block text-xs text-slate-800">Maintenance flotte</b><span class="block text-[11px] text-slate-500 mt-1">4 véhicules à l'atelier.</span></span><i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-rh" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="eyebrow mb-2">Équipe & conformité</p><h1 class="section-title">Ressources humaines</h1><p class="text-sm text-slate-500 mt-1">Gestion des chauffeurs, permis et disponibilités.</p></div><button class="btn-primary" onclick="openDriverModal()"><i class="fa-solid fa-user-plus mr-2"></i>Ajouter un chauffeur</button></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="panel p-4"><p class="text-xs text-slate-500">Chauffeurs enregistrés</p><p class="text-2xl font-extrabold mt-2">24</p></div><div class="panel p-4"><p class="text-xs text-slate-500">Disponibles aujourd'hui</p><p class="text-2xl font-extrabold mt-2 text-emerald-600">8</p></div><div class="panel p-4"><p class="text-xs text-slate-500">Documents à vérifier</p><p class="text-2xl font-extrabold mt-2 text-red-600">2</p></div></div>
+          <div class="panel overflow-hidden"><div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3"><div><h3 class="font-bold text-sm">Répertoire du personnel</h3><p class="text-xs text-slate-400 mt-1">Recherchez un chauffeur par nom, permis ou statut.</p></div><input class="search max-w-xs" placeholder="Rechercher un chauffeur..." oninput="filterTable(this,'driversTable')"></div><div class="table-wrap"><table id="driversTable"><thead><tr><th>Nom & prénom</th><th>N° permis</th><th>Catégorie</th><th>Expiration</th><th>Disponibilité</th><th>Action</th></tr></thead><tbody>
+            <tr><td class="font-bold text-slate-800">Mohammed Bennani</td><td>PRM-883920</td><td>EC</td><td>12/10/2028</td><td><span class="status green">Disponible</span></td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : modification non enregistrée.')">Modifier</button></td></tr>
+            <tr><td class="font-bold text-slate-800">Abderrahim El Amrani</td><td>PRM-112938</td><td>C</td><td>04/11/2026</td><td><span class="status blue">En mission</span></td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : modification non enregistrée.')">Modifier</button></td></tr>
+            <tr><td class="font-bold text-slate-800">Youssef Amrani</td><td>PRM-445201</td><td>EC</td><td>21/08/2027</td><td><span class="status amber">Congé</span></td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : modification non enregistrée.')">Modifier</button></td></tr>
+          </tbody></table></div></div>
+        </section>
+
+        <section id="tab-compta" class="tab-content space-y-5">
+          <div><p class="eyebrow mb-2">Suivi financier</p><h1 class="section-title">Comptabilité & finance</h1><p class="text-sm text-slate-500 mt-1">Validation des dépenses et suivi des paiements clients.</p></div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="panel p-4"><p class="text-xs text-slate-500">Chiffre d'affaires</p><p class="text-xl font-extrabold mt-2">452 000 MAD</p><p class="text-[10px] text-emerald-600 mt-2">+14 % ce mois</p></div><div class="panel p-4"><p class="text-xs text-slate-500">Factures en attente</p><p class="text-xl font-extrabold mt-2">89 400 MAD</p><p class="text-[10px] text-red-600 mt-2">3 factures à relancer</p></div><div class="panel p-4"><p class="text-xs text-slate-500">Dépenses à valider</p><p class="text-xl font-extrabold mt-2">1 500 MAD</p><p class="text-[10px] text-amber-600 mt-2">1 reçu en attente</p></div></div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div class="panel p-5"><div class="mb-4"><h3 class="font-bold text-sm">Dépenses en attente de validation</h3><p class="text-xs text-slate-400 mt-1">Vérifiez les reçus avant approbation.</p></div><div id="expenseCard" class="rounded-xl border border-slate-200 p-4"><div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">Trajet TRJ-9081 · Gazole</p><p class="text-xs text-slate-500 mt-1">Chauffeur : M. Bennani · 120 litres</p><p class="text-lg font-extrabold mt-3">1 500 MAD</p></div><span class="status amber">En attente</span></div><div class="flex gap-2 mt-4"><button class="btn-primary" onclick="handleExpense(true)">Valider</button><button class="btn-secondary" onclick="handleExpense(false)">Rejeter</button></div></div></div>
+            <div class="panel overflow-hidden"><div class="p-5"><h3 class="font-bold text-sm">Factures clients</h3><p class="text-xs text-slate-400 mt-1">État des règlements enregistrés.</p></div><div class="table-wrap"><table><thead><tr><th>Référence</th><th>Client</th><th>Montant</th><th>État</th></tr></thead><tbody><tr><td class="font-bold text-slate-800">FACT-2026-001</td><td>LogiMaroc SARL</td><td>24 000 MAD</td><td><span class="status green">Payée</span></td></tr><tr><td class="font-bold text-slate-800">FACT-2026-002</td><td>Atlas Prime Transports</td><td>45 000 MAD</td><td><span class="status red">En retard</span></td></tr><tr><td class="font-bold text-slate-800">FACT-2026-003</td><td>Souss Express</td><td>20 400 MAD</td><td><span class="status amber">À relancer</span></td></tr></tbody></table></div></div>
+          </div>
+        </section>
+
+        <section id="tab-dispatch" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="eyebrow mb-2">Opérations logistiques</p><h1 class="section-title">Dispatching & flotte</h1><p class="text-sm text-slate-500 mt-1">État du parc et affectation des véhicules.</p></div><button class="btn-primary" onclick="openTripModal()"><i class="fa-solid fa-plus mr-2"></i>Nouvel ordre</button></div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="panel p-4"><p class="text-xs text-slate-500">Véhicules en service</p><p class="text-2xl font-extrabold mt-2">18</p></div><div class="panel p-4"><p class="text-xs text-slate-500">En maintenance</p><p class="text-2xl font-extrabold mt-2 text-amber-600">4</p></div><div class="panel p-4"><p class="text-xs text-slate-500">Trajets en cours</p><p class="text-2xl font-extrabold mt-2 text-blue-600">6</p></div></div>
+          <div class="panel overflow-hidden"><div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3"><div><h3 class="font-bold text-sm">Parc de véhicules</h3><p class="text-xs text-slate-400 mt-1">Vue des camions et de leurs affectations.</p></div><input class="search max-w-xs" placeholder="Rechercher un véhicule..." oninput="filterTable(this,'fleetTable')"></div><div class="table-wrap"><table id="fleetTable"><thead><tr><th>Matricule</th><th>Marque / modèle</th><th>Capacité</th><th>Statut opérationnel</th><th>Chauffeur assigné</th><th>Action</th></tr></thead><tbody>
+            <tr><td class="font-bold text-slate-800">12345-A-6</td><td>Volvo FH 500</td><td>40 tonnes</td><td><span class="status green">En service</span></td><td>M. Bennani</td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : affectation non enregistrée.')">Gérer</button></td></tr>
+            <tr><td class="font-bold text-slate-800">98765-B-2</td><td>Scania R500</td><td>35 tonnes</td><td><span class="status amber">Maintenance</span></td><td>Atelier</td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : affectation non enregistrée.')">Gérer</button></td></tr>
+            <tr><td class="font-bold text-slate-800">45678-C-1</td><td>MAN TGX</td><td>32 tonnes</td><td><span class="status green">En service</span></td><td>Y. Amrani</td><td><button class="text-orange-600 font-bold" onclick="showToast('Mode démonstration : affectation non enregistrée.')">Gérer</button></td></tr>
+          </tbody></table></div></div>
+        </section>
+
+        <section id="tab-rapports" class="tab-content space-y-5">
+          <div><p class="eyebrow mb-2">Pilotage & indicateurs</p><h1 class="section-title">Rapports & analytics</h1><p class="text-sm text-slate-500 mt-1">Préparez des exports à partir des données affichées.</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 report-grid">
+            <div class="panel p-6"><div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 grid place-items-center text-xl"><i class="fa-solid fa-file-pdf"></i></div><h3 class="font-bold mt-4">Rentabilité mensuelle</h3><p class="text-xs text-slate-500 leading-5 mt-2">Synthèse du chiffre d'affaires, des dépenses et des marges estimées.</p><button class="btn-primary mt-5 w-full" onclick="exportReport('rentabilite')"><i class="fa-solid fa-download mr-2"></i>Exporter CSV</button></div>
+            <div class="panel p-6"><div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 grid place-items-center text-xl"><i class="fa-solid fa-gas-pump"></i></div><h3 class="font-bold mt-4">Consommation de gazole</h3><p class="text-xs text-slate-500 leading-5 mt-2">Vue de démonstration des dépenses de carburant par trajet.</p><button class="btn-secondary mt-5 w-full" onclick="exportReport('gazole')"><i class="fa-solid fa-file-csv mr-2"></i>Exporter CSV</button></div>
+            <div class="panel p-6"><div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 grid place-items-center text-xl"><i class="fa-solid fa-user-check"></i></div><h3 class="font-bold mt-4">Conformité RH</h3><p class="text-xs text-slate-500 leading-5 mt-2">Liste des permis et statuts du personnel enregistrés dans cette démo.</p><button class="btn-secondary mt-5 w-full" onclick="exportReport('rh')"><i class="fa-solid fa-file-csv mr-2"></i>Exporter CSV</button></div>
+          </div>
+          <div class="panel p-5"><h3 class="font-bold text-sm">À propos des rapports</h3><p class="text-xs text-slate-500 leading-5 mt-2">Les exports sont générés à partir des exemples intégrés à cette interface. Pour produire des rapports financiers officiels, connectez le tableau de bord à une base de données et validez les calculs avec les données réelles de l'entreprise.</p></div>
+        </section>
+
+        <section id="tab-audit" class="tab-content space-y-5">
+          <div><p class="eyebrow mb-2">Sécurité & traçabilité</p><h1 class="section-title">Journal d'audit</h1><p class="text-sm text-slate-500 mt-1">Historique illustratif des actions effectuées dans les modules.</p></div>
+          <div class="panel overflow-hidden"><div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3"><div><h3 class="font-bold text-sm">Activité récente</h3><p class="text-xs text-slate-400 mt-1">Les événements ci-dessous sont des exemples statiques.</p></div><input class="search max-w-xs" placeholder="Rechercher dans le journal..." oninput="filterTable(this,'auditTable')"></div><div class="table-wrap"><table id="auditTable"><thead><tr><th>Date & heure</th><th>Utilisateur</th><th>Module</th><th>Action effectuée</th><th>Résultat</th></tr></thead><tbody>
+            <tr><td>28/10/2026 · 14:30</td><td class="font-semibold text-slate-800">Admin (M. Bennani)</td><td>RH</td><td>Consultation du dossier PRM-112938</td><td><span class="status green">Réussi</span></td></tr>
+            <tr><td>28/10/2026 · 13:15</td><td class="font-semibold text-slate-800">Dispatcher</td><td>Flotte</td><td>Affectation du camion 12345-A-6 au trajet TRJ-9081</td><td><span class="status green">Réussi</span></td></tr>
+            <tr><td>28/10/2026 · 11:02</td><td class="font-semibold text-slate-800">Comptable</td><td>Finance</td><td>Reçu gazole #REC-GAZ-442 soumis à validation</td><td><span class="status amber">En attente</span></td></tr>
+          </tbody></table></div></div>
+        </section>
+        <footer class="pt-7 pb-2 text-center text-[10px] text-slate-400">© 2026 Translogix ERP · Interface de démonstration · Les données ne sont pas enregistrées sur un serveur.</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="actionModal" class="rounded-2xl p-0 w-[min(92vw,460px)] shadow-2xl backdrop:bg-slate-900/50">
+    <form id="modalForm" class="p-6" onsubmit="submitModal(event)">
+      <div class="flex items-start justify-between gap-4"><div><p class="eyebrow">Formulaire</p><h2 id="modalTitle" class="text-lg font-extrabold mt-1">Nouvel élément</h2><p id="modalDescription" class="text-xs text-slate-500 mt-2">Saisissez les informations ci-dessous.</p></div><button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button></div>
+      <div id="modalFields" class="space-y-4 mt-5"></div>
+      <div class="flex justify-end gap-2 mt-6"><button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button><button type="submit" class="btn-primary">Confirmer</button></div>
+      <p class="text-[10px] text-slate-400 mt-4">Démo : les informations ne sont pas enregistrées dans une base de données.</p>
+    </form>
+  </dialog>
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageNames = {
+      dashboard: ['Vue générale', 'Tableau de bord'],
+      rh: ['Équipe & conformité', 'Ressources humaines'],
+      compta: ['Suivi financier', 'Comptabilité & finance'],
+      dispatch: ['Opérations logistiques', 'Dispatching & flotte'],
+      rapports: ['Pilotage & indicateurs', 'Rapports & analytics'],
+      audit: ['Sécurité & traçabilité', "Journal d'audit"]
+    };
+    let modalMode = '';
+    let toastTimer;
+
+    function switchTab(tabId, element) {
+      const target = document.getElementById(`tab-${tabId}`);
+      if (!target) return;
+      document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-tab]').forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-current', 'false');
+      });
+      target.classList.add('active');
+      const navButton = element || document.querySelector(`[data-tab="${tabId}"]`);
+      if (navButton) {
+        navButton.classList.add('active');
+        navButton.setAttribute('aria-current', 'page');
+      }
+      document.getElementById('pageKicker').textContent = pageNames[tabId][0];
+      document.getElementById('pageTitle').textContent = pageNames[tabId][1];
+      toggleSidebar(false);
+      document.querySelector('.content-scroll').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', shouldOpen);
+      overlay.classList.toggle('show', shouldOpen);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3200);
+    }
+
+    function filterTable(input, tableId) {
+      const query = input.value.trim().toLocaleLowerCase('fr');
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+      rows.forEach(row => row.hidden = !row.textContent.toLocaleLowerCase('fr').includes(query));
+    }
+
+    function openModal(title, description, mode, fields) {
+      modalMode = mode;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      const container = document.getElementById('modalFields');
+      container.innerHTML = '';
+      fields.forEach(field => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'block text-xs font-semibold text-slate-600';
+        wrapper.textContent = field.label;
+        let input;
+        if (field.options) {
+          input = document.createElement('select');
+          input.className = 'search mt-2';
+          field.options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            input.appendChild(option);
+          });
+        } else {
+          input = document.createElement('input');
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          input.className = 'search mt-2';
+        }
+        input.name = field.name;
+        input.required = true;
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+      });
+      document.getElementById('actionModal').showModal();
+    }
+
+    function openDriverModal() {
+      openModal('Ajouter un chauffeur', 'Complétez les informations principales du chauffeur.', 'driver', [
+        {label:'Nom complet',name:'name',placeholder:'Ex. : Amine El Idrissi'},
+        {label:'Numéro de permis',name:'license',placeholder:'Ex. : PRM-123456'},
+        {label:'Catégorie de permis',name:'category',options:['C','EC','D']},
+        {label:'Disponibilité',name:'availability',options:['Disponible','En mission','Congé']}
+      ]);
+    }
+
+    function openTripModal() {
+      openModal('Nouvel ordre de transport', 'Définissez le trajet à planifier.', 'trip', [
+        {label:'Référence du trajet',name:'reference',placeholder:'Ex. : TRJ-9084'},
+        {label:'Ville de départ',name:'origin',placeholder:'Ex. : Agadir'},
+        {label:'Ville d’arrivée',name:'destination',placeholder:'Ex. : Casablanca'},
+        {label:'Chauffeur',name:'driver',placeholder:'Nom du chauffeur'}
+      ]);
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').close();
+    }
+
+    function submitModal(event) {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target).entries());
+      if (modalMode === 'driver') {
+        const table = document.querySelector('#driversTable tbody');
+        const row = table.insertRow();
+        row.innerHTML = `<td class="font-bold text-slate-800"></td><td></td><td></td><td>À renseigner</td><td><span class="status gray"></span></td><td><span class="text-slate-400">Démo</span></td>`;
+        row.cells[0].textContent = values.name;
+        row.cells[1].textContent = values.license;
+        row.cells[2].textContent = values.category;
+        row.cells[4].querySelector('span').textContent = values.availability;
+        row.cells[4].querySelector('span').className = 'status ' + (values.availability === 'Disponible' ? 'green' : values.availability === 'En mission' ? 'blue' : 'amber');
+        showToast('Chauffeur ajouté à la liste de démonstration.');
+      } else if (modalMode === 'trip') {
+        showToast(`Ordre ${values.reference} préparé : ${values.origin} → ${values.destination}. Démo uniquement.`);
+      }
+      closeModal();
+      event.target.reset();
+    }
+
+    function handleExpense(approved) {
+      const card = document.getElementById('expenseCard');
+      card.innerHTML = `<div class="flex items-center gap-3"><span class="w-10 h-10 rounded-full ${approved ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} grid place-items-center"><i class="fa-solid ${approved ? 'fa-check' : 'fa-xmark'}"></i></span><div><p class="font-bold text-sm">${approved ? 'Dépense validée' : 'Dépense rejetée'}</p><p class="text-xs text-slate-500 mt-1">Cette action est uniquement simulée dans la démo.</p></div></div>`;
+      showToast(approved ? 'Dépense validée (simulation).' : 'Dépense rejetée (simulation).');
+    }
+
+    function exportReport(type) {
+      const reports = {
+        rentabilite: {name:'rapport-rentabilite.csv', rows:[['Indicateur','Valeur'],['Chiffre d’affaires (MAD)','452000'],['Créances clients (MAD)','89400'],['Variation mensuelle','14%']]},
+        gazole: {name:'rapport-gazole.csv', rows:[['Trajet','Chauffeur','Litres','Montant MAD'],['TRJ-9081','Mohammed Bennani','120','1500']]},
+        rh: {name:'rapport-conformite-rh.csv', rows:[['Nom','Permis','Catégorie','Expiration','Disponibilité'],['Mohammed Bennani','PRM-883920','EC','12/10/2028','Disponible'],['Abderrahim El Amrani','PRM-112938','C','04/11/2026','En mission']]}
+      };
+      const report = reports[type];
+      const csv = '\uFEFF' + report.rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = report.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Export CSV généré à partir des données de démonstration.');
+    }
+
+    function logout() {
+      if (confirm('Voulez-vous quitter cette démonstration ?')) showToast('Déconnexion simulée. Aucun compte réel n’est connecté.');
+    }
+
+    document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('fr-MA', {dateStyle:'full'}).format(new Date());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') toggleSidebar(false);
+    });
+  </script>
+</body>
+</html>
