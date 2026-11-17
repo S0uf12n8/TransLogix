@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f97316">
+  <title>Espace Chauffeur | Translogix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f5f7fb}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .sidebar{background:#172033;color:#e2e8f0;width:258px;transition:transform .25s ease;z-index:40}
+    .nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:10px;text-align:left;color:#aeb8c9;font-size:13px;transition:.18s}
+    .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-item:hover{background:#263248;color:white}
+    .nav-item.active{background:var(--orange);color:white;box-shadow:0 5px 14px #f9731633}
+    .tab-content{display:none;animation:fade .18s ease}
+    .tab-content.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #17203305}
+    .kpi{position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:-20px;top:-24px;width:90px;height:90px;border-radius:50%;background:var(--tint,#fff1e7)}
+    .kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tint,#fff1e7);color:var(--accent,var(--orange))}
+    .section-title{font-size:20px;font-weight:750;letter-spacing:-.035em}
+    .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#7c8799}
+    .btn-primary{background:var(--orange);color:white;border:1px solid var(--orange);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s}
+    .btn-primary:hover{background:var(--orange-dark)}
+    .btn-secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:650;color:#334155}
+    .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:650px}
+    th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;font-weight:750;padding:13px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:14px 16px;border-bottom:1px solid #eef2f7;font-size:12px;color:#475569;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbfcfe}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .green{background:#dcfce7;color:#15803d}.amber{background:#fef3c7;color:#b45309}.red{background:#fee2e2;color:#b91c1c}.blue{background:#dbeafe;color:#1d4ed8}.purple{background:#f3e8ff;color:#7e22ce}.gray{background:#f1f5f9;color:#475569}
+    .search{border:1px solid var(--line);border-radius:9px;background:white;padding:9px 12px;font-size:12px;outline:none;width:100%}
+    .search:focus,input:focus,select:focus,textarea:focus{border-color:#fb923c;box-shadow:0 0 0 3px #fed7aa66;outline:none}
+    .progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;border-radius:99px;background:var(--orange)}
+    .mobile-overlay{display:none}
+    @media(max-width:900px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0f172a88;z-index:30}.main-area{width:100%}.desktop-only{display:none}}
+    @media(max-width:640px){.content-pad{padding:16px!important}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.section-title{font-size:18px}.topbar-meta{display:none}}
+    @media print{.sidebar,.topbar-actions,.no-print{display:none!important}.main-area{overflow:visible!important}.content-scroll{overflow:visible!important;padding:0!important}.tab-content{display:none!important}.tab-content.active{display:block!important}.panel{box-shadow:none;break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar(false)"></div>
+  <div class="flex min-h-screen">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar flex flex-col shrink-0 min-h-screen">
+      <div class="px-5 py-6 flex items-center gap-3 border-b border-white/10">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-lg shadow-orange-900/20"><img src="./logo.jpeg" alt="Translogix logo" class="w-full h-full object-cover"></div>
+        <div><h1 class="font-extrabold text-white tracking-tight">Espace Chauffeur</h1><p class="text-[10px] text-slate-400 mt-1">TRANSLOGIX · MAROC</p></div>
+        <button class="ml-auto lg:hidden text-slate-300" onclick="toggleSidebar(false)" aria-label="Fermer le menu"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-4 py-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 grid place-items-center font-bold text-xs">MB</div>
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-bold text-white">Mohammed Bennani</p>
+            <p class="text-[10px] text-slate-400 mt-1">Chauffeur Routier PL (EC)</p>
+          </div>
+          <span class="w-2 h-2 bg-emerald-400 rounded-full" title="En service"></span>
+        </div>
+      </div>
+      <nav class="px-3 py-2 space-y-1 flex-1" aria-label="Navigation principale">
+        <p class="eyebrow px-3 pb-2 pt-1 text-slate-500">Poste de Conduite</p>
+        <button class="nav-item active" data-tab="driver-home" onclick="switchTab('driver-home',this)"><i class="fa-solid fa-house-laptop"></i><span>Tableau de bord</span></button>
+        <button class="nav-item" data-tab="driver-missions" onclick="switchTab('driver-missions',this)"><i class="fa-solid fa-route"></i><span>Mes Ordres de Transport</span><span class="ml-auto text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">1 en cours</span></button>
+        <button class="nav-item" data-tab="driver-expenses" onclick="switchTab('driver-expenses',this)"><i class="fa-solid fa-receipt"></i><span>Reçus & Carburant</span><span class="ml-auto text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full" id="driverExpenseBadge">2</span></button>
+        <button class="nav-item" data-tab="driver-profile" onclick="switchTab('driver-profile',this)"><i class="fa-solid fa-address-card"></i><span>Permis & Documents</span></button>
+        <button class="nav-item" data-tab="driver-incidents" onclick="switchTab('driver-incidents',this)"><i class="fa-solid fa-triangle-exclamation"></i><span>Incidents & Support</span></button>
+        <div class="mt-6 px-3 py-4 rounded-xl bg-gradient-to-br from-orange-500/15 to-transparent border border-orange-400/15">
+          <i class="fa-solid fa-truck-front text-orange-300 mb-2"></i>
+          <p class="text-xs font-semibold text-white">Camion Assigné</p>
+          <p class="text-[10px] leading-5 text-slate-400 mt-1"><b>Volvo FH 500</b> · 12345-A-6<br>Prochaine vidange : 425 000 km</p>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <button onclick="logout()" class="nav-item hover:bg-red-500/15 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Fin de service</span></button>
+        <p class="text-[10px] text-slate-600 px-3 mt-3">Espace Chauffeur v2.0 · Démo</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-area flex-1 min-w-0 flex flex-col min-h-screen">
+      <header class="h-[72px] bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <button class="lg:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600" onclick="toggleSidebar(true)" aria-label="Ouvrir le menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="min-w-0"><p id="pageKicker" class="eyebrow">Cockpit Chauffeur</p><h2 id="pageTitle" class="font-bold text-sm md:text-base truncate">Tableau de bord</h2></div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4 topbar-actions">
+          <div class="topbar-meta text-right"><p class="text-xs font-semibold text-slate-700" id="currentDate"></p><p class="text-[10px] text-slate-400 mt-1">Trajet : Casablanca → Tanger Med</p></div>
+          <button class="btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-gas-pump mr-2"></i>Ajouter Reçu</button>
+          <button class="btn-secondary" onclick="exportDriverReport()"><i class="fa-solid fa-file-csv mr-2"></i><span class="desktop-only">Export Relevé</span></button>
+          <button class="w-9 h-9 rounded-xl border border-slate-200 text-slate-500 relative" aria-label="Notifications" onclick="showToast('Dispatch : Veuillez charger le quai N°4 à Tanger Med.')"><i class="fa-regular fa-bell"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white"></span></button>
+        </div>
+      </header>
+
+      <div class="content-scroll content-pad p-5 md:p-8 flex-1 max-w-[1600px] w-full mx-auto">
+        
+        <!-- TAB 1: Tableau de bord -->
+        <section id="tab-driver-home" class="tab-content active space-y-6">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div><p class="eyebrow mb-2">Synthèse de service</p><h1 class="section-title">Salam, M. Bennani <span>🚛</span></h1><p class="text-sm text-slate-500 mt-1">Camion Volvo FH (12345-A-6) · Statut : En route vers Tanger Med.</p></div>
+            <div class="flex gap-2">
+              <button class="btn-primary" onclick="updateMissionProgress()"><i class="fa-solid fa-play mr-2"></i>Point de Passage (GPS)</button>
+              <button class="btn-secondary" onclick="openIncidentModal()"><i class="fa-solid fa-triangle-exclamation mr-2 text-red-600"></i>Signalement</button>
+            </div>
+          </div>
+
+          <!-- Active Mission Banner -->
+          <div class="panel p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-orange-500/10 blur-2xl"></div>
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <span class="status blue bg-blue-500/20 text-blue-300 border border-blue-400/30">Ordre Actif · TRJ-9081</span>
+                <h3 class="text-xl font-bold mt-2">Casablanca <i class="fa-solid fa-arrow-right text-orange-400 mx-2"></i> Tanger Med</h3>
+                <p class="text-xs text-slate-400 mt-1">Client : LogiMaroc SARL · Produit : Produits Frais Sous Température Dirigée (+4°C)</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-400">Heure de Livraison Estimée (ETA)</p>
+                <p class="text-2xl font-extrabold text-orange-400 mt-1">18:30 <span class="text-xs text-slate-300 font-normal">(+25 min)</span></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
+              <div><p class="text-[10px] text-slate-400 uppercase font-bold">Cargaison</p><p class="text-sm font-bold text-white mt-1">24 Tonnes / 33 Palettes</p></div>
+              <div><p class="text-[10px] text-slate-400 uppercase font-bold">Tachygraphe Conduite</p><p class="text-sm font-bold text-emerald-400 mt-1">5h 30m / 9h max</p></div>
+              <div><p class="text-[10px] text-slate-400 uppercase font-bold">Distance Restante</p><p class="text-sm font-bold text-white mt-1">142 km (A1 Autoroute)</p></div>
+              <div><p class="text-[10px] text-slate-400 uppercase font-bold">Lettre de Voiture (CMR)</p><p class="text-sm font-bold text-emerald-400 mt-1"><i class="fa-solid fa-circle-check mr-1"></i>Signée au départ</p></div>
+            </div>
+
+            <div class="mt-5">
+              <div class="flex justify-between text-xs text-slate-300 mb-1"><span>Progression du Trajet</span><span>62% effectué</span></div>
+              <div class="progress h-2.5 bg-slate-700"><span style="width:62%" id="tripProgressBar"></span></div>
+            </div>
+          </div>
+
+          <!-- Driver KPIs -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 kpi-grid">
+            <div class="panel kpi p-5" style="--tint:#fff1e7;--accent:#ea580c">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Kilomètres ce Mois</p><p class="text-2xl font-extrabold mt-3 tracking-tight">4 200 <span class="text-xs font-semibold text-slate-400">km</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-gauge-high"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-emerald-600 font-semibold"><i class="fa-solid fa-road mr-1"></i>14 voyages accomplis</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#dcfce7;--accent:#16a34a">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Temps de Conduite (Jour)</p><p class="text-2xl font-extrabold mt-3">5h 30m</p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+              </div>
+              <div class="progress mt-4"><span style="width:61%"></span></div>
+              <p class="text-[11px] mt-2 text-slate-400">3h 30m de repos disponible</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#e0f2fe;--accent:#0284c7">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Prime Trajet Estimée</p><p class="text-2xl font-extrabold mt-3">3 150 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-blue-600 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i>Calculé selon km parcourus</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#fef3c7;--accent:#b45309">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Reçus Gazole Soumis</p><p class="text-2xl font-extrabold mt-3">2 <span class="text-xs font-semibold text-slate-400">reçus</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-emerald-600 font-semibold"><i class="fa-solid fa-check mr-1"></i>1 850 MAD validés compta</p>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="panel p-5 space-y-4">
+            <h3 class="font-bold text-sm">Commandes Rapides en Conduite</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-orange-50 hover:border-orange-200 transition text-left flex items-center gap-3" onclick="showToast('Début de pause obligatoire enregistré sur le tachygraphe.')">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 grid place-items-center font-bold shrink-0"><i class="fa-solid fa-mug-hot"></i></div>
+                <div><b class="block text-xs text-slate-800">Pause / Pause Rallongée</b><span class="block text-[11px] text-slate-500 mt-0.5">Activer mode repos tachygraphe</span></div>
+              </button>
+
+              <button class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 transition text-left flex items-center gap-3" onclick="openExpenseModal()">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 grid place-items-center font-bold shrink-0"><i class="fa-solid fa-gas-pump"></i></div>
+                <div><b class="block text-xs text-slate-800">Saisir Reçu Gazole / Péage</b><span class="block text-[11px] text-slate-500 mt-0.5">Scanner un bon ou ticket</span></div>
+              </button>
+
+              <button class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-200 transition text-left flex items-center gap-3" onclick="openIncidentModal()">
+                <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 grid place-items-center font-bold shrink-0"><i class="fa-solid fa-truck-medical"></i></div>
+                <div><b class="block text-xs text-slate-800">Signaler Panne / Accident</b><span class="block text-[11px] text-slate-500 mt-0.5">Notifier le dispatching urgence</span></div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: Mes Ordres de Transport -->
+        <section id="tab-driver-missions" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Carnet de Route</p><h1 class="section-title">Mes Ordres de Transport</h1><p class="text-sm text-slate-500 mt-1">Consultez vos ordres planifiés, en cours et l'historique des livraisons.</p></div>
+            <button class="btn-secondary" onclick="showToast('Actualisation des ordres de transport depuis le serveur...')"><i class="fa-solid fa-rotate-right mr-2"></i>Synchroniser Ordres</button>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Liste des Missions Assignées</h3><p class="text-xs text-slate-400 mt-1">Recherchez par N° d'ordre, ville ou client.</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher mission..." oninput="filterTable(this,'missionsTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="missionsTable">
+                <thead>
+                  <tr><th>Réf. Ordre</th><th>Itinéraire</th><th>Client</th><th>Cargaison</th><th>Date / Horaires</th><th>Lettre de Voiture (CMR)</th><th>Statut</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9081</td>
+                    <td>Casablanca <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Tanger Med</td>
+                    <td>LogiMaroc SARL</td>
+                    <td>24 T · Produits Frais</td>
+                    <td>28/10/2026 · 12:00 → 18:30</td>
+                    <td><span class="status green">Signée Départ</span></td>
+                    <td><span class="status blue">En cours</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="showToast('Visualisation Lettre de voiture TRJ-9081')">CMR / Doc</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9075</td>
+                    <td>Agadir <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Marrakech</td>
+                    <td>Souss Express Logistique</td>
+                    <td>18 T · Agrumes primeurs</td>
+                    <td>24/10/2026 · 08:00 → 14:15</td>
+                    <td><span class="status green">Livré & Signé</span></td>
+                    <td><span class="status green">Terminé</span></td>
+                    <td><button class="text-slate-600 font-bold text-xs" onclick="showToast('Mission archivée.')">Avoir du bon</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9089</td>
+                    <td>Rabat <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Fès</td>
+                    <td>Atlas Prime Transports</td>
+                    <td>30 T · Matériaux Construction</td>
+                    <td>30/10/2026 · 07:00 → 12:00</td>
+                    <td><span class="status gray">En attente</span></td>
+                    <td><span class="status amber">Planifié</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="showToast('Ordre accepté pour le 30/10.')">Confirmer</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: Reçus & Carburant -->
+        <section id="tab-driver-expenses" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Frais de Route & Justificatifs</p><h1 class="section-title">Saisie des Reçus & Carburant</h1><p class="text-sm text-slate-500 mt-1">Transmettez vos tickets de péage autoroutier, frais de gazole et dépenses d'urgence.</p></div>
+            <button class="btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-plus mr-2"></i>Nouveau Reçu</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="panel p-4"><p class="text-xs text-slate-500">Reçus Validés (Ce mois)</p><p class="text-2xl font-extrabold mt-2 text-emerald-600">1 850 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">En Attente Validation</p><p class="text-2xl font-extrabold mt-2 text-amber-600" id="driverPendingAmount">1 500 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Consommation Moyenne</p><p class="text-2xl font-extrabold mt-2 text-slate-900">31.5 L / 100 km</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Historique de vos Justificatifs</h3><p class="text-xs text-slate-400 mt-1">Suivez la validation par le comptable.</p></div>
+              <input class="search max-w-xs" placeholder="Filtrer reçu..." oninput="filterTable(this,'driverExpensesTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="driverExpensesTable">
+                <thead>
+                  <tr><th>N° Reçu</th><th>Mission</th><th>Type de Dépense</th><th>Fournisseur / Station</th><th>Montant (MAD)</th><th>Statut Comptable</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">REC-2026-881</td>
+                    <td>TRJ-9081</td>
+                    <td>Gazole (120 Litres)</td>
+                    <td>Afriquia Mohammedia</td>
+                    <td class="font-bold text-slate-900">1 500 MAD</td>
+                    <td><span class="status amber">En attente</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">REC-2026-772</td>
+                    <td>TRJ-9075</td>
+                    <td>Péage Autoroute A1</td>
+                    <td>Autoroutes du Maroc (ADM)</td>
+                    <td class="font-bold text-slate-900">350 MAD</td>
+                    <td><span class="status green">Validé Compta</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">REC-2026-654</td>
+                    <td>TRJ-9075</td>
+                    <td>Gazole (120 Litres)</td>
+                    <td>TotalEnergies Agadir</td>
+                    <td class="font-bold text-slate-900">1 500 MAD</td>
+                    <td><span class="status green">Validé Compta</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: Permis & Documents -->
+        <section id="tab-driver-profile" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Dossier Administratif</p><h1 class="section-title">Profil & Conformité Légale</h1><p class="text-sm text-slate-500 mt-1">Vérification de la validité de vos pièces et attestations professionnelles.</p></div>
+            <button class="btn-secondary" onclick="showToast('Demande d\'attestation de travail transmise aux RH.')"><i class="fa-solid fa-file-contract mr-2"></i>Demander Attestation RH</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="panel p-5 space-y-4">
+              <div class="flex items-center gap-3">
+                <div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-700 grid place-items-center font-bold text-lg">MB</div>
+                <div>
+                  <h3 class="font-bold text-base text-slate-900">Mohammed Bennani</h3>
+                  <p class="text-xs text-slate-500">CIN : BE-889021</p>
+                  <p class="text-xs text-slate-500">CNSS : 198273645</p>
+                </div>
+              </div>
+              <div class="border-t border-slate-100 pt-3 text-xs space-y-2">
+                <p><b>Date d'embauche :</b> 15/03/2021</p>
+                <p><b>Type de contrat :</b> CDI Temps Plein</p>
+                <p><b>Dépôt de rattachement :</b> Casablanca Z.I. Tit Mellil</p>
+              </div>
+            </div>
+
+            <div class="panel p-5 md:col-span-2 space-y-4">
+              <h3 class="font-bold text-sm">Cartes & Permis Obligatoires</h3>
+              <div class="space-y-3">
+                <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">Permis de Conduire Catégorie EC (Poids Lourds)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">N° PRM-883920 · Expiration : 12/10/2028</p>
+                  </div>
+                  <span class="status green">Valide</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">Carte FIMC / FCO (Formation Continue Conducteur)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">N° FIMC-2024-99 · Expiration : 15/08/2028</p>
+                  </div>
+                  <span class="status green">Valide</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">Visite Médicale d'Aptitude à la Conduite</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Dernier examen : 11/2025 · Prochaine visite : 11/2027</p>
+                  </div>
+                  <span class="status green">Conforme</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-amber-200 bg-amber-50/50 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">Carte Conducteur Tachygraphe Numérique</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">N° TACHO-110293 · Renouvellement recommandé sous 60 jours</p>
+                  </div>
+                  <span class="status amber">À renouveler</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: Incidents & Support -->
+        <section id="tab-driver-incidents" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Urgence & Assistance Routière</p><h1 class="section-title">Incidents & Support Route</h1><p class="text-sm text-slate-500 mt-1">Numéros d'urgence et déclaration d'aléa de transport.</p></div>
+            <button class="btn-primary bg-red-600 hover:bg-red-700 border-red-600" onclick="openIncidentModal()"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Signaler un Problème</button>
+          </div>
+
+          <!-- Emergency Hotlines -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="panel p-5 border-red-200 bg-red-50/30">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 grid place-items-center text-lg shrink-0"><i class="fa-solid fa-headset"></i></div>
+                <div>
+                  <p class="text-xs font-bold text-slate-800">Dispatching Urgence 24/7</p>
+                  <p class="text-sm font-extrabold text-red-600 mt-0.5">0522-XX-XX-00</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel p-5 border-amber-200 bg-amber-50/30">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 grid place-items-center text-lg shrink-0"><i class="fa-solid fa-wrench"></i></div>
+                <div>
+                  <p class="text-xs font-bold text-slate-800">Assistance Dépannage Flotte</p>
+                  <p class="text-sm font-extrabold text-amber-700 mt-0.5">0800-XX-XX-88</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel p-5 border-sky-200 bg-sky-50/30">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 grid place-items-center text-lg shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                  <p class="text-xs font-bold text-slate-800">Autoroutes du Maroc (ADM)</p>
+                  <p class="text-sm font-extrabold text-sky-700 mt-0.5">Dépanneur 5050</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel p-5 space-y-4">
+            <h3 class="font-bold text-sm">Consignes de Sécurité en cas d'Arrêt d'Urgence</h3>
+            <ul class="text-xs text-slate-600 space-y-2 list-disc pl-4">
+              <li>Mettre les feux de détresse et revêtir le gilet haute visibilité avant de descendre du véhicule.</li>
+              <li>Placer le triangle de présignalisation à au moins 30 mètres en amont sur bande d'arrêt d'urgence.</li>
+              <li>Conserver la marchandise réfrigérée sous température contrôlée (+4°C) et ne pas couper le groupe froid.</li>
+              <li>Prendre des photos nettes de tout choc ou dégât mécanique pour le dossier d'assurance.</li>
+            </ul>
+          </div>
+        </section>
+
+        <footer class="pt-7 pb-2 text-center text-[10px] text-slate-400">© 2026 Translogix ERP · Espace Chauffeur · Démonstration sans persistance.</footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- Action Modal -->
+  <dialog id="actionModal" class="rounded-2xl p-0 w-[min(92vw,480px)] shadow-2xl backdrop:bg-slate-900/50">
+    <form id="modalForm" class="p-6" onsubmit="submitModal(event)">
+      <div class="flex items-start justify-between gap-4">
+        <div><p class="eyebrow" id="modalSub">Espace Chauffeur</p><h2 id="modalTitle" class="text-lg font-extrabold mt-1">Saisie</h2><p id="modalDescription" class="text-xs text-slate-500 mt-2">Renseignez les informations demandées.</p></div>
+        <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalFields" class="space-y-4 mt-5"></div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn-primary">Transmettre</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">Simulation ERP : Données traitées uniquement pour la démo.</p>
+    </form>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageNames = {
+      'driver-home': ['Cockpit Chauffeur', 'Tableau de bord'],
+      'driver-missions': ['Carnet de Route', 'Mes Ordres de Transport'],
+      'driver-expenses': ['Frais de Route & Justificatifs', 'Saisie des Reçus & Carburant'],
+      'driver-profile': ['Dossier Administratif', 'Permis & Documents'],
+      'driver-incidents': ['Urgence & Assistance Routière', 'Incidents & Support']
+    };
+    let modalMode = '';
+    let toastTimer;
+
+    function switchTab(tabId, element) {
+      const target = document.getElementById(`tab-${tabId}`);
+      if (!target) return;
+      document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-tab]').forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-current', 'false');
+      });
+      target.classList.add('active');
+      const navButton = element || document.querySelector(`[data-tab="${tabId}"]`);
+      if (navButton) {
+        navButton.classList.add('active');
+        navButton.setAttribute('aria-current', 'page');
+      }
+      document.getElementById('pageKicker').textContent = pageNames[tabId][0];
+      document.getElementById('pageTitle').textContent = pageNames[tabId][1];
+      toggleSidebar(false);
+      document.querySelector('.content-scroll').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', shouldOpen);
+      overlay.classList.toggle('show', shouldOpen);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function filterTable(input, tableId) {
+      const query = input.value.trim().toLocaleLowerCase('fr');
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+      rows.forEach(row => row.hidden = !row.textContent.toLocaleLowerCase('fr').includes(query));
+    }
+
+    function openModal(title, description, mode, fields) {
+      modalMode = mode;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      const container = document.getElementById('modalFields');
+      container.innerHTML = '';
+      fields.forEach(field => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'block text-xs font-semibold text-slate-600';
+        wrapper.textContent = field.label;
+        let input;
+        if (field.options) {
+          input = document.createElement('select');
+          input.className = 'search mt-1.5';
+          field.options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            input.appendChild(option);
+          });
+        } else if(field.type === 'textarea') {
+          input = document.createElement('textarea');
+          input.rows = 3;
+          input.className = 'search mt-1.5';
+          input.placeholder = field.placeholder || '';
+        } else {
+          input = document.createElement('input');
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          input.className = 'search mt-1.5';
+        }
+        input.name = field.name;
+        if(field.value) input.value = field.value;
+        input.required = true;
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+      });
+      document.getElementById('actionModal').showModal();
+    }
+
+    function openExpenseModal() {
+      openModal('Saisir un Bon / Reçu', 'Transmettez une dépense engagée pendant votre mission.', 'expense', [
+        {label:'Mission associée', name:'tripRef', options:['TRJ-9081 (Casablanca -> Tanger)','TRJ-9075 (Agadir -> Marrakech)','TRJ-9089 (Rabat -> Fès)']},
+        {label:'Type de Frais', name:'type', options:['Ravitaillement Gazole','Péage Autoroute (ADM)','Réparation / Vulcanisation Pneumatique','Lavage Camion / Frigo','Repas / Nuitée']},
+        {label:'Station / Fournisseur', name:'station', placeholder:'Ex: Afriquia Mohammedia / ADM Péage'},
+        {label:'Montant (en MAD)', name:'amount', type:'number', placeholder:'Ex: 1500'},
+        {label:'Volume (Litres gazole si applicable)', name:'liters', type:'number', placeholder:'Ex: 120'}
+      ]);
+    }
+
+    function openIncidentModal() {
+      openModal('Signaler un Incident sur la Route', 'Consignez immédiatement tout obstacle ou retard.', 'incident', [
+        {label:'Mission en cours', name:'tripRef', options:['TRJ-9081 (Casablanca -> Tanger Med)','TRJ-9089 (Rabat -> Fès)']},
+        {label:'Type d’Aléa', name:'incidentType', options:['Embouteillage / Bouchon Autoroute','Panne Mécanique Camion / Moteur','Crevaison Pneumatique','Problème Groupe Frigo (+4°C)','Retard Contrôle Douanier / Gendarmerie']},
+        {label:'Localisation Précise (Point Kilométrique / Ville)', name:'location', placeholder:'Ex: PK 42 Autoroute A1 près de Bouznika'},
+        {label:'Détails & Impact sur l’Heure de Livraison', name:'details', type:'textarea', placeholder:'Expliquez la situation et l’estimation du retard...'}
+      ]);
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').close();
+    }
+
+    function submitModal(event) {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target).entries());
+      
+      if (modalMode === 'expense') {
+        const table = document.querySelector('#driverExpensesTable tbody');
+        const row = table.insertRow(0);
+        const refNum = `REC-2026-${Math.floor(100 + Math.random() * 900)}`;
+        row.innerHTML = `
+          <td class="font-bold text-slate-800">${refNum}</td>
+          <td>${values.tripRef.split(' ')[0]}</td>
+          <td>${values.type}</td>
+          <td>${values.station}</td>
+          <td class="font-bold text-slate-900">${values.amount} MAD</td>
+          <td><span class="status amber">En attente</span></td>
+        `;
+        showToast(`Reçu de ${values.amount} MAD transmis pour validation comptable.`);
+      } else if (modalMode === 'incident') {
+        showToast(`Incident transmis en urgence au dispatching. Restez à l'écoute.`);
+      }
+      closeModal();
+      event.target.reset();
+    }
+
+    function updateMissionProgress() {
+      const bar = document.getElementById('tripProgressBar');
+      if (bar) {
+        bar.style.width = '80%';
+        showToast('Point GPS mis à jour : Position enregistrée sur A1 KM 190 (Tanger).');
+      }
+    }
+
+    function exportDriverReport() {
+      const rows = [
+        ['Date', 'Mission', 'Itineraire', 'Kilometres', 'Frais Generes MAD'],
+        ['28/10/2026', 'TRJ-9081', 'Casablanca -> Tanger', '340', '1500'],
+        ['24/10/2026', 'TRJ-9075', 'Agadir -> Marrakech', '260', '1850']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'releve-chauffeur-bennani.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Relevé chauffeur CSV téléchargé.');
+    }
+
+    function logout() {
+      if (confirm('Marquer la fin de service chauffeur ?')) showToast('Session chauffeur clôturée.');
+    }
+
+    document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('fr-MA', {dateStyle:'full'}).format(new Date());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') toggleSidebar(false);
+    });
+  </script>
+</body>
+</html>

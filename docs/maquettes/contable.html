@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f97316">
+  <title>Espace Comptabilité & Finance | Translogix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f5f7fb}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .sidebar{background:#172033;color:#e2e8f0;width:258px;transition:transform .25s ease;z-index:40}
+    .nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:10px;text-align:left;color:#aeb8c9;font-size:13px;transition:.18s}
+    .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-item:hover{background:#263248;color:white}
+    .nav-item.active{background:var(--orange);color:white;box-shadow:0 5px 14px #f9731633}
+    .tab-content{display:none;animation:fade .18s ease}
+    .tab-content.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #17203305}
+    .kpi{position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:-20px;top:-24px;width:90px;height:90px;border-radius:50%;background:var(--tint,#fff1e7)}
+    .kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tint,#fff1e7);color:var(--accent,var(--orange))}
+    .section-title{font-size:20px;font-weight:750;letter-spacing:-.035em}
+    .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#7c8799}
+    .btn-primary{background:var(--orange);color:white;border:1px solid var(--orange);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s}
+    .btn-primary:hover{background:var(--orange-dark)}
+    .btn-secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:650;color:#334155}
+    .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:650px}
+    th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;font-weight:750;padding:13px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:14px 16px;border-bottom:1px solid #eef2f7;font-size:12px;color:#475569;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbfcfe}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .green{background:#dcfce7;color:#15803d}.amber{background:#fef3c7;color:#b45309}.red{background:#fee2e2;color:#b91c1c}.blue{background:#dbeafe;color:#1d4ed8}.purple{background:#f3e8ff;color:#7e22ce}.gray{background:#f1f5f9;color:#475569}
+    .search{border:1px solid var(--line);border-radius:9px;background:white;padding:9px 12px;font-size:12px;outline:none;width:100%}
+    .search:focus,input:focus,select:focus,textarea:focus{border-color:#fb923c;box-shadow:0 0 0 3px #fed7aa66;outline:none}
+    .progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;border-radius:99px;background:var(--orange)}
+    .mobile-overlay{display:none}
+    @media(max-width:900px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0f172a88;z-index:30}.main-area{width:100%}.desktop-only{display:none}}
+    @media(max-width:640px){.content-pad{padding:16px!important}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.section-title{font-size:18px}.topbar-meta{display:none}}
+    @media print{.sidebar,.topbar-actions,.no-print{display:none!important}.main-area{overflow:visible!important}.content-scroll{overflow:visible!important;padding:0!important}.tab-content{display:none!important}.tab-content.active{display:block!important}.panel{box-shadow:none;break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar(false)"></div>
+  <div class="flex min-h-screen">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar flex flex-col shrink-0 min-h-screen">
+      <div class="px-5 py-6 flex items-center gap-3 border-b border-white/10">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-lg shadow-orange-900/20"><img src="./logo.jpeg" alt="Translogix logo" class="w-full h-full object-cover"></div>
+        <div><h1 class="font-extrabold text-white tracking-tight">Compta & Finance</h1><p class="text-[10px] text-slate-400 mt-1">TRANSLOGIX · MAROC</p></div>
+        <button class="ml-auto lg:hidden text-slate-300" onclick="toggleSidebar(false)" aria-label="Fermer le menu"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-4 py-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 grid place-items-center font-bold text-xs">MA</div>
+          <div class="min-w-0 flex-1"><p class="text-xs font-bold text-white">Mme. Alami</p><p class="text-[10px] text-slate-400 mt-1">Responsable Comptable</p></div>
+          <span class="w-2 h-2 bg-emerald-400 rounded-full" title="En ligne"></span>
+        </div>
+      </div>
+      <nav class="px-3 py-2 space-y-1 flex-1" aria-label="Navigation principale">
+        <p class="eyebrow px-3 pb-2 pt-1 text-slate-500">Gestion Financière</p>
+        <button class="nav-item active" data-tab="compta-dashboard" onclick="switchTab('compta-dashboard',this)"><i class="fa-solid fa-chart-line"></i><span>Tableau de bord</span></button>
+        <button class="nav-item" data-tab="invoices" onclick="switchTab('invoices',this)"><i class="fa-solid fa-file-invoice-dollar"></i><span>Facturation Clients</span><span class="ml-auto text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">3 impayées</span></button>
+        <button class="nav-item" data-tab="expenses" onclick="switchTab('expenses',this)"><i class="fa-solid fa-receipt"></i><span>Valider Dépenses</span><span class="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full" id="expenseBadge">3</span></button>
+        <button class="nav-item" data-tab="receivables" onclick="switchTab('receivables',this)"><i class="fa-solid fa-hand-holding-dollar"></i><span>Créances & Recouvrement</span></button>
+        <button class="nav-item" data-tab="cashflow" onclick="switchTab('cashflow',this)"><i class="fa-solid fa-building-columns"></i><span>Trésorerie & Bilan</span></button>
+        <button class="nav-item" data-tab="employee-payments" onclick="switchTab('employee-payments',this)"><i class="fa-solid fa-money-check-dollar"></i><span>Paiement des Employés</span></button>
+        <button class="nav-item" data-tab="ledger" onclick="switchTab('ledger',this)"><i class="fa-solid fa-book-journal-whills"></i><span>Journal Comptable</span></button>
+        <div class="mt-6 px-3 py-4 rounded-xl bg-gradient-to-br from-orange-500/15 to-transparent border border-orange-400/15">
+          <i class="fa-solid fa-shield-check text-orange-300 mb-2"></i><p class="text-xs font-semibold text-white">Conformité Fiscale</p><p class="text-[10px] leading-5 text-slate-400 mt-1">Déclarations TVA, retenues à la source et facturation électronique prêtes pour clôture.</p>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <button onclick="logout()" class="nav-item hover:bg-red-500/15 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Déconnexion</span></button>
+        <p class="text-[10px] text-slate-600 px-3 mt-3">Compta ERP v2.0 · Démo</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-area flex-1 min-w-0 flex flex-col min-h-screen">
+      <header class="h-[72px] bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <button class="lg:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600" onclick="toggleSidebar(true)" aria-label="Ouvrir le menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="min-w-0"><p id="pageKicker" class="eyebrow">Synthèse financière</p><h2 id="pageTitle" class="font-bold text-sm md:text-base truncate">Tableau de bord Comptable</h2></div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4 topbar-actions">
+          <div class="topbar-meta text-right"><p class="text-xs font-semibold text-slate-700" id="currentDate"></p><p class="text-[10px] text-slate-400 mt-1">Espace Responsable Financier</p></div>
+          <button class="btn-primary" onclick="openInvoiceModal()"><i class="fa-solid fa-plus mr-2"></i>Créer une facture</button>
+          <button class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i><span class="desktop-only">Imprimer</span></button>
+          <button class="w-9 h-9 rounded-xl border border-slate-200 text-slate-500 relative" aria-label="Notifications" onclick="showToast('Rappel : 3 factures en retard nécessitent une relance client.')"><i class="fa-regular fa-bell"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white"></span></button>
+        </div>
+      </header>
+
+      <div class="content-scroll content-pad p-5 md:p-8 flex-1 max-w-[1600px] w-full mx-auto">
+        
+        <!-- Tab 1: Dashboard -->
+        <section id="tab-compta-dashboard" class="tab-content active space-y-6">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div><p class="eyebrow mb-2">Aperçu Exécutif Finance</p><h1 class="section-title">Bonjour, Mme. Alami <span>💰</span></h1><p class="text-sm text-slate-500 mt-1">Voici l'état des encaissements, factures et dépenses de transport.</p></div>
+            <button class="btn-secondary" onclick="exportGeneralLedger()"><i class="fa-solid fa-file-csv mr-2"></i>Exporter Grand Livre (CSV)</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 kpi-grid">
+            <div class="panel kpi p-5" style="--tint:#fff1e7;--accent:#ea580c">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Chiffre d'Affaires Mensuel</p><p class="text-2xl font-extrabold mt-3 tracking-tight">452 000 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-coins"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i>+14 % <span class="text-slate-400 font-normal">vs mois précédent</span></p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#dcfce7;--accent:#16a34a">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Encaissements du mois</p><p class="text-2xl font-extrabold mt-3">362 600 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+              </div>
+              <div class="progress mt-4"><span style="width:80%"></span></div>
+              <p class="text-[11px] mt-2 text-slate-400">80% du CA encaissé</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#fee2e2;--accent:#dc2626">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Créances en retard (>30j)</p><p class="text-2xl font-extrabold mt-3">89 400 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-red-600 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>3 factures à relancer</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#fef3c7;--accent:#b45309">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Reçus Gazole en attente</p><p class="text-2xl font-extrabold mt-3">4 850 <span class="text-xs font-semibold text-slate-400">MAD</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-gas-pump"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-amber-600 font-semibold"><i class="fa-solid fa-clock mr-1"></i>3 reçus à valider</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div class="panel xl:col-span-2 overflow-hidden">
+              <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div><h3 class="font-bold text-sm">Dernières Factures Émises</h3><p class="text-xs text-slate-400 mt-1">Suivi des règlements clients récents</p></div>
+                <button class="btn-secondary" onclick="switchTab('invoices', document.querySelector('[data-tab=invoices]'))">Voir toutes les factures <i class="fa-solid fa-arrow-right ml-2"></i></button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>N° Facture</th><th>Client</th><th>Date d'émission</th><th>Montant TTC</th><th>Statut</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold text-slate-800">FACT-2026-001</td>
+                      <td>LogiMaroc SARL</td>
+                      <td>12/10/2026</td>
+                      <td class="font-bold text-slate-900">24 000 MAD</td>
+                      <td><span class="status green">Payée</span></td>
+                      <td><button class="text-orange-600 font-bold text-xs" onclick="showToast('Impression facture FACT-2026-001.')">Télécharger PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-800">FACT-2026-002</td>
+                      <td>Atlas Prime Transports</td>
+                      <td>28/09/2026</td>
+                      <td class="font-bold text-slate-900">45 000 MAD</td>
+                      <td><span class="status red">En retard</span></td>
+                      <td><button class="text-red-600 font-bold text-xs" onclick="showToast('Relance client transmise à Atlas Prime Transports.')">Relancer</button></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-800">FACT-2026-003</td>
+                      <td>Souss Express Logistique</td>
+                      <td>05/10/2026</td>
+                      <td class="font-bold text-slate-900">20 400 MAD</td>
+                      <td><span class="status amber">À relancer</span></td>
+                      <td><button class="text-orange-600 font-bold text-xs" onclick="openPaymentModal('FACT-2026-003')">Enregistrer Paiement</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm">Actions Financières Rapides</h3>
+                <span class="bg-orange-100 text-orange-700 rounded-full px-2 py-0.5 text-[10px] font-bold">Urgent</span>
+              </div>
+              <div class="space-y-3">
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-orange-50 hover:bg-orange-100/70 transition" onclick="switchTab('expenses', document.querySelector('[data-tab=expenses]'))">
+                  <span class="w-9 h-9 rounded-lg bg-white text-orange-600 grid place-items-center shrink-0"><i class="fa-solid fa-check-double"></i></span>
+                  <span><b class="block text-xs text-slate-800">Validation des frais de route</b><span class="block text-[11px] text-slate-500 mt-1">3 reçus gazole en attente d'approbation.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-red-50 hover:bg-red-100/70 transition" onclick="switchTab('receivables', document.querySelector('[data-tab=receivables]'))">
+                  <span class="w-9 h-9 rounded-lg bg-white text-red-600 grid place-items-center shrink-0"><i class="fa-solid fa-bullhorn"></i></span>
+                  <span><b class="block text-xs text-slate-800">Plan de recouvrement clients</b><span class="block text-[11px] text-slate-500 mt-1">89 400 MAD de créances échues.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-sky-50 hover:bg-sky-100/70 transition" onclick="openInvoiceModal()">
+                  <span class="w-9 h-9 rounded-lg bg-white text-sky-600 grid place-items-center shrink-0"><i class="fa-solid fa-file-circle-plus"></i></span>
+                  <span><b class="block text-xs text-slate-800">Émettre une facture transport</b><span class="block text-[11px] text-slate-500 mt-1">Saisie rapide avec calcul automatique TVA 14%.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 2: Facturation Clients -->
+        <section id="tab-invoices" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Ventes & Chiffre d'Affaires</p><h1 class="section-title">Facturation Clients</h1><p class="text-sm text-slate-500 mt-1">Suivi des factures de transport, règlements et avoirs.</p></div>
+            <button class="btn-primary" onclick="openInvoiceModal()"><i class="fa-solid fa-plus mr-2"></i>Nouvelle Facture</button>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Registre des Factures</h3><p class="text-xs text-slate-400 mt-1">Recherchez par N° de facture, client ou montant.</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher une facture..." oninput="filterTable(this,'invoicesTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="invoicesTable">
+                <thead>
+                  <tr><th>Référence</th><th>Client</th><th>Date Émission</th><th>Échéance</th><th>Montant HT</th><th>TVA (14%)</th><th>Montant TTC</th><th>Statut</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">FACT-2026-001</td>
+                    <td>LogiMaroc SARL</td>
+                    <td>12/10/2026</td>
+                    <td>12/11/2026</td>
+                    <td>21 052 MAD</td>
+                    <td>2 948 MAD</td>
+                    <td class="font-bold text-slate-900">24 000 MAD</td>
+                    <td><span class="status green">Payée</span></td>
+                    <td><button class="text-slate-600 font-bold text-xs" onclick="showToast('Téléchargement duplicata FACT-2026-001.')">Duplicata</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">FACT-2026-002</td>
+                    <td>Atlas Prime Transports</td>
+                    <td>28/08/2026</td>
+                    <td>28/09/2026</td>
+                    <td>39 473 MAD</td>
+                    <td>5 527 MAD</td>
+                    <td class="font-bold text-slate-900">45 000 MAD</td>
+                    <td><span class="status red">En retard</span></td>
+                    <td>
+                      <button class="text-orange-600 font-bold text-xs mr-2" onclick="openPaymentModal('FACT-2026-002')">Régler</button>
+                      <button class="text-red-600 font-bold text-xs" onclick="showToast('Relance niveau 2 envoyée.')">Relance</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">FACT-2026-003</td>
+                    <td>Souss Express Logistique</td>
+                    <td>05/10/2026</td>
+                    <td>05/11/2026</td>
+                    <td>17 894 MAD</td>
+                    <td>2 506 MAD</td>
+                    <td class="font-bold text-slate-900">20 400 MAD</td>
+                    <td><span class="status amber">À relancer</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="openPaymentModal('FACT-2026-003')">Régler</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">FACT-2026-004</td>
+                    <td>Maroc Primeurs Agadir</td>
+                    <td>20/10/2026</td>
+                    <td>20/11/2026</td>
+                    <td>33 333 MAD</td>
+                    <td>4 667 MAD</td>
+                    <td class="font-bold text-slate-900">38 000 MAD</td>
+                    <td><span class="status blue">En attente</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="openPaymentModal('FACT-2026-004')">Régler</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Valider Dépenses -->
+        <section id="tab-expenses" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Contrôle des Charges de Route</p><h1 class="section-title">Validation des Dépenses & Reçus Gazole</h1><p class="text-sm text-slate-500 mt-1">Approuvez ou rejetez les notes de frais soumises par les chauffeurs.</p></div>
+            <button class="btn-secondary" onclick="exportExpenseAudit()"><i class="fa-solid fa-file-csv mr-2"></i>Exporter Reçus (CSV)</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="panel p-4"><p class="text-xs text-slate-500">En attente d'approbation</p><p class="text-2xl font-extrabold mt-2 text-amber-600" id="pendingCount">3 reçus</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Montant total à valider</p><p class="text-2xl font-extrabold mt-2 text-slate-900" id="pendingAmount">4 850 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Dépenses validées ce mois</p><p class="text-2xl font-extrabold mt-2 text-emerald-600">34 200 MAD</p></div>
+          </div>
+
+          <div class="space-y-4" id="expenseCardsContainer">
+            <!-- Expense Item 1 -->
+            <div class="panel p-5" id="expense-1">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 grid place-items-center text-xl shrink-0"><i class="fa-solid fa-gas-pump"></i></div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-base text-slate-900">Trajet TRJ-9081 · Ravitaillement Gazole</span>
+                      <span class="status amber">En attente</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Chauffeur : <b>Mohammed Bennani</b> · Véhicule : 12345-A-6 (Volvo FH)</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Station Afriquia Mohammedia · 120 Litres @ 12.50 MAD/L</p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0">
+                  <div class="text-left md:text-right">
+                    <p class="text-xs text-slate-400">Montant Reçu</p>
+                    <p class="text-xl font-extrabold text-slate-900">1 500 MAD</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="btn-primary" onclick="processExpense(1, true)">Valider</button>
+                    <button class="btn-secondary text-red-600 border-red-200 hover:bg-red-50" onclick="processExpense(1, false)">Rejeter</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expense Item 2 -->
+            <div class="panel p-5" id="expense-2">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 grid place-items-center text-xl shrink-0"><i class="fa-solid fa-road"></i></div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-base text-slate-900">Trajet TRJ-9082 · Péage Autoroute A1</span>
+                      <span class="status amber">En attente</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Chauffeur : <b>Abderrahim El Amrani</b> · Véhicule : 67890-B-2 (Scania)</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Ticket Autoroutes du Maroc (ADM) · Casablanca - Agadir</p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0">
+                  <div class="text-left md:text-right">
+                    <p class="text-xs text-slate-400">Montant Reçu</p>
+                    <p class="text-xl font-extrabold text-slate-900">350 MAD</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="btn-primary" onclick="processExpense(2, true)">Valider</button>
+                    <button class="btn-secondary text-red-600 border-red-200 hover:bg-red-50" onclick="processExpense(2, false)">Rejeter</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expense Item 3 -->
+            <div class="panel p-5" id="expense-3">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 grid place-items-center text-xl shrink-0"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-base text-slate-900">Trajet TRJ-9083 · Réparation Pneumatique d'Urgence</span>
+                      <span class="status amber">En attente</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Chauffeur : <b>Youssef Amrani</b> · Véhicule : 45678-C-1 (MAN TGX)</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Vulcanisation d'urgence station Shell Rabat</p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0">
+                  <div class="text-left md:text-right">
+                    <p class="text-xs text-slate-400">Montant Reçu</p>
+                    <p class="text-xl font-extrabold text-slate-900">3 000 MAD</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="btn-primary" onclick="processExpense(3, true)">Valider</button>
+                    <button class="btn-secondary text-red-600 border-red-200 hover:bg-red-50" onclick="processExpense(3, false)">Rejeter</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Créances & Recouvrement -->
+        <section id="tab-receivables" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Gestion du Poste Client</p><h1 class="section-title">Balance Âgée & Recouvrement</h1><p class="text-sm text-slate-500 mt-1">Analyse des retard de paiement et suivi du plan de relance.</p></div>
+            <button class="btn-secondary" onclick="exportAgingReport()"><i class="fa-solid fa-file-csv mr-2"></i>Exporter Balance Âgée (CSV)</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="panel p-4"><p class="text-xs text-slate-500">Non Échu (&lt;30j)</p><p class="text-xl font-extrabold mt-2 text-emerald-600">58 400 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Retard 30 à 60j</p><p class="text-xl font-extrabold mt-2 text-amber-600">45 000 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Retard 60 à 90j</p><p class="text-xl font-extrabold mt-2 text-orange-600">20 400 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Douteux (&gt;90j)</p><p class="text-xl font-extrabold mt-2 text-red-600">24 000 MAD</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Suivi des Relances Clients</h3><p class="text-xs text-slate-400 mt-1">Historique des contacts et promesses de règlement.</p></div>
+              <input class="search max-w-xs" placeholder="Filtrer client..." oninput="filterTable(this,'receivablesTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="receivablesTable">
+                <thead>
+                  <tr><th>Client</th><th>Encours Total</th><th>Montant Échu</th><th>Niveau Relance</th><th>Dernière Action</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">Atlas Prime Transports</td>
+                    <td class="font-bold text-slate-900">45 000 MAD</td>
+                    <td class="font-bold text-red-600">45 000 MAD (45j)</td>
+                    <td><span class="status red">Relance N°2</span></td>
+                    <td>Appel téléphonique du 22/10 · Promesse virement sous 7j</td>
+                    <td><button class="btn-primary text-xs py-1 px-2" onclick="showToast('Relance formelle générée pour Atlas Prime.')">Relancer</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Souss Express Logistique</td>
+                    <td class="font-bold text-slate-900">20 400 MAD</td>
+                    <td class="font-bold text-orange-600">20 400 MAD (62j)</td>
+                    <td><span class="status amber">Relance N°1</span></td>
+                    <td>E-mail automatique envoyé le 15/10</td>
+                    <td><button class="btn-primary text-xs py-1 px-2" onclick="showToast('Rappel envoyé par e-mail.')">Relancer</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">LogiMaroc SARL</td>
+                    <td class="font-bold text-slate-900">24 000 MAD</td>
+                    <td class="font-bold text-emerald-600">0 MAD (À jour)</td>
+                    <td><span class="status green">Conforme</span></td>
+                    <td>Facture réglée le 18/10 par virement bancaire</td>
+                    <td><button class="btn-secondary text-xs py-1 px-2" onclick="showToast('Compte client en règle.')">Historique</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 5: Trésorerie & Bilan -->
+        <section id="tab-cashflow" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Analyse Financière & Marges</p><h1 class="section-title">Trésorerie & Marges par Trajet</h1><p class="text-sm text-slate-500 mt-1">Rentabilité opérationnelle du parc de transport.</p></div>
+            <button class="btn-secondary" onclick="showToast('Calcul du bilan analytique mis à jour.')"><i class="fa-solid fa-rotate-right mr-2"></i>Actualiser</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="panel p-5"><p class="text-xs text-slate-500">Solde Bancaire Disponible (BMCE / Attijari)</p><p class="text-2xl font-extrabold mt-2 text-slate-900">184 200 MAD</p><p class="text-[10px] text-emerald-600 mt-2"><i class="fa-solid fa-circle-check mr-1"></i>Trésorerie saine</p></div>
+            <div class="panel p-5"><p class="text-xs text-slate-500">Charges d'Exploitation (Gazole + Salaires)</p><p class="text-2xl font-extrabold mt-2 text-orange-600">212 000 MAD</p><p class="text-[10px] text-slate-400 mt-2">Mois en cours</p></div>
+            <div class="panel p-5"><p class="text-xs text-slate-500">Marge Brute Moyenne / Trajet</p><p class="text-2xl font-extrabold mt-2 text-emerald-600">32.4 %</p><p class="text-[10px] text-emerald-600 mt-2">+2.1% vs objectif</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+              <div><h3 class="font-bold text-sm">Rentabilité Analytique des Trajets Récents</h3><p class="text-xs text-slate-400 mt-1">Comparatif Chiffre d'affaires vs Coûts directs (Gazole + Péage + Chauffeur)</p></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Mission</th><th>Axe Routier</th><th>Facturé Client</th><th>Gazole & Péages</th><th>Part Chauffeur</th><th>Marge Nette (MAD)</th><th>Marge %</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9081</td>
+                    <td>Casablanca <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Tanger Med</td>
+                    <td class="font-bold">12 500 MAD</td>
+                    <td>2 200 MAD</td>
+                    <td>1 900 MAD</td>
+                    <td class="font-extrabold text-emerald-700">8 400 MAD</td>
+                    <td><span class="status green">67.2%</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9082</td>
+                    <td>Agadir <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Marrakech</td>
+                    <td class="font-bold">18 000 MAD</td>
+                    <td>3 400 MAD</td>
+                    <td>2 500 MAD</td>
+                    <td class="font-extrabold text-emerald-700">12 100 MAD</td>
+                    <td><span class="status green">67.2%</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9083</td>
+                    <td>Rabat <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Fès</td>
+                    <td class="font-bold">10 000 MAD</td>
+                    <td>1 800 MAD</td>
+                    <td>1 500 MAD</td>
+                    <td class="font-extrabold text-emerald-700">6 700 MAD</td>
+                    <td><span class="status green">67.0%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Paiement des Employés -->
+        <section id="tab-employee-payments" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="eyebrow mb-2">Gestion de la Paie</p>
+              <h1 class="section-title">Paiement des Employés</h1>
+              <p class="text-sm text-slate-500 mt-1">Consultez les salaires et enregistrez les paiements du personnel.</p>
+            </div>
+            <button class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i>Imprimer la liste</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="panel p-4">
+              <p class="text-xs text-slate-500">Masse salariale mensuelle</p>
+              <p class="text-2xl font-extrabold mt-2 text-slate-900">42 500 MAD</p>
+            </div>
+            <div class="panel p-4">
+              <p class="text-xs text-slate-500">Paiements effectués</p>
+              <p class="text-2xl font-extrabold mt-2 text-emerald-600" id="employeePaidCount">2 employés</p>
+            </div>
+            <div class="panel p-4">
+              <p class="text-xs text-slate-500">Paiements en attente</p>
+              <p class="text-2xl font-extrabold mt-2 text-amber-600" id="employeePendingCount">2 employés</p>
+            </div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div>
+                <h3 class="font-bold text-sm">Registre des Salaires</h3>
+                <p class="text-xs text-slate-400 mt-1">Suivi des salaires mensuels et de leur règlement.</p>
+              </div>
+              <input class="search max-w-xs" placeholder="Rechercher un employé..." oninput="filterTable(this,'employeePaymentsTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="employeePaymentsTable">
+                <thead>
+                  <tr><th>Matricule</th><th>Employé</th><th>Poste</th><th>Mois</th><th>Salaire Net</th><th>Statut</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">EMP-001</td>
+                    <td>Mohammed Bennani</td>
+                    <td>Chauffeur</td>
+                    <td>Octobre 2026</td>
+                    <td class="font-bold text-slate-900">8 500 MAD</td>
+                    <td><span class="status green">Payé</span></td>
+                    <td><span class="text-xs text-slate-400">Réglé</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">EMP-002</td>
+                    <td>Abderrahim El Amrani</td>
+                    <td>Chauffeur</td>
+                    <td>Octobre 2026</td>
+                    <td class="font-bold text-slate-900">8 000 MAD</td>
+                    <td><span class="status amber">En attente</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="openEmployeePaymentModal('Abderrahim El Amrani','8 000 MAD',this)">Effectuer le paiement</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">EMP-003</td>
+                    <td>Youssef Amrani</td>
+                    <td>Chauffeur</td>
+                    <td>Octobre 2026</td>
+                    <td class="font-bold text-slate-900">7 500 MAD</td>
+                    <td><span class="status green">Payé</span></td>
+                    <td><span class="text-xs text-slate-400">Réglé</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">EMP-004</td>
+                    <td>Salma El Idrissi</td>
+                    <td>Assistante administrative</td>
+                    <td>Octobre 2026</td>
+                    <td class="font-bold text-slate-900">18 500 MAD</td>
+                    <td><span class="status amber">En attente</span></td>
+                    <td><button class="text-orange-600 font-bold text-xs" onclick="openEmployeePaymentModal('Salma El Idrissi','18 500 MAD',this)">Effectuer le paiement</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400">Les montants affichés sont des données de démonstration. Les paiements sont simulés localement.</p>
+        </section>
+
+        <!-- Tab 6: Journal Comptable & Audit -->
+        <section id="tab-ledger" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Traçabilité & Écritures</p><h1 class="section-title">Journal Comptable & Audit</h1><p class="text-sm text-slate-500 mt-1">Historique automatisé des écritures de ventes et de charges.</p></div>
+            <button class="btn-primary" onclick="exportGeneralLedger()"><i class="fa-solid fa-download mr-2"></i>Exporter Écritures (CSV)</button>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Écritures Comptables Automatisées</h3><p class="text-xs text-slate-400 mt-1">Comptes Plan Comptable Général Marocain (PCGM)</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher écriture..." oninput="filterTable(this,'ledgerTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="ledgerTable">
+                <thead>
+                  <tr><th>Date</th><th>Code Journal</th><th>Compte PCGM</th><th>Libellé Écriture</th><th>Débit (MAD)</th><th>Crédit (MAD)</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>28/10/2026</td>
+                    <td><span class="status blue">VT (Ventes)</span></td>
+                    <td>342100 - Clients</td>
+                    <td>Facture FACT-2026-001 LogiMaroc</td>
+                    <td class="font-bold text-slate-900">24 000 MAD</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>28/10/2026</td>
+                    <td><span class="status blue">VT (Ventes)</span></td>
+                    <td>712100 - Ventes de transport</td>
+                    <td>Facture FACT-2026-001 LogiMaroc HT</td>
+                    <td>-</td>
+                    <td class="font-bold text-slate-900">21 052 MAD</td>
+                  </tr>
+                  <tr>
+                    <td>28/10/2026</td>
+                    <td><span class="status blue">VT (Ventes)</span></td>
+                    <td>445500 - TVA Facturée</td>
+                    <td>TVA 14% Facture FACT-2026-001</td>
+                    <td>-</td>
+                    <td class="font-bold text-slate-900">2 948 MAD</td>
+                  </tr>
+                  <tr>
+                    <td>27/10/2026</td>
+                    <td><span class="status amber">AC (Achats)</span></td>
+                    <td>612200 - Achats Gazole</td>
+                    <td>Reçu Gazole #1500 M. Bennani</td>
+                    <td class="font-bold text-slate-900">1 500 MAD</td>
+                    <td>-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="pt-7 pb-2 text-center text-[10px] text-slate-400">© 2026 Translogix ERP · Espace Comptabilité & Finance · Démonstration sans persistance.</footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- Action Modal -->
+  <dialog id="actionModal" class="rounded-2xl p-0 w-[min(92vw,480px)] shadow-2xl backdrop:bg-slate-900/50">
+    <form id="modalForm" class="p-6" onsubmit="submitModal(event)">
+      <div class="flex items-start justify-between gap-4">
+        <div><p class="eyebrow" id="modalSub">Comptabilité & Finance</p><h2 id="modalTitle" class="text-lg font-extrabold mt-1">Formulaire</h2><p id="modalDescription" class="text-xs text-slate-500 mt-2">Saisissez les informations financières ci-dessous.</p></div>
+        <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalFields" class="space-y-4 mt-5"></div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn-primary">Confirmer</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">Simulation ERP : Données traitées uniquement en local.</p>
+    </form>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageNames = {
+      'compta-dashboard': ['Synthèse financière', 'Tableau de bord Comptable'],
+      'invoices': ['Ventes & Chiffre d\'Affaires', 'Facturation Clients'],
+      'expenses': ['Contrôle des Charges de Route', 'Validation des Dépenses'],
+      'receivables': ['Gestion du Poste Client', 'Balance Âgée & Recouvrement'],
+      'cashflow': ['Analyse Financière & Marges', 'Trésorerie & Marges'],
+      'employee-payments': ['Gestion de la Paie', 'Paiement des Employés'],
+      'ledger': ['Traçabilité & Écritures', 'Journal Comptable & Audit']
+    };
+    let modalMode = '';
+    let toastTimer;
+    let employeePaymentRow = null;
+
+    function switchTab(tabId, element) {
+      const target = document.getElementById(`tab-${tabId}`);
+      if (!target) return;
+      document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-tab]').forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-current', 'false');
+      });
+      target.classList.add('active');
+      const navButton = element || document.querySelector(`[data-tab="${tabId}"]`);
+      if (navButton) {
+        navButton.classList.add('active');
+        navButton.setAttribute('aria-current', 'page');
+      }
+      document.getElementById('pageKicker').textContent = pageNames[tabId][0];
+      document.getElementById('pageTitle').textContent = pageNames[tabId][1];
+      toggleSidebar(false);
+      document.querySelector('.content-scroll').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', shouldOpen);
+      overlay.classList.toggle('show', shouldOpen);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function filterTable(input, tableId) {
+      const query = input.value.trim().toLocaleLowerCase('fr');
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+      rows.forEach(row => row.hidden = !row.textContent.toLocaleLowerCase('fr').includes(query));
+    }
+
+    function openModal(title, description, mode, fields) {
+      modalMode = mode;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      const container = document.getElementById('modalFields');
+      container.innerHTML = '';
+      fields.forEach(field => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'block text-xs font-semibold text-slate-600';
+        wrapper.textContent = field.label;
+        let input;
+        if (field.options) {
+          input = document.createElement('select');
+          input.className = 'search mt-1.5';
+          field.options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            input.appendChild(option);
+          });
+        } else if(field.type === 'textarea') {
+          input = document.createElement('textarea');
+          input.rows = 3;
+          input.className = 'search mt-1.5';
+          input.placeholder = field.placeholder || '';
+        } else {
+          input = document.createElement('input');
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          input.className = 'search mt-1.5';
+        }
+        input.name = field.name;
+        if(field.value) input.value = field.value;
+        input.required = true;
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+      });
+      document.getElementById('actionModal').showModal();
+    }
+
+    function openInvoiceModal() {
+      openModal('Créer une Facture Transport', 'Émettez une nouvelle facture client avec TVA (14%).', 'invoice', [
+        {label:'Client', name:'client', options:['LogiMaroc SARL','Atlas Prime Transports','Souss Express Logistique','Maroc Primeurs Agadir']},
+        {label:'Montant Hors Taxe (HT en MAD)', name:'amountHT', type:'number', placeholder:'Ex: 20000'},
+        {label:'Référence Trajet / Ordre', name:'tripRef', placeholder:'Ex: TRJ-9081'},
+        {label:'Conditions de Règlement', name:'terms', options:['Paiement à 30 jours','Paiement à 60 jours','Comptant à la livraison']}
+      ]);
+    }
+
+    function openPaymentModal(invoiceRef) {
+      openModal(`Enregistrer Règlement ${invoiceRef}`, 'Saisissez l\'encaissement reçu du client.', 'payment', [
+        {label:'Mode de Paiement', name:'method', options:['Virement Bancaire (BMCE/Attijari)','Chèque Bancaire','Effet de Commerce']},
+        {label:'Numéro de Pièce / Chèque', name:'reference', placeholder:'Ex: VIR-882910'},
+        {label:'Date d’Encaissement', name:'payDate', type:'date'}
+      ]);
+    }
+
+    function openEmployeePaymentModal(employeeName, salary, button) {
+      employeePaymentRow = button.closest('tr');
+      openModal(`Paiement du salaire - ${employeeName}`,
+        `Enregistrez le paiement du salaire de ${salary}.`,
+        'employeePayment', [
+          {label:'Employé', name:'employeeName', value:employeeName},
+          {label:'Montant Net (MAD)', name:'salaryAmount', value:salary},
+          {label:'Mode de Paiement', name:'employeeMethod', options:['Virement bancaire','Chèque','Espèces']},
+          {label:'Date de Paiement', name:'employeePayDate', type:'date'},
+          {label:'Référence du Paiement', name:'employeeReference', placeholder:'Ex: VIR-SAL-2026-001'}
+        ]);
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').close();
+    }
+
+    function submitModal(event) {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target).entries());
+      
+      if (modalMode === 'invoice') {
+        const ht = parseFloat(values.amountHT) || 0;
+        const tva = Math.round(ht * 0.14);
+        const ttc = ht + tva;
+        const table = document.querySelector('#invoicesTable tbody');
+        const row = table.insertRow(0);
+        const ref = `FACT-2026-00${table.rows.length}`;
+        row.innerHTML = `
+          <td class="font-bold text-slate-800">${ref}</td>
+          <td>${values.client}</td>
+          <td>Aujourd'hui</td>
+          <td>Sous 30j</td>
+          <td>${ht.toLocaleString('fr-MA')} MAD</td>
+          <td>${tva.toLocaleString('fr-MA')} MAD</td>
+          <td class="font-bold text-slate-900">${ttc.toLocaleString('fr-MA')} MAD</td>
+          <td><span class="status blue">En attente</span></td>
+          <td><button class="text-orange-600 font-bold text-xs" onclick="openPaymentModal('${ref}')">Régler</button></td>
+        `;
+        showToast(`Facture ${ref} émise pour ${values.client} (${ttc} MAD TTC).`);
+      } else if (modalMode === 'payment') {
+        showToast(`Règlement enregistré avec succès pour la facture.`);
+      } else if (modalMode === 'employeePayment') {
+        if (employeePaymentRow) {
+          const statusCell = employeePaymentRow.cells[5];
+          const actionCell = employeePaymentRow.cells[6];
+          statusCell.innerHTML = '<span class="status green">Payé</span>';
+          actionCell.innerHTML = '<span class="text-xs text-slate-400">Réglé</span>';
+          const paid = document.querySelectorAll('#employeePaymentsTable tbody .status.green').length;
+          const pending = document.querySelectorAll('#employeePaymentsTable tbody .status.amber').length;
+          document.getElementById('employeePaidCount').textContent = `${paid} employés`;
+          document.getElementById('employeePendingCount').textContent = `${pending} employés`;
+        }
+        showToast(`Paiement du salaire de ${values.employeeName} enregistré (${values.salaryAmount} MAD) par ${values.employeeMethod}.`);
+        employeePaymentRow = null;
+      }
+      closeModal();
+      event.target.reset();
+    }
+
+    let pendingCount = 3;
+    let pendingSum = 4850;
+
+    function processExpense(id, approved) {
+      const card = document.getElementById(`expense-${id}`);
+      if (card) {
+        let expenseVal = id === 1 ? 1500 : id === 2 ? 350 : 3000;
+        pendingCount--;
+        pendingSum -= expenseVal;
+        
+        document.getElementById('pendingCount').textContent = `${pendingCount} reçus`;
+        document.getElementById('pendingAmount').textContent = `${pendingSum.toLocaleString('fr-MA')} MAD`;
+        document.getElementById('expenseBadge').textContent = pendingCount;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3 p-2">
+            <span class="w-10 h-10 rounded-full ${approved ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} grid place-items-center shrink-0">
+              <i class="fa-solid ${approved ? 'fa-check' : 'fa-xmark'}"></i>
+            </span>
+            <div>
+              <p class="font-bold text-sm text-slate-800">${approved ? 'Dépense Validée & Comptabilisée' : 'Dépense Rejetée'}</p>
+              <p class="text-xs text-slate-500 mt-0.5">${approved ? `Montant de ${expenseVal} MAD imputé au compte de charge.` : 'Le chauffeur a été notifié du motif de rejet.'}</p>
+            </div>
+          </div>
+        `;
+        showToast(approved ? `Dépense de ${expenseVal} MAD validée.` : `Dépense rejetée.`);
+      }
+    }
+
+    function exportGeneralLedger() {
+      const rows = [
+        ['Date', 'Journal', 'Compte', 'Libelle', 'Debit MAD', 'Credit MAD'],
+        ['28/10/2026', 'VT', '342100', 'Facture FACT-2026-001 LogiMaroc', '24000', '0'],
+        ['28/10/2026', 'VT', '712100', 'Facture FACT-2026-001 LogiMaroc HT', '0', '21052'],
+        ['28/10/2026', 'VT', '445500', 'TVA 14% Facture FACT-2026-001', '0', '2948'],
+        ['27/10/2026', 'AC', '612200', 'Recu Gazole M. Bennani', '1500', '0']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'grand-livre-general.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Export CSV du Grand Livre généré.');
+    }
+
+    function exportAgingReport() {
+      const rows = [
+        ['Client', 'Encours Total', 'Non Echu', '30-60 Jours', '60-90 Jours', '>90 Jours'],
+        ['Atlas Prime Transports', '45000', '0', '45000', '0', '0'],
+        ['Souss Express Logistique', '20400', '0', '0', '20400', '0'],
+        ['LogiMaroc SARL', '24000', '24000', '0', '0', '0']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'balance-agee-clients.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Export CSV de la Balance Âgée généré.');
+    }
+
+    function exportExpenseAudit() {
+      const rows = [
+        ['Trajet', 'Chauffeur', 'Type', 'Station/Fournisseur', 'Montant MAD', 'Statut'],
+        ['TRJ-9081', 'Mohammed Bennani', 'Gazole', 'Afriquia Mohammedia', '1500', 'En attente'],
+        ['TRJ-9082', 'Abderrahim El Amrani', 'Peage', 'ADM A1', '350', 'En attente'],
+        ['TRJ-9083', 'Youssef Amrani', 'Reparation', 'Shell Rabat', '3000', 'En attente']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'recus-depenses-audit.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Export CSV des dépenses et reçus généré.');
+    }
+
+    function logout() {
+      if (confirm('Déconnexion de l’Espace Comptabilité & Finance ?')) showToast('Session fermée.');
+    }
+
+    document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('fr-MA', {dateStyle:'full'}).format(new Date());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') toggleSidebar(false);
+    });
+  </script>
+</body>
+</html>
