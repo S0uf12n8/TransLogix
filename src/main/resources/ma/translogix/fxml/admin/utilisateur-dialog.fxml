@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- User form, shown in a dialog by UtilisateursController (mockup: #actionModal).
+     Buttons (Annuler / Confirmer) are added by the controller. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.admin.UtilisateurFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="460" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="FORMULAIRE" styleClass="eyebrow"/>
+            <Label fx:id="titre" text="Nouvel utilisateur" styleClass="dialog-title"/>
+            <Label fx:id="description" text="Saisissez les informations ci-dessous." wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <VBox spacing="6">
+                <Label text="Nom" styleClass="form-label"/>
+                <TextField fx:id="champNom" promptText="Ex. : El Idrissi" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="Pr&#233;nom" styleClass="form-label"/>
+                <TextField fx:id="champPrenom" promptText="Ex. : Amine" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="Email" styleClass="form-label"/>
+                <TextField fx:id="champEmail" promptText="Ex. : amine@translogix.ma" styleClass="search-field"/>
+            </VBox>
+            <VBox fx:id="blocMotDePasse" spacing="6">
+                <Label text="Mot de passe (8 caract&#232;res minimum)" styleClass="form-label"/>
+                <PasswordField fx:id="champMotDePasse" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="R&#244;le" styleClass="form-label"/>
+                <ComboBox fx:id="champRole" promptText="Choisir un r&#244;le" maxWidth="Infinity" styleClass="form-combo"/>
+            </VBox>
+            <CheckBox fx:id="champActif" text="Compte actif" selected="true"/>
+            <Label text="Les comptes sont gard&#233;s en m&#233;moire tant que la base de donn&#233;es n'est pas branch&#233;e." wrapText="true" styleClass="form-note"/>
+        </VBox>
+    </content>
+</DialogPane>

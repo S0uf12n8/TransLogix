@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>Dispatcher Desk | Translogix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root{--blue:#2563eb;--blue-dark:#1d4ed8;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f8fafc}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .sidebar{background:#0f172a;color:#e2e8f0;width:258px;transition:transform .25s ease;z-index:40}
+    .nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:10px;text-align:left;color:#94a3b8;font-size:13px;transition:.18s}
+    .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-item:hover{background:#1e293b;color:white}
+    .nav-item.active{background:var(--blue);color:white;box-shadow:0 5px 14px #2563eb33}
+    .tab-content{display:none;animation:fade .18s ease}
+    .tab-content.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #0f172a05}
+    .kpi{position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:-20px;top:-24px;width:90px;height:90px;border-radius:50%;background:var(--tint,#eff6ff)}
+    .kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tint,#eff6ff);color:var(--accent,var(--blue))}
+    .section-title{font-size:20px;font-weight:750;letter-spacing:-.035em}
+    .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#64748b}
+    .btn-primary{background:var(--blue);color:white;border:1px solid var(--blue);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s}
+    .btn-primary:hover{background:var(--blue-dark)}
+    .btn-secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:650;color:#334155}
+    .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:650px}
+    th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;font-weight:750;padding:13px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:14px 16px;border-bottom:1px solid #eef2f7;font-size:12px;color:#475569;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#f8fafc}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .green{background:#dcfce7;color:#15803d}.amber{background:#fef3c7;color:#b45309}.red{background:#fee2e2;color:#b91c1c}.blue{background:#dbeafe;color:#1d4ed8}.purple{background:#f3e8ff;color:#7e22ce}.gray{background:#f1f5f9;color:#475569}
+    .search{border:1px solid var(--line);border-radius:9px;background:white;padding:9px 12px;font-size:12px;outline:none;width:100%}
+    .search:focus,input:focus,select:focus,textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 3px #bfdbfeaa;outline:none}
+    .progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;border-radius:99px;background:var(--blue)}
+    .mobile-overlay{display:none}
+    @media(max-width:900px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0f172a88;z-index:30}.main-area{width:100%}.desktop-only{display:none}}
+    @media(max-width:640px){.content-pad{padding:16px!important}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.section-title{font-size:18px}.topbar-meta{display:none}}
+    @media print{.sidebar,.topbar-actions,.no-print{display:none!important}.main-area{overflow:visible!important}.content-scroll{overflow:visible!important;padding:0!important}.tab-content{display:none!important}.tab-content.active{display:block!important}.panel{box-shadow:none;break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar(false)"></div>
+  <div class="flex min-h-screen">
+    <aside id="sidebar" class="sidebar flex flex-col shrink-0 min-h-screen">
+      <div class="px-5 py-6 flex items-center gap-3 border-b border-white/10">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-lg shadow-blue-900/30"><img src="./logo.jpeg" alt="Translogix logo" class="w-full h-full object-cover"></div>
+        <div><h1 class="font-extrabold text-white tracking-tight">Dispatcher Desk</h1><p class="text-[10px] text-slate-400 mt-1">TRANSLOGIX · EXPLOITATION LOGISTIQUE</p></div>
+        <button class="ml-auto lg:hidden text-slate-300" onclick="toggleSidebar(false)" aria-label="Fermer le menu"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-4 py-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 grid place-items-center font-bold text-xs">KA</div>
+          <div class="min-w-0 flex-1"><p class="text-xs font-bold text-white">K. Alami</p><p class="text-[10px] text-slate-400 mt-1">Chef Repartiteur / Dispatcher</p></div>
+          <span class="w-2 h-2 bg-emerald-400 rounded-full" title="En ligne"></span>
+        </div>
+      </div>
+      <nav class="px-3 py-2 space-y-1 flex-1" aria-label="Navigation principale">
+        <p class="eyebrow px-3 pb-2 pt-1 text-slate-500">Poste de commande</p>
+        <button class="nav-item active" data-tab="active-orders" onclick="switchTab('active-orders',this)"><i class="fa-solid fa-route"></i><span>Ordres & Trajets</span><span class="ml-auto text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">6 en cours</span></button>
+        <button class="nav-item" data-tab="fleet-map" onclick="switchTab('fleet-map',this)"><i class="fa-solid fa-truck-moving"></i><span>Suivi Flotte & GPS</span></button>
+        <button class="nav-item" data-tab="driver-assign" onclick="switchTab('driver-assign',this)"><i class="fa-solid fa-user-gear"></i><span>Planning Chauffeurs</span></button>
+        <button class="nav-item" data-tab="incidents" onclick="switchTab('incidents',this)"><i class="fa-solid fa-triangle-exclamation"></i><span>Incidents & Alertes</span><span class="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">2</span></button>
+        <button class="nav-item" data-tab="fuel-logs" onclick="switchTab('fuel-logs',this)"><i class="fa-solid fa-gas-pump"></i><span>Carburant & Bons</span></button>
+        <div class="mt-6 px-3 py-4 rounded-xl bg-gradient-to-br from-blue-500/15 to-transparent border border-blue-400/15">
+          <i class="fa-solid fa-satellite-dish text-blue-300 mb-2"></i><p class="text-xs font-semibold text-white">Liaison Chauffeurs</p><p class="text-[10px] leading-5 text-slate-400 mt-1">Transmettez les ordres de mission directement aux téléphones des conducteurs.</p>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <button onclick="logout()" class="nav-item hover:bg-red-500/15 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Déconnexion</span></button>
+        <p class="text-[10px] text-slate-600 px-3 mt-3">Dispatcher Desk v2.0 · Démo</p>
+      </div>
+    </aside>
+
+    <main class="main-area flex-1 min-w-0 flex flex-col min-h-screen">
+      <header class="h-[72px] bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <button class="lg:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600" onclick="toggleSidebar(true)" aria-label="Ouvrir le menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="min-w-0"><p id="pageKicker" class="eyebrow">Opérations en direct</p><h2 id="pageTitle" class="font-bold text-sm md:text-base truncate">Ordres & Trajets</h2></div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4 topbar-actions">
+          <div class="topbar-meta text-right"><p class="text-xs font-semibold text-slate-700" id="currentDate"></p><p class="text-[10px] text-slate-400 mt-1">Statut réseau: Optimal</p></div>
+          <button class="btn-primary" onclick="openTripModal()"><i class="fa-solid fa-plus mr-2"></i>Nouvelle affectation</button>
+          <button class="w-9 h-9 rounded-xl border border-slate-200 text-slate-500 relative" aria-label="Notifications" onclick="showToast('Alertes: RETARD sur TRJ-9081 (Bouchon Mohammedia).')"><i class="fa-regular fa-bell"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white"></span></button>
+        </div>
+      </header>
+
+      <div class="content-scroll content-pad p-5 md:p-8 flex-1 max-w-[1600px] w-full mx-auto">
+        <section id="tab-active-orders" class="tab-content active space-y-6">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div><p class="eyebrow mb-2">Suivi opérationnel</p><h1 class="section-title">Tableau de Dispatching <span>🚛</span></h1><p class="text-sm text-slate-500 mt-1">Gestion en temps réel des départs, livraisons et affectations.</p></div>
+            <div class="flex gap-2">
+              <button class="btn-secondary" onclick="exportDispatchCSV()"><i class="fa-solid fa-file-csv mr-2"></i>Exporter la feuille de route</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 kpi-grid">
+            <div class="panel kpi p-5" style="--tint:#dbeafe;--accent:#2563eb"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Missions en cours</p><p class="text-2xl font-extrabold mt-3 tracking-tight">6 <span class="text-xs font-semibold text-slate-400">camions</span></p></div><div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div></div><p class="text-[11px] mt-4 text-blue-600 font-semibold"><i class="fa-solid fa-location-arrow mr-1"></i>3 sur autoroute A1</p></div>
+            <div class="panel kpi p-5" style="--tint:#dcfce7;--accent:#16a34a"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Camions dispo</p><p class="text-2xl font-extrabold mt-3">12 <span class="text-sm font-semibold text-slate-400">/ 22</span></p></div><div class="kpi-icon"><i class="fa-solid fa-square-check"></i></div></div><div class="progress mt-4"><span style="width:54%"></span></div><p class="text-[11px] mt-2 text-slate-400">Prets pour affectation</p></div>
+            <div class="panel kpi p-5" style="--tint:#fef3c7;--accent:#d97706"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">En attente de quai</p><p class="text-2xl font-extrabold mt-3">4 <span class="text-xs font-semibold text-slate-400">chargements</span></p></div><div class="kpi-icon"><i class="fa-solid fa-boxes-packing"></i></div></div><p class="text-[11px] mt-4 text-amber-600 font-semibold"><i class="fa-solid fa-clock mr-1"></i>Port de Casablanca</p></div>
+            <div class="panel kpi p-5" style="--tint:#fee2e2;--accent:#dc2626"><div class="flex items-start justify-between"><div><p class="text-xs font-semibold text-slate-500">Alertes Retard / Incidents</p><p class="text-2xl font-extrabold mt-3">2 <span class="text-sm font-semibold text-slate-400">cas</span></p></div><div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div></div><p class="text-[11px] mt-4 text-red-600 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i>1 panne mineure + 1 retard</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Ordres de Transport Actifs</h3><p class="text-xs text-slate-400 mt-1">Consultez et modifiez les missions programmées</p></div>
+              <div class="flex items-center gap-2">
+                <input class="search max-w-xs" placeholder="Rechercher trajet, chauffeur, ville..." oninput="filterTable(this,'ordersTable')">
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="ordersTable">
+                <thead>
+                  <tr>
+                    <th>Réf. Mission</th>
+                    <th>Chauffeur & Camion</th>
+                    <th>Itinéraire</th>
+                    <th>Cargaison</th>
+                    <th>ETA / Arrivée prél.</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9081</td>
+                    <td><p class="font-semibold text-slate-700">Mohammed Bennani</p><p class="text-[10px] text-slate-400 mt-0.5">12345-A-6 · Volvo FH</p></td>
+                    <td>Casablanca <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Tanger Med</td>
+                    <td>24 T · Produits Frais</td>
+                    <td class="font-semibold text-slate-700">18:30 (Retard +25m)</td>
+                    <td><span class="status amber">En route (Retard)</span></td>
+                    <td>
+                      <button class="text-blue-600 font-bold text-xs hover:underline mr-2" onclick="showToast('SMS de relance envoyé au chauffeur Bennani.')">Contacter</button>
+                      <button class="text-slate-600 font-bold text-xs hover:underline" onclick="openUpdateStatusModal('TRJ-9081')">Éditer</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9082</td>
+                    <td><p class="font-semibold text-slate-700">Abderrahim El Amrani</p><p class="text-[10px] text-slate-400 mt-0.5">67890-B-2 · Scania R500</p></td>
+                    <td>Agadir <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Marrakech</td>
+                    <td>18 T · Agrumes</td>
+                    <td class="font-semibold text-slate-700">16:15 (À l'heure)</td>
+                    <td><span class="status green">Terminé</span></td>
+                    <td>
+                      <button class="text-blue-600 font-bold text-xs hover:underline mr-2" onclick="showToast('Ordre archivé avec succès.')">Clôturer</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9083</td>
+                    <td><p class="font-semibold text-slate-700">Youssef Amrani</p><p class="text-[10px] text-slate-400 mt-0.5">45678-C-1 · MAN TGX</p></td>
+                    <td>Rabat <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Fès</td>
+                    <td>30 T · Matériaux Construction</td>
+                    <td class="font-semibold text-slate-700">Demain 09:00</td>
+                    <td><span class="status blue">Planifié</span></td>
+                    <td>
+                      <button class="text-blue-600 font-bold text-xs hover:underline mr-2" onclick="showToast('Ordre transmis au téléphone du chauffeur.')">Envoyer Ordre</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">TRJ-9084</td>
+                    <td><p class="font-semibold text-slate-700">Karim El Idrissi</p><p class="text-[10px] text-slate-400 mt-0.5">11223-D-8 · DAF XF</p></td>
+                    <td>Jorf Lasfar <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> Casablanca</td>
+                    <td>28 T · Engrais</td>
+                    <td class="font-semibold text-slate-700">Chargement en cours</td>
+                    <td><span class="status purple">Au Quai</span></td>
+                    <td>
+                      <button class="text-blue-600 font-bold text-xs hover:underline" onclick="showToast('Validation du bon de pesée.')">Bon Pesée</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-fleet-map" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Cartographie & Geofencing</p><h1 class="section-title">Suivi Flotte GPS en temps réel</h1><p class="text-sm text-slate-500 mt-1">Localisation des véhicules et état des balises.</p></div>
+            <button class="btn-secondary" onclick="showToast('Actualisation des positions GPS...')"><i class="fa-solid fa-rotate-right mr-2"></i>Rafraîchir GPS</button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div class="panel lg:col-span-2 p-4 flex flex-col justify-between min-h-[420px] bg-slate-900 text-white relative overflow-hidden rounded-2xl">
+              <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+              <div class="relative z-10 flex justify-between items-center bg-slate-800/80 p-3 rounded-xl border border-slate-700 backdrop-blur">
+                <div class="flex items-center gap-2 text-xs font-semibold">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Flux GPS actif · 18 véhicules connectés</span>
+                </div>
+                <span class="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-300">Carte Maroc Vectorielle</span>
+              </div>
+              
+              <div class="relative z-10 my-auto text-center py-12">
+                <i class="fa-solid fa-map-location-dot text-6xl text-blue-500/40 mb-3"></i>
+                <p class="font-bold text-base text-slate-200">Simulation de Carte GPS interactive</p>
+                <p class="text-xs text-slate-400 max-w-md mx-auto mt-1">Axe Casablanca - Rabat - Tanger : 4 véhicules en mouvement.<br>Axe Agadir - Marrakech : 2 véhicules en transit.</p>
+                <div class="mt-4 flex justify-center gap-3">
+                  <button class="btn-primary text-xs" onclick="showToast('Agrandissement de la carte GPS')"><i class="fa-solid fa-expand mr-1"></i> Plein écran</button>
+                  <button class="btn-secondary text-xs bg-slate-800 text-slate-200 border-slate-700" onclick="showToast('Affichage du trafic routier A1/A3')"><i class="fa-solid fa-layer-group mr-1"></i> Calque Trafic</button>
+                </div>
+              </div>
+
+              <div class="relative z-10 grid grid-cols-3 gap-2 text-center text-xs bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+                <div><p class="text-slate-400 text-[10px]">Vitesse Moyenne</p><p class="font-bold text-white text-sm">74 km/h</p></div>
+                <div><p class="text-slate-400 text-[10px]">Arrêts non planifiés</p><p class="font-bold text-amber-400 text-sm">1 détecté</p></div>
+                <div><p class="text-slate-400 text-[10px]">Hors Zone (Geofence)</p><p class="font-bold text-emerald-400 text-sm">0</p></div>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-4">
+              <h3 class="font-bold text-sm">Positions GPS récentes</h3>
+              <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                <div class="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">12345-A-6 (Volvo FH)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>A1 Autoroute Kenitra · 82 km/h</p>
+                  </div>
+                  <span class="status green">En mouvement</span>
+                </div>
+                <div class="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">67890-B-2 (Scania R500)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-warehouse text-amber-500 mr-1"></i>Dépôt Marrakech · Moteur coupé</p>
+                  </div>
+                  <span class="status gray">À l'arrêt</span>
+                </div>
+                <div class="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">45678-C-1 (MAN TGX)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i>N1 Route Nationale Salé · 60 km/h</p>
+                  </div>
+                  <span class="status green">En mouvement</span>
+                </div>
+                <div class="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p class="font-bold text-xs text-slate-800">98765-B-2 (Scania R450)</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-wrench text-red-500 mr-1"></i>Garage Central Casablanca</p>
+                  </div>
+                  <span class="status red">Atelier</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-driver-assign" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Ressources & Disponibilité</p><h1 class="section-title">Planning & Affectation Chauffeurs</h1><p class="text-sm text-slate-500 mt-1">Attribuez les conducteurs aux tracteurs et vérifiez le temps de conduite.</p></div>
+            <button class="btn-primary" onclick="openDriverAssignModal()"><i class="fa-solid fa-link mr-2"></i>Assigner Chauffeur / Camion</button>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Conducteurs & Temps de Volant</h3><p class="text-xs text-slate-400 mt-1">Respect du temps de repos règlementaire</p></div>
+              <input class="search max-w-xs" placeholder="Filtrer chauffeur..." oninput="filterTable(this,'driverAssignTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="driverAssignTable">
+                <thead>
+                  <tr>
+                    <th>Chauffeur</th>
+                    <th>Camion Assigné</th>
+                    <th>Permis / Validité</th>
+                    <th>Heures Conduite (Aujourd'hui)</th>
+                    <th>Disponibilité</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">Mohammed Bennani</td>
+                    <td class="font-semibold text-slate-700">12345-A-6 (Volvo)</td>
+                    <td>Cat. EC · Valide 2028</td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="progress w-24"><span style="width:70%"></span></div>
+                        <span class="text-xs font-bold text-slate-700">5h 30m / 9h</span>
+                      </div>
+                    </td>
+                    <td><span class="status blue">En Conduite</span></td>
+                    <td><button class="text-blue-600 font-bold" onclick="showToast('Consultation du tachygraphe numérique.')">Tachygraphe</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Abderrahim El Amrani</td>
+                    <td class="font-semibold text-slate-700">67890-B-2 (Scania)</td>
+                    <td>Cat. C · Valide 2026</td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="progress w-24"><span style="width:90%; background:#dc2626"></span></div>
+                        <span class="text-xs font-bold text-red-600">8h 15m / 9h</span>
+                      </div>
+                    </td>
+                    <td><span class="status amber">Repos Requis</span></td>
+                    <td><button class="text-blue-600 font-bold" onclick="showToast('Pause obligatoire déclenchée.')">Notifier Pause</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Hassan Mansouri</td>
+                    <td class="font-semibold text-slate-700">Non assigné</td>
+                    <td>Cat. EC · Valide 2027</td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="progress w-24"><span style="width:0%"></span></div>
+                        <span class="text-xs font-bold text-slate-700">0h 00m</span>
+                      </div>
+                    </td>
+                    <td><span class="status green">Disponible</span></td>
+                    <td><button class="text-blue-600 font-bold" onclick="openTripModal('Hassan Mansouri')">Assigner Trajet</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-incidents" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Gestion des aléas</p><h1 class="section-title">Incidents & Retards de Route</h1><p class="text-sm text-slate-500 mt-1">Signalez et gérez les pannes, accidents ou blocages.</p></div>
+            <button class="btn-primary bg-red-600 hover:bg-red-700 border-red-600" onclick="openIncidentModal()"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Déclarer Incident</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="panel p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm text-slate-800">Incidents En Cours</h3>
+                <span class="status red">2 urgences</span>
+              </div>
+              <div class="p-4 rounded-xl border border-red-200 bg-red-50/50 space-y-2">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-xs text-red-900">Crevaison pneu arrière droit</span>
+                  <span class="text-[10px] font-semibold text-red-600">TRJ-9081</span>
+                </div>
+                <p class="text-xs text-slate-600">Camion 12345-A-6 arrêté sur l'A1 KM 42 près de Bouznika. Assistance pneumatique contactée.</p>
+                <div class="pt-2 flex gap-2">
+                  <button class="btn-secondary text-xs" onclick="showToast('Depanneur relancé à 14:35.')"><i class="fa-solid fa-phone mr-1"></i> Appeler Assistance</button>
+                  <button class="btn-primary text-xs bg-emerald-600 hover:bg-emerald-700 border-emerald-600" onclick="showToast('Incident marqué comme résolu.')">Résoudre</button>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
+                <div class="flex justify-between items-start">
+                  <span class="font-bold text-xs text-amber-900">Bouchon exceptionnel / Retard quai</span>
+                  <span class="text-[10px] font-semibold text-amber-600">TRJ-9084</span>
+                </div>
+                <p class="text-xs text-slate-600">Attente de plus de 2h à l'entrée du Port de Casablanca. ETA décalée à 19:00.</p>
+                <div class="pt-2 flex gap-2">
+                  <button class="btn-secondary text-xs" onclick="showToast('Client prévenu du retard par SMS/Email.')"><i class="fa-solid fa-envelope mr-1"></i> Prévenir Client</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-4">
+              <h3 class="font-bold text-sm">Procédure d'Urgence Dispatch</h3>
+              <ul class="text-xs text-slate-600 space-y-3 list-disc pl-4">
+                <li><b>Panne mécanique :</b> Contacter l'assistance 24/7 au 0800-XX-XX-XX et enregistrer la géolocalisation exacte.</li>
+                <li><b>Accident de circulation :</b> S'assurer de la sécurité du chauffeur, demander un constat amiable ou rapport de gendarmerie.</li>
+                <li><b>Rupture de chaîne du froid :</b> Contacter immédiatement le client et consigner la température enregistrée par la balise.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-fuel-logs" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Gestion Carburant & Péages</p><h1 class="section-title">Bons de Gazole & Cartes Autoroute</h1><p class="text-sm text-slate-500 mt-1">Émission et suivi des bons de carburant par mission.</p></div>
+            <button class="btn-primary" onclick="openFuelModal()"><i class="fa-solid fa-gas-pump mr-2"></i>Émettre Bon Gazole</button>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Historique des Ravitaillements</h3><p class="text-xs text-slate-400 mt-1">Suivi des consommations moyennes par camion</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher bon..." oninput="filterTable(this,'fuelTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="fuelTable">
+                <thead>
+                  <tr>
+                    <th>N° Bon</th>
+                    <th>Camion</th>
+                    <th>Chauffeur</th>
+                    <th>Station / Provider</th>
+                    <th>Litres</th>
+                    <th>Montant Est.</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">BON-8841</td>
+                    <td>12345-A-6</td>
+                    <td>Mohammed Bennani</td>
+                    <td>Afriquia Casablanca Route Zénata</td>
+                    <td>250 L</td>
+                    <td class="font-bold">3 250 MAD</td>
+                    <td><span class="status green">Validé Dispatch</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">BON-8842</td>
+                    <td>67890-B-2</td>
+                    <td>Abderrahim El Amrani</td>
+                    <td>TotalEnergies Agadir Entrée</td>
+                    <td>180 L</td>
+                    <td class="font-bold">2 340 MAD</td>
+                    <td><span class="status green">Validé Dispatch</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">BON-8843</td>
+                    <td>45678-C-1</td>
+                    <td>Youssef Amrani</td>
+                    <td>Shell Rabat Autoroute</td>
+                    <td>200 L</td>
+                    <td class="font-bold">2 600 MAD</td>
+                    <td><span class="status amber">En attente reça</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="pt-7 pb-2 text-center text-[10px] text-slate-400">© 2026 Translogix ERP · Module Repartiteur / Dispatcher · Données de démonstration.</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="actionModal" class="rounded-2xl p-0 w-[min(92vw,480px)] shadow-2xl backdrop:bg-slate-900/50">
+    <form id="modalForm" class="p-6" onsubmit="submitModal(event)">
+      <div class="flex items-start justify-between gap-4">
+        <div><p class="eyebrow" id="modalSub">Module Dispatching</p><h2 id="modalTitle" class="text-lg font-extrabold mt-1">Nouvel Ordre</h2><p id="modalDescription" class="text-xs text-slate-500 mt-2">Complétez les champs ci-dessous.</p></div>
+        <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalFields" class="space-y-4 mt-5"></div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn-primary">Valider & Transmettre</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">Simulation ERP : L'action générera une notification de démonstration.</p>
+    </form>
+  </dialog>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageNames = {
+      'active-orders': ['Opérations en direct', 'Ordres & Trajets'],
+      'fleet-map': ['Cartographie & Geofencing', 'Suivi Flotte GPS'],
+      'driver-assign': ['Ressources & Disponibilité', 'Planning Chauffeurs'],
+      'incidents': ['Gestion des aléas', 'Incidents & Retards'],
+      'fuel-logs': ['Carburant & Péages', 'Bons de Gazole']
+    };
+    let modalMode = '';
+    let toastTimer;
+
+    function switchTab(tabId, element) {
+      const target = document.getElementById(`tab-${tabId}`);
+      if (!target) return;
+      document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-tab]').forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-current', 'false');
+      });
+      target.classList.add('active');
+      const navButton = element || document.querySelector(`[data-tab="${tabId}"]`);
+      if (navButton) {
+        navButton.classList.add('active');
+        navButton.setAttribute('aria-current', 'page');
+      }
+      document.getElementById('pageKicker').textContent = pageNames[tabId][0];
+      document.getElementById('pageTitle').textContent = pageNames[tabId][1];
+      toggleSidebar(false);
+      document.querySelector('.content-scroll').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', shouldOpen);
+      overlay.classList.toggle('show', shouldOpen);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function filterTable(input, tableId) {
+      const query = input.value.trim().toLocaleLowerCase('fr');
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+      rows.forEach(row => row.hidden = !row.textContent.toLocaleLowerCase('fr').includes(query));
+    }
+
+    function openModal(title, description, mode, fields) {
+      modalMode = mode;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      const container = document.getElementById('modalFields');
+      container.innerHTML = '';
+      fields.forEach(field => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'block text-xs font-semibold text-slate-600';
+        wrapper.textContent = field.label;
+        let input;
+        if (field.options) {
+          input = document.createElement('select');
+          input.className = 'search mt-1.5';
+          field.options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            input.appendChild(option);
+          });
+        } else if(field.type === 'textarea') {
+          input = document.createElement('textarea');
+          input.rows = 3;
+          input.className = 'search mt-1.5';
+          input.placeholder = field.placeholder || '';
+        } else {
+          input = document.createElement('input');
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          input.className = 'search mt-1.5';
+        }
+        input.name = field.name;
+        if(field.value) input.value = field.value;
+        input.required = true;
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+      });
+      document.getElementById('actionModal').showModal();
+    }
+
+    function openTripModal(presetDriver = '') {
+      openModal('Nouvelle Affectation de Transport', 'Créez un ordre de mission et affectez camion + chauffeur.', 'trip', [
+        {label:'Référence Trajet', name:'ref', placeholder:'Ex: TRJ-9085'},
+        {label:'Chauffeur', name:'driver', placeholder:'Nom du chauffeur', value: presetDriver},
+        {label:'Tracteur / Camion', name:'truck', options:['12345-A-6 (Volvo FH)','67890-B-2 (Scania R500)','45678-C-1 (MAN TGX)','11223-D-8 (DAF XF)']},
+        {label:'Ville Départ', name:'origin', placeholder:'Ex: Casablanca Port'},
+        {label:'Ville Arrivée', name:'destination', placeholder:'Ex: Tanger Med Quay 2'},
+        {label:'Cargaison / Poids', name:'cargo', placeholder:'Ex: 22 Tonnes - Marchandises Diverses'}
+      ]);
+    }
+
+    function openIncidentModal() {
+      openModal('Déclaration d’Incident de Route', 'Consignez un aléa pour alerter le reste de l’équipe.', 'incident', [
+        {label:'Référence Mission / Trajet', name:'ref', placeholder:'Ex: TRJ-9081'},
+        {label:'Type d’incident', name:'type', options:['Panne Mécanique','Accident / Choc','Retard Quai / Chargement','Contrôle Routier','Rupture Frigo']},
+        {label:'Description & Localisation', name:'desc', type:'textarea', placeholder:'Précisez l’emplacement exact et l’impact sur la livraison...'}
+      ]);
+    }
+
+    function openFuelModal() {
+      openModal('Émission d’un Bon de Gazole', 'Générez un bon utilisable par le chauffeur en station.', 'fuel', [
+        {label:'Chauffeur', name:'driver', placeholder:'Nom du chauffeur'},
+        {label:'Matricule Camion', name:'truck', placeholder:'Ex: 12345-A-6'},
+        {label:'Volume Estimé (Litres)', name:'liters', type:'number', placeholder:'Ex: 200'},
+        {label:'Réseau de Station', name:'station', options:['Afriquia','TotalEnergies','Shell','Winxo']}
+      ]);
+    }
+
+    function openDriverAssignModal() {
+      openModal('Attribuer un Chauffeur', 'Modifiez le camion affecté à un conducteur.', 'assign', [
+        {label:'Chauffeur', name:'driver', placeholder:'Ex: Hassan Mansouri'},
+        {label:'Véhicule à attribuer', name:'truck', options:['12345-A-6 (Volvo FH)','67890-B-2 (Scania R500)','45678-C-1 (MAN TGX)','98765-B-2 (Scania R450)']}
+      ]);
+    }
+
+    function openUpdateStatusModal(tripRef) {
+      openModal(`Mise à jour statut ${tripRef}`, 'Ajustez l’avancement de la mission.', 'status', [
+        {label:'Nouveau Statut', name:'status', options:['Chargement en cours','En Route (À l’heure)','En Route (Retardé)','Au Quai Arrivée','Livraison Effectuée / Terminé']},
+        {label:'Note / Commentaire ETA', name:'note', placeholder:'Ex: Arrivée repoussée de 15 min'}
+      ]);
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').close();
+    }
+
+    function submitModal(event) {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target).entries());
+      
+      if (modalMode === 'trip') {
+        const table = document.querySelector('#ordersTable tbody');
+        const row = table.insertRow(0);
+        row.innerHTML = `
+          <td class="font-bold text-slate-800">${values.ref}</td>
+          <td><p class="font-semibold text-slate-700">${values.driver}</p><p class="text-[10px] text-slate-400 mt-0.5">${values.truck}</p></td>
+          <td>${values.origin} <i class="fa-solid fa-arrow-right text-slate-300 mx-1"></i> ${values.destination}</td>
+          <td>${values.cargo}</td>
+          <td class="font-semibold text-slate-700">Aujourd'hui (Planifié)</td>
+          <td><span class="status blue">Planifié</span></td>
+          <td><button class="text-blue-600 font-bold text-xs" onclick="showToast('Ordre envoyé au chauffeur.')">Notifier</button></td>
+        `;
+        showToast(`Ordre de transport ${values.ref} créé et transmis au chauffeur ${values.driver}.`);
+      } else if (modalMode === 'incident') {
+        showToast(`Incident enregistré pour la mission ${values.ref}. L'équipe d'exploitation est notifiée.`);
+      } else if (modalMode === 'fuel') {
+        showToast(`Bon de gazole émis pour ${values.driver} (${values.liters} L chez ${values.station}).`);
+      } else {
+        showToast('Action enregistrée avec succès (mode démonstration).');
+      }
+      closeModal();
+      event.target.reset();
+    }
+
+    function exportDispatchCSV() {
+      const rows = [
+        ['Ref Mission', 'Chauffeur', 'Camion', 'Depart', 'Arrivee', 'Statut'],
+        ['TRJ-9081', 'Mohammed Bennani', '12345-A-6', 'Casablanca', 'Tanger Med', 'En route (Retard)'],
+        ['TRJ-9082', 'Abderrahim El Amrani', '67890-B-2', 'Agadir', 'Marrakech', 'Termine'],
+        ['TRJ-9083', 'Youssef Amrani', '45678-C-1', 'Rabat', 'Fes', 'Planifie']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'feuille-de-route-dispatch.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Feuille de route exportée au format CSV.');
+    }
+
+    function logout() {
+      if (confirm('Déconnexion de la session Dispatcher ?')) showToast('Déconnexion effectuée.');
+    }
+
+    document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('fr-MA', {dateStyle:'full'}).format(new Date());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') toggleSidebar(false);
+    });
+  </script>
+</body>
+</html>

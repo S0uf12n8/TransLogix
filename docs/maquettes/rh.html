@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f97316">
+  <title>Espace RH | Translogix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root{--orange:#f97316;--orange-dark:#ea580c;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--surface:#fff;--canvas:#f5f7fb}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .sidebar{background:#172033;color:#e2e8f0;width:258px;transition:transform .25s ease;z-index:40}
+    .nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:10px;text-align:left;color:#aeb8c9;font-size:13px;transition:.18s}
+    .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-item:hover{background:#263248;color:white}
+    .nav-item.active{background:var(--orange);color:white;box-shadow:0 5px 14px #f9731633}
+    .tab-content{display:none;animation:fade .18s ease}
+    .tab-content.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px #17203305}
+    .kpi{position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:-20px;top:-24px;width:90px;height:90px;border-radius:50%;background:var(--tint,#fff1e7)}
+    .kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--tint,#fff1e7);color:var(--accent,var(--orange))}
+    .section-title{font-size:20px;font-weight:750;letter-spacing:-.035em}
+    .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.09em;color:#7c8799}
+    .btn-primary{background:var(--orange);color:white;border:1px solid var(--orange);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s}
+    .btn-primary:hover{background:var(--orange-dark)}
+    .btn-secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12px;font-weight:650;color:#334155}
+    .btn-secondary:hover{background:#f8fafc;border-color:#cbd5e1}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:650px}
+    th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.07em;text-align:left;font-weight:750;padding:13px 16px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:14px 16px;border-bottom:1px solid #eef2f7;font-size:12px;color:#475569;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbfcfe}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:750;white-space:nowrap}
+    .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .green{background:#dcfce7;color:#15803d}.amber{background:#fef3c7;color:#b45309}.red{background:#fee2e2;color:#b91c1c}.blue{background:#dbeafe;color:#1d4ed8}.purple{background:#f3e8ff;color:#7e22ce}.gray{background:#f1f5f9;color:#475569}
+    .search{border:1px solid var(--line);border-radius:9px;background:white;padding:9px 12px;font-size:12px;outline:none;width:100%}
+    .search:focus,input:focus,select:focus,textarea:focus{border-color:#fb923c;box-shadow:0 0 0 3px #fed7aa66;outline:none}
+    .progress{height:6px;border-radius:99px;background:#eef2f7;overflow:hidden}.progress span{display:block;height:100%;border-radius:99px;background:var(--orange)}
+    .mobile-overlay{display:none}
+    @media(max-width:900px){.sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobile-overlay.show{display:block;position:fixed;inset:0;background:#0f172a88;z-index:30}.main-area{width:100%}.desktop-only{display:none}}
+    @media(max-width:640px){.content-pad{padding:16px!important}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.section-title{font-size:18px}.topbar-meta{display:none}}
+    @media print{.sidebar,.topbar-actions,.no-print{display:none!important}.main-area{overflow:visible!important}.content-scroll{overflow:visible!important;padding:0!important}.tab-content{display:none!important}.tab-content.active{display:block!important}.panel{box-shadow:none;break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="mobileOverlay" class="mobile-overlay" onclick="toggleSidebar(false)"></div>
+  <div class="flex min-h-screen">
+    <aside id="sidebar" class="sidebar flex flex-col shrink-0 min-h-screen">
+      <div class="px-5 py-6 flex items-center gap-3 border-b border-white/10">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-lg shadow-orange-900/20"><img src="./logo.jpeg" alt="Translogix logo" class="w-full h-full object-cover"></div>
+        <div><h1 class="font-extrabold text-white tracking-tight">Portal RH</h1><p class="text-[10px] text-slate-400 mt-1">TRANSLOGIX · MAROC</p></div>
+        <button class="ml-auto lg:hidden text-slate-300" onclick="toggleSidebar(false)" aria-label="Fermer le menu"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-4 py-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 grid place-items-center font-bold text-xs">MC</div>
+          <div class="min-w-0 flex-1"><p class="text-xs font-bold text-white">Mme. Chraïbi</p><p class="text-[10px] text-slate-400 mt-1">Responsable RH</p></div>
+          <span class="w-2 h-2 bg-emerald-400 rounded-full" title="En ligne"></span>
+        </div>
+      </div>
+      <nav class="px-3 py-2 space-y-1 flex-1" aria-label="Navigation principale">
+        <p class="eyebrow px-3 pb-2 pt-1 text-slate-500">Capital Humain</p>
+        <button class="nav-item active" data-tab="rh-dashboard" onclick="switchTab('rh-dashboard',this)"><i class="fa-solid fa-chart-pie"></i><span>Tableau de bord RH</span></button>
+        <button class="nav-item" data-tab="staff-directory" onclick="switchTab('staff-directory',this)"><i class="fa-solid fa-id-card"></i><span>Chauffeurs & Employés</span></button>
+        <button class="nav-item" data-tab="compliance" onclick="switchTab('compliance',this)"><i class="fa-solid fa-shield-halved"></i><span>Conformité & Permis</span><span class="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">3</span></button>
+        <button class="nav-item" data-tab="leaves" onclick="switchTab('leaves',this)"><i class="fa-solid fa-calendar-check"></i><span>Congés & Absences</span><span class="ml-auto text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full">2</span></button>
+        <button class="nav-item" data-tab="payroll" onclick="switchTab('payroll',this)"><i class="fa-solid fa-hand-holding-dollar"></i><span>Paie & Prime Trajet</span></button>
+        <button class="nav-item" data-tab="recruitment" onclick="switchTab('recruitment',this)"><i class="fa-solid fa-user-plus"></i><span>Recrutement & Onboarding</span></button>
+        <div class="mt-6 px-3 py-4 rounded-xl bg-gradient-to-br from-orange-500/15 to-transparent border border-orange-400/15">
+          <i class="fa-solid fa-circle-check text-orange-300 mb-2"></i><p class="text-xs font-semibold text-white">Suivi Réglementaire</p><p class="text-[10px] leading-5 text-slate-400 mt-1">Contrôles CNSS, permis C/EC et FIMC/FCO à jour pour l'ensemble de la flotte.</p>
+        </div>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <button onclick="logout()" class="nav-item hover:bg-red-500/15 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Déconnexion</span></button>
+        <p class="text-[10px] text-slate-600 px-3 mt-3">Portal RH v2.0 · Démo</p>
+      </div>
+    </aside>
+
+    <main class="main-area flex-1 min-w-0 flex flex-col min-h-screen">
+      <header class="h-[72px] bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3 min-w-0">
+          <button class="lg:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600" onclick="toggleSidebar(true)" aria-label="Ouvrir le menu"><i class="fa-solid fa-bars"></i></button>
+          <div class="min-w-0"><p id="pageKicker" class="eyebrow">Vue Synthétique</p><h2 id="pageTitle" class="font-bold text-sm md:text-base truncate">Tableau de bord RH</h2></div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4 topbar-actions">
+          <div class="topbar-meta text-right"><p class="text-xs font-semibold text-slate-700" id="currentDate"></p><p class="text-[10px] text-slate-400 mt-1">Espace Responsable RH</p></div>
+          <button class="btn-primary" onclick="openEmployeeModal()"><i class="fa-solid fa-plus mr-2"></i>Ajouter un salarié</button>
+          <button class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print mr-2"></i><span class="desktop-only">Imprimer</span></button>
+          <button class="w-9 h-9 rounded-xl border border-slate-200 text-slate-500 relative" aria-label="Notifications" onclick="showToast('Alertes RH : 2 permis à renouveler + 1 visite médicale.')"><i class="fa-regular fa-bell"></i><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 border-2 border-white"></span></button>
+        </div>
+      </header>
+
+      <div class="content-scroll content-pad p-5 md:p-8 flex-1 max-w-[1600px] w-full mx-auto">
+        
+        <section id="tab-rh-dashboard" class="tab-content active space-y-6">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div><p class="eyebrow mb-2">Gestion des ressources humaines</p><h1 class="section-title">Bienvenue, Mme. Chraïbi <span>👋</span></h1><p class="text-sm text-slate-500 mt-1">Aperçu global de l'effectif, de la conformité et des demandes RH.</p></div>
+            <button class="btn-secondary" onclick="exportHRReport()"><i class="fa-solid fa-file-csv mr-2"></i>Exporter Rapport RH</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 kpi-grid">
+            <div class="panel kpi p-5" style="--tint:#fff1e7;--accent:#ea580c">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Effectif Total</p><p class="text-2xl font-extrabold mt-3 tracking-tight">42 <span class="text-xs font-semibold text-slate-400">salariés</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-emerald-600 font-semibold"><i class="fa-solid fa-user-plus mr-1"></i>+3 recrutements ce mois</p>
+            </div>
+            
+            <div class="panel kpi p-5" style="--tint:#e0f2fe;--accent:#0284c7">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Chauffeurs Actifs</p><p class="text-2xl font-extrabold mt-3">28 <span class="text-sm font-semibold text-slate-400">/ 30</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-id-card"></i></div>
+              </div>
+              <div class="progress mt-4"><span style="width:93%"></span></div>
+              <p class="text-[11px] mt-2 text-slate-400">2 chauffeurs en congé</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#fee2e2;--accent:#dc2626">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Alertes Conformité</p><p class="text-2xl font-extrabold mt-3">3 <span class="text-xs font-semibold text-slate-400">dossiers</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-red-600 font-semibold"><i class="fa-solid fa-clock mr-1"></i>2 Permis + 1 Visite Médicale</p>
+            </div>
+
+            <div class="panel kpi p-5" style="--tint:#dcfce7;--accent:#16a34a">
+              <div class="flex items-start justify-between">
+                <div><p class="text-xs font-semibold text-slate-500">Congés en Attente</p><p class="text-2xl font-extrabold mt-3">2 <span class="text-sm font-semibold text-slate-400">demandes</span></p></div>
+                <div class="kpi-icon"><i class="fa-solid fa-calendar-day"></i></div>
+              </div>
+              <p class="text-[11px] mt-4 text-amber-600 font-semibold"><i class="fa-solid fa-hourglass-half mr-1"></i>À valider sous 48h</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div class="panel xl:col-span-2 overflow-hidden">
+              <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div><h3 class="font-bold text-sm">Chauffeurs & Conducteurs - Statut Rapide</h3><p class="text-xs text-slate-400 mt-1">Derniers mouvements et états de service</p></div>
+                <button class="btn-secondary" onclick="switchTab('staff-directory', document.querySelector('[data-tab=staff-directory]'))">Voir l'annuaire complet <i class="fa-solid fa-arrow-right ml-2"></i></button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Employé</th><th>Poste / Catégorie</th><th>Permis / FIMC</th><th>Visite Médicale</th><th>Statut</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold text-slate-800">Mohammed Bennani</td>
+                      <td>Chauffeur Poids Lourds (EC)</td>
+                      <td>PRM-883920 (2028)</td>
+                      <td class="text-emerald-700 font-semibold">Conforme (11/2027)</td>
+                      <td><span class="status green">En Mission</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-800">Abderrahim El Amrani</td>
+                      <td>Chauffeur Routier (C)</td>
+                      <td>PRM-112938 (11/2026)</td>
+                      <td class="text-amber-700 font-semibold">Échéance 15 jours</td>
+                      <td><span class="status blue">Disponible</span></td>
+                    </tr>
+                    <tr>
+                      <td class="font-bold text-slate-800">Youssef Amrani</td>
+                      <td>Chauffeur Super Lourds (EC)</td>
+                      <td>PRM-445201 (2027)</td>
+                      <td class="text-emerald-700 font-semibold">Conforme (04/2027)</td>
+                      <td><span class="status amber">En Congé</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm">Action Rapide RH</h3>
+                <span class="bg-orange-100 text-orange-700 rounded-full px-2 py-0.5 text-[10px] font-bold">Aujourd'hui</span>
+              </div>
+              <div class="space-y-3">
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-orange-50 hover:bg-orange-100/70 transition" onclick="openLeaveModal()">
+                  <span class="w-9 h-9 rounded-lg bg-white text-orange-600 grid place-items-center shrink-0"><i class="fa-solid fa-calendar-plus"></i></span>
+                  <span><b class="block text-xs text-slate-800">Saisir une demande de congé</b><span class="block text-[11px] text-slate-500 mt-1">Saisie rapide pour un salarié.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-blue-50 hover:bg-blue-100/70 transition" onclick="openRenewLicenseModal()">
+                  <span class="w-9 h-9 rounded-lg bg-white text-blue-600 grid place-items-center shrink-0"><i class="fa-solid fa-id-badge"></i></span>
+                  <span><b class="block text-xs text-slate-800">Renouvellement Permis / FIMC</b><span class="block text-[11px] text-slate-500 mt-1">Mettre à jour une visite médicale ou carte FCO.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+                <button class="w-full flex gap-3 text-left p-3 rounded-xl bg-purple-50 hover:bg-purple-100/70 transition" onclick="switchTab('payroll', document.querySelector('[data-tab=payroll]'))">
+                  <span class="w-9 h-9 rounded-lg bg-white text-purple-600 grid place-items-center shrink-0"><i class="fa-solid fa-calculator"></i></span>
+                  <span><b class="block text-xs text-slate-800">Calculateur Prime Route</b><span class="block text-[11px] text-slate-500 mt-1">Générer les indemnités de déplacement.</span></span>
+                  <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto mt-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-staff-directory" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Effectif & Registre du Personnel</p><h1 class="section-title">Chauffeurs & Employés</h1><p class="text-sm text-slate-500 mt-1">Annuaire complet, contrats, matricules CNSS et affectations.</p></div>
+            <button class="btn-primary" onclick="openEmployeeModal()"><i class="fa-solid fa-user-plus mr-2"></i>Ajouter un employé</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="panel p-4"><p class="text-xs text-slate-500">Chauffeurs PL / SPL</p><p class="text-2xl font-extrabold mt-2">30</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Personnel Administratif & Dépôt</p><p class="text-2xl font-extrabold mt-2 text-blue-600">12</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Contrats CDI / CDD</p><p class="text-2xl font-extrabold mt-2 text-emerald-600">38 CDI / 4 CDD</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Registre du personnel</h3><p class="text-xs text-slate-400 mt-1">Recherchez un salarié par nom, CIN, N° CNSS ou rôle.</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher un salarié..." oninput="filterTable(this,'staffTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="staffTable">
+                <thead>
+                  <tr><th>Matricule & Nom</th><th>CIN & CNSS</th><th>Poste</th><th>Permis / Catégorie</th><th>Embauche</th><th>Statut</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><p class="font-bold text-slate-800">Mohammed Bennani</p><p class="text-[10px] text-slate-400">MAT-2021-04</p></td>
+                    <td><p class="font-semibold text-slate-700">BE-889021</p><p class="text-[10px] text-slate-400">CNSS: 198273645</p></td>
+                    <td>Chauffeur Routier</td>
+                    <td><span class="font-bold text-slate-700">EC</span> · PRM-883920</td>
+                    <td>15/03/2021</td>
+                    <td><span class="status green">Actif</span></td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Affichage du dossier salarié de M. Bennani.')">Dossier</button></td>
+                  </tr>
+                  <tr>
+                    <td><p class="font-bold text-slate-800">Abderrahim El Amrani</p><p class="text-[10px] text-slate-400">MAT-2022-12</p></td>
+                    <td><p class="font-semibold text-slate-700">A-443219</p><p class="text-[10px] text-slate-400">CNSS: 209384712</p></td>
+                    <td>Chauffeur Poids Lourds</td>
+                    <td><span class="font-bold text-slate-700">C</span> · PRM-112938</td>
+                    <td>01/06/2022</td>
+                    <td><span class="status green">Actif</span></td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Affichage du dossier salarié de M. El Amrani.')">Dossier</button></td>
+                  </tr>
+                  <tr>
+                    <td><p class="font-bold text-slate-800">Youssef Amrani</p><p class="text-[10px] text-slate-400">MAT-2020-02</p></td>
+                    <td><p class="font-semibold text-slate-700">CD-110293</p><p class="text-[10px] text-slate-400">CNSS: 102938475</p></td>
+                    <td>Chauffeur Super Lourds</td>
+                    <td><span class="font-bold text-slate-700">EC</span> · PRM-445201</td>
+                    <td>10/01/2020</td>
+                    <td><span class="status amber">En Congé</span></td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Affichage du dossier salarié de M. Amrani.')">Dossier</button></td>
+                  </tr>
+                  <tr>
+                    <td><p class="font-bold text-slate-800">Karima Bouazzaoui</p><p class="text-[10px] text-slate-400">MAT-2023-08</p></td>
+                    <td><p class="font-semibold text-slate-700">BK-667123</p><p class="text-[10px] text-slate-400">CNSS: 334928104</p></td>
+                    <td>Assistante Exploitation</td>
+                    <td><span class="font-bold text-slate-700">B</span> · PRM-992011</td>
+                    <td>01/02/2023</td>
+                    <td><span class="status green">Actif</span></td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Affichage du dossier salarié de Mme. Bouazzaoui.')">Dossier</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-compliance" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Sécurité & Réglementation Transport</p><h1 class="section-title">Conformité, Permis & Visites Médicales</h1><p class="text-sm text-slate-500 mt-1">Suivi strict des échéances de permis de conduire, carte FIMC/FCO et examens médicaux.</p></div>
+            <button class="btn-primary" onclick="openRenewLicenseModal()"><i class="fa-solid fa-arrows-rotate mr-2"></i>Mettre à jour document</button>
+          </div>
+
+          <div class="panel p-5 bg-red-50/50 border-red-200">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 grid place-items-center shrink-0 text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div>
+                <h3 class="font-bold text-sm text-red-950">Alerte Échéances Permis & Visites Médicales</h3>
+                <p class="text-xs text-red-700 mt-1">3 éléments nécessitent une action urgente avant suspension de la conduite.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Registre de Conformité des Conducteurs</h3><p class="text-xs text-slate-400 mt-1">Validité des pièces légales obligatoires au Maroc.</p></div>
+              <input class="search max-w-xs" placeholder="Filtrer par chauffeur..." oninput="filterTable(this,'complianceTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="complianceTable">
+                <thead>
+                  <tr><th>Chauffeur</th><th>N° Permis</th><th>Catégorie</th><th>Expiration Permis</th><th>Carte FIMC/FCO</th><th>Visite Médicale</th><th>Statut Global</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">Abderrahim El Amrani</td>
+                    <td>PRM-112938</td>
+                    <td>C / EC</td>
+                    <td class="text-red-600 font-bold">04/11/2026 (Expire bientôt)</td>
+                    <td>Valide (2027)</td>
+                    <td class="text-amber-600 font-bold">15 jours restants</td>
+                    <td><span class="status red">Urgent</span></td>
+                    <td><button class="btn-primary text-xs py-1 px-2" onclick="openRenewLicenseModal('Abderrahim El Amrani')">Renouveler</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Mohammed Bennani</td>
+                    <td>PRM-883920</td>
+                    <td>EC</td>
+                    <td>12/10/2028</td>
+                    <td>Valide (2028)</td>
+                    <td>11/2027</td>
+                    <td><span class="status green">Conforme</span></td>
+                    <td><button class="btn-secondary text-xs py-1 px-2" onclick="showToast('Dossier conforme.')">Vérifier</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Youssef Amrani</td>
+                    <td>PRM-445201</td>
+                    <td>EC</td>
+                    <td>21/08/2027</td>
+                    <td class="text-amber-600 font-bold">À renouveler (30j)</td>
+                    <td>04/2027</td>
+                    <td><span class="status amber">À suivre</span></td>
+                    <td><button class="btn-primary text-xs py-1 px-2" onclick="openRenewLicenseModal('Youssef Amrani')">Renouveler</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-leaves" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Suivi du Temps de Travail</p><h1 class="section-title">Congés & Absences</h1><p class="text-sm text-slate-500 mt-1">Validation des demandes de congé payé, congés maladie et absences.</p></div>
+            <button class="btn-primary" onclick="openLeaveModal()"><i class="fa-solid fa-plus mr-2"></i>Nouvelle demande</button>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div class="panel xl:col-span-2 overflow-hidden">
+              <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <div><h3 class="font-bold text-sm">Demandes Récentes</h3><p class="text-xs text-slate-400 mt-1">Validation des départs en congé</p></div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Employé</th><th>Type</th><th>Période</th><th>Jours</th><th>Statut</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold text-slate-800">Youssef Amrani</td>
+                      <td>Congé Payé Annuel</td>
+                      <td>25/10/2026 → 02/11/2026</td>
+                      <td>8 jours</td>
+                      <td><span class="status green">Approuvé</span></td>
+                      <td><span class="text-xs text-slate-400">Validé</span></td>
+                    </tr>
+                    <tr id="leaveRow1">
+                      <td class="font-bold text-slate-800">Karim El Idrissi</td>
+                      <td>Congé Exceptionnel (Mariage)</td>
+                      <td>05/11/2026 → 09/11/2026</td>
+                      <td>4 jours</td>
+                      <td><span class="status amber">En attente</span></td>
+                      <td>
+                        <div class="flex gap-2">
+                          <button class="btn-primary text-xs py-1 px-2" onclick="handleLeave(1, true)">Accorder</button>
+                          <button class="btn-secondary text-xs py-1 px-2 text-red-600 border-red-200" onclick="handleLeave(1, false)">Refuser</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr id="leaveRow2">
+                      <td class="font-bold text-slate-800">Abderrahim El Amrani</td>
+                      <td>Maladie (Justifié)</td>
+                      <td>28/10/2026 → 30/10/2026</td>
+                      <td>2 jours</td>
+                      <td><span class="status amber">En attente</span></td>
+                      <td>
+                        <div class="flex gap-2">
+                          <button class="btn-primary text-xs py-1 px-2" onclick="handleLeave(2, true)">Accorder</button>
+                          <button class="btn-secondary text-xs py-1 px-2 text-red-600 border-red-200" onclick="handleLeave(2, false)">Refuser</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-4">
+              <h3 class="font-bold text-sm">Solde des Congés (Moyenne)</h3>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-xs font-semibold mb-1"><span>Chauffeurs PL</span><span>18 j. / 21 j. restants</span></div>
+                  <div class="progress"><span style="width:85%"></span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-semibold mb-1"><span>Administration</span><span>14 j. / 18 j. restants</span></div>
+                  <div class="progress"><span style="width:70%"></span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-semibold mb-1"><span>Équipe Atelier</span><span>12 j. / 18 j. restants</span></div>
+                  <div class="progress"><span style="width:65%"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-payroll" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Rémunération & Primes Logistiques</p><h1 class="section-title">Paie & Primes de Route</h1><p class="text-sm text-slate-500 mt-1">Calcul des indemnités kilométriques, primes de trajet et variables du mois.</p></div>
+            <button class="btn-primary" onclick="showToast('Calcul global des primes du mois lancé.')"><i class="fa-solid fa-calculator mr-2"></i>Calculer les Primes</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="panel p-4"><p class="text-xs text-slate-500">Masse Salariale Estimée</p><p class="text-xl font-extrabold mt-2">285 000 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Total Primes de Route (Mois)</p><p class="text-xl font-extrabold mt-2 text-orange-600">48 500 MAD</p></div>
+            <div class="panel p-4"><p class="text-xs text-slate-500">Jours Travaillés Flotte</p><p class="text-xl font-extrabold mt-2 text-emerald-600">620 Journées</p></div>
+          </div>
+
+          <div class="panel overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between gap-3">
+              <div><h3 class="font-bold text-sm">Décompte des Primes de Trajet par Chauffeur</h3><p class="text-xs text-slate-400 mt-1">Calcul basé sur la distance parcourue et le nombre de trajets accomplis.</p></div>
+              <input class="search max-w-xs" placeholder="Rechercher chauffeur..." oninput="filterTable(this,'payrollTable')">
+            </div>
+            <div class="table-wrap">
+              <table id="payrollTable">
+                <thead>
+                  <tr><th>Chauffeur</th><th>Missions Ce Mois</th><th>Distance Totale</th><th>Salaire de Base</th><th>Prime de Route (MAD)</th><th>Net Estimé</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-bold text-slate-800">Mohammed Bennani</td>
+                    <td>14 trajets</td>
+                    <td>4 200 km</td>
+                    <td>5 500 MAD</td>
+                    <td class="font-extrabold text-orange-600">3 150 MAD</td>
+                    <td class="font-bold text-slate-900">8 650 MAD</td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Fiche de calcul générée pour M. Bennani.')">Détail</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Abderrahim El Amrani</td>
+                    <td>18 trajets</td>
+                    <td>5 100 km</td>
+                    <td>5 200 MAD</td>
+                    <td class="font-extrabold text-orange-600">3 825 MAD</td>
+                    <td class="font-bold text-slate-900">9 025 MAD</td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Fiche de calcul générée pour M. El Amrani.')">Détail</button></td>
+                  </tr>
+                  <tr>
+                    <td class="font-bold text-slate-800">Youssef Amrani</td>
+                    <td>10 trajets</td>
+                    <td>3 100 km</td>
+                    <td>5 500 MAD</td>
+                    <td class="font-extrabold text-orange-600">2 325 MAD</td>
+                    <td class="font-bold text-slate-900">7 825 MAD</td>
+                    <td><button class="text-orange-600 font-bold" onclick="showToast('Fiche de calcul générée pour M. Amrani.')">Détail</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-recruitment" class="tab-content space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><p class="eyebrow mb-2">Pipeline RH & Intégration</p><h1 class="section-title">Recrutement & Onboarding</h1><p class="text-sm text-slate-500 mt-1">Gestion des candidatures de chauffeurs et parcours d'intégration.</p></div>
+            <button class="btn-primary" onclick="showToast('Ouverture du formulaire de nouvelle offre d\'emploi.')"><i class="fa-solid fa-plus mr-2"></i>Publier une offre</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="panel p-5 space-y-3">
+              <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-xs uppercase tracking-wider text-slate-500">Candidatures Reçues</h3><span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full text-xs">4</span></div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <p class="font-bold text-xs text-slate-800">Amine El Idrissi</p>
+                <p class="text-[10px] text-slate-500 mt-1">Permis EC · 8 ans d'expérience PL</p>
+                <div class="mt-2 flex justify-between items-center"><span class="status blue">Entretien à fixer</span><button class="text-orange-600 font-bold text-xs" onclick="showToast('Invitation entretien envoyée.')">Inviter</button></div>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <p class="font-bold text-xs text-slate-800">Othmane Naciri</p>
+                <p class="text-[10px] text-slate-500 mt-1">Permis C · Transport National</p>
+                <div class="mt-2 flex justify-between items-center"><span class="status gray">CV Reçu</span><button class="text-orange-600 font-bold text-xs" onclick="showToast('CV présélectionné.')">Étudier</button></div>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-3">
+              <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-xs uppercase tracking-wider text-slate-500">En Test Conduite</h3><span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full text-xs">1</span></div>
+              <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <p class="font-bold text-xs text-slate-800">Hassan Mansouri</p>
+                <p class="text-[10px] text-slate-500 mt-1">Test pratique sur Volvo FH à Casablanca</p>
+                <div class="mt-2 flex justify-between items-center"><span class="status amber">Test en cours</span><button class="text-orange-600 font-bold text-xs" onclick="showToast('Validation du test pratique.')">Valider Test</button></div>
+              </div>
+            </div>
+
+            <div class="panel p-5 space-y-3">
+              <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-xs uppercase tracking-wider text-slate-500">Onboarding & Visite Médicale</h3><span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-xs">1</span></div>
+              <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                <p class="font-bold text-xs text-slate-800">Tariq Kasmi</p>
+                <p class="text-[10px] text-slate-500 mt-1">Signature contrat CDI + Visite d'embauche</p>
+                <div class="mt-2 flex justify-between items-center"><span class="status green">Finalisation</span><button class="text-emerald-700 font-bold text-xs" onclick="showToast('Salarié intégré à la paie.')">Intégrer</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="pt-7 pb-2 text-center text-[10px] text-slate-400">© 2026 Translogix ERP · Espace RH · Démonstration sans persistance serveur.</footer>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="actionModal" class="rounded-2xl p-0 w-[min(92vw,480px)] shadow-2xl backdrop:bg-slate-900/50">
+    <form id="modalForm" class="p-6" onsubmit="submitModal(event)">
+      <div class="flex items-start justify-between gap-4">
+        <div><p class="eyebrow" id="modalSub">Gestion RH</p><h2 id="modalTitle" class="text-lg font-extrabold mt-1">Nouvel Élément</h2><p id="modalDescription" class="text-xs text-slate-500 mt-2">Renseignez les champs requis ci-dessous.</p></div>
+        <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalFields" class="space-y-4 mt-5"></div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-4">Simulation RH : Données ajoutées localement pour la séance de démo.</p>
+    </form>
+  </dialog>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageNames = {
+      'rh-dashboard': ['Vue Synthétique', 'Tableau de bord RH'],
+      'staff-directory': ['Effectif & Registre du Personnel', 'Chauffeurs & Employés'],
+      'compliance': ['Sécurité & Réglementation Transport', 'Conformité & Permis'],
+      'leaves': ['Suivi du Temps de Travail', 'Congés & Absences'],
+      'payroll': ['Rémunération & Primes Logistiques', 'Paie & Prime Trajet'],
+      'recruitment': ['Pipeline RH & Intégration', 'Recrutement & Onboarding']
+    };
+    let modalMode = '';
+    let toastTimer;
+
+    function switchTab(tabId, element) {
+      const target = document.getElementById(`tab-${tabId}`);
+      if (!target) return;
+      document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.nav-item[data-tab]').forEach(button => {
+        button.classList.remove('active');
+        button.setAttribute('aria-current', 'false');
+      });
+      target.classList.add('active');
+      const navButton = element || document.querySelector(`[data-tab="${tabId}"]`);
+      if (navButton) {
+        navButton.classList.add('active');
+        navButton.setAttribute('aria-current', 'page');
+      }
+      document.getElementById('pageKicker').textContent = pageNames[tabId][0];
+      document.getElementById('pageTitle').textContent = pageNames[tabId][1];
+      toggleSidebar(false);
+      document.querySelector('.content-scroll').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function toggleSidebar(force) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', shouldOpen);
+      overlay.classList.toggle('show', shouldOpen);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function filterTable(input, tableId) {
+      const query = input.value.trim().toLocaleLowerCase('fr');
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+      rows.forEach(row => row.hidden = !row.textContent.toLocaleLowerCase('fr').includes(query));
+    }
+
+    function openModal(title, description, mode, fields) {
+      modalMode = mode;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      const container = document.getElementById('modalFields');
+      container.innerHTML = '';
+      fields.forEach(field => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'block text-xs font-semibold text-slate-600';
+        wrapper.textContent = field.label;
+        let input;
+        if (field.options) {
+          input = document.createElement('select');
+          input.className = 'search mt-1.5';
+          field.options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            input.appendChild(option);
+          });
+        } else if(field.type === 'textarea') {
+          input = document.createElement('textarea');
+          input.rows = 3;
+          input.className = 'search mt-1.5';
+          input.placeholder = field.placeholder || '';
+        } else {
+          input = document.createElement('input');
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          input.className = 'search mt-1.5';
+        }
+        input.name = field.name;
+        if(field.value) input.value = field.value;
+        input.required = true;
+        wrapper.appendChild(input);
+        container.appendChild(wrapper);
+      });
+      document.getElementById('actionModal').showModal();
+    }
+
+    function openEmployeeModal() {
+      openModal('Nouveau Salarié', 'Saisissez les informations administratives du nouveau collaborateur.', 'employee', [
+        {label:'Nom & Prénom', name:'fullname', placeholder:'Ex: Amine El Idrissi'},
+        {label:'CIN', name:'cin', placeholder:'Ex: BE-998822'},
+        {label:'Numéro CNSS', name:'cnss', placeholder:'Ex: 198273645'},
+        {label:'Poste Occupé', name:'role', options:['Chauffeur Routier (EC)','Chauffeur Poids Lourds (C)','Agent de Dépôt','Mécanicien Atelier','Gestionnaire Administration']},
+        {label:'Type de Contrat', name:'contract', options:['CDI','CDD','Période d’essai']}
+      ]);
+    }
+
+    function openLeaveModal() {
+      openModal('Saisie de Demande de Congé', 'Enregistrez une absence ou un congé payé.', 'leave', [
+        {label:'Salarié concerné', name:'employee', placeholder:'Ex: Mohammed Bennani'},
+        {label:'Type de congé', name:'type', options:['Congé Payé Annuel','Maladie / Accident','Evénement Familial','Absence Injustifiée']},
+        {label:'Date de début', name:'start', type:'date'},
+        {label:'Date de fin', name:'end', type:'date'}
+      ]);
+    }
+
+    function openRenewLicenseModal(presetDriver = '') {
+      openModal('Renouvellement Document / Permis', 'Saisissez la nouvelle date d’échéance du permis ou de la visite médicale.', 'renew', [
+        {label:'Chauffeur', name:'driver', placeholder:'Nom du chauffeur', value: presetDriver},
+        {label:'Document renouvelé', name:'docType', options:['Permis de Conduire (C/EC)','Carte FIMC/FCO','Visite Médicale Obligatoire']},
+        {label:'Nouvelle Date d’expiration', name:'expDate', type:'date'}
+      ]);
+    }
+
+    function closeModal() {
+      document.getElementById('actionModal').close();
+    }
+
+    function submitModal(event) {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target).entries());
+      
+      if (modalMode === 'employee') {
+        const table = document.querySelector('#staffTable tbody');
+        const row = table.insertRow(0);
+        row.innerHTML = `
+          <td><p class="font-bold text-slate-800">${values.fullname}</p><p class="text-[10px] text-slate-400">MAT-2026-N</p></td>
+          <td><p class="font-semibold text-slate-700">${values.cin}</p><p class="text-[10px] text-slate-400">CNSS: ${values.cnss}</p></td>
+          <td>${values.role}</td>
+          <td><span class="font-bold text-slate-700">Conforme</span></td>
+          <td>Aujourd'hui</td>
+          <td><span class="status green">Actif</span></td>
+          <td><button class="text-orange-600 font-bold" onclick="showToast('Dossier créé.')">Dossier</button></td>
+        `;
+        showToast(`Salarié ${values.fullname} créé avec succès.`);
+      } else if (modalMode === 'leave') {
+        showToast(`Demande de congé enregistrée pour ${values.employee}.`);
+      } else if (modalMode === 'renew') {
+        showToast(`Mise à jour effectuée : ${values.docType} pour ${values.driver}.`);
+      }
+      closeModal();
+      event.target.reset();
+    }
+
+    function handleLeave(rowId, approved) {
+      const row = document.getElementById(`leaveRow${rowId}`);
+      if (row) {
+        const statusSpan = row.cells[4].querySelector('span');
+        statusSpan.textContent = approved ? 'Accordé' : 'Refusé';
+        statusSpan.className = 'status ' + (approved ? 'green' : 'red');
+        row.cells[5].innerHTML = `<span class="text-xs text-slate-400">${approved ? 'Validé RH' : 'Rejeté RH'}</span>`;
+        showToast(approved ? 'Demande de congé approuvée.' : 'Demande de congé refusée.');
+      }
+    }
+
+    function exportHRReport() {
+      const rows = [
+        ['Matricule', 'Nom', 'CIN', 'Poste', 'Statut Permis', 'Visite Medicale'],
+        ['MAT-2021-04', 'Mohammed Bennani', 'BE-889021', 'Chauffeur Routier', 'Valide 2028', 'Conforme'],
+        ['MAT-2022-12', 'Abderrahim El Amrani', 'A-443219', 'Chauffeur PL', 'Expire Bientot', 'Echeance 15j']
+      ];
+      const csv = '\uFEFF' + rows.map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'rapport-conformite-rh.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast('Export CSV du rapport RH généré.');
+    }
+
+    function logout() {
+      if (confirm('Déconnexion du portail RH ?')) showToast('Session RH fermée.');
+    }
+
+    document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('fr-MA', {dateStyle:'full'}).format(new Date());
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') toggleSidebar(false);
+    });
+  </script>
+</body>
+</html>
