@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.translogix.client.controller.dispatcher.FleetGpsController" spacing="20">
+    <HBox alignment="CENTER_LEFT">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="CARTOGRAPHIE &amp; GEOFENCING" styleClass="eyebrow"/>
+            <Label text="Suivi Flotte GPS en temps réel" styleClass="section-title"/>
+            <Label text="Localisation des véhicules et calcul d'itinéraires (EF-19, EF-20)." style="-fx-text-fill: #64748b;"/>
+        </VBox>
+        <Button text="🔄 Rafraîchir GPS" styleClass="btn-secondary" onAction="#handleRefreshGps"/>
+    </HBox>
+
+    <GridPane hgap="20">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="65"/>
+            <ColumnConstraints percentWidth="35"/>
+        </columnConstraints>
+
+        <VBox GridPane.columnIndex="0" prefHeight="450" alignment="CENTER" spacing="14"
+              style="-fx-background-color: #0f172a; -fx-background-radius: 16px; -fx-padding: 24px;">
+            <Label text="🟢 Flux GPS actif · 18 véhicules connectés" style="-fx-text-fill: #34d399; -fx-font-weight: bold;"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Label text="🗺️ Simulation de Carte GPS Interactive (Maroc)" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <Label text="Axe Casablanca - Rabat - Tanger : 4 véhicules en mouvement.&#10;Axe Agadir - Marrakech : 2 véhicules en transit."
+                   textAlignment="CENTER" style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <HBox spacing="30" alignment="CENTER" style="-fx-background-color: #1e293b; -fx-padding: 12px; -fx-background-radius: 10px;">
+                <VBox alignment="CENTER"><Label text="Vitesse Moy." style="-fx-text-fill: #94a3b8; -fx-font-size: 10px;"/><Label text="74 km/h" style="-fx-text-fill: white; -fx-font-weight: bold;"/></VBox>
+                <VBox alignment="CENTER"><Label text="Arrêts non planifiés" style="-fx-text-fill: #94a3b8; -fx-font-size: 10px;"/><Label text="1 détecté" style="-fx-text-fill: #fbbf24; -fx-font-weight: bold;"/></VBox>
+                <VBox alignment="CENTER"><Label text="Hors Zone" style="-fx-text-fill: #94a3b8; -fx-font-size: 10px;"/><Label text="0" style="-fx-text-fill: #34d399; -fx-font-weight: bold;"/></VBox>
+            </HBox>
+        </VBox>
+
+        <VBox GridPane.columnIndex="1" styleClass="panel" style="-fx-padding: 18px;" spacing="12">
+            <Label text="Positions GPS récentes" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <ListView fx:id="gpsListView" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;"/>
+        </VBox>
+    </GridPane>
+</VBox>
