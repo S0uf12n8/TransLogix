@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- "Conformité & Permis" (rh.html compliance, issue [M5]). Layout and wording from Majda's rh-compliance.fxml.
+     Statuses computed by ConformiteService from today. Renewal in rh/document-dialog.fxml. -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.rh.ConformiteController"
+      stylesheets="@../../css/app.css"
+      spacing="20" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <Label text="S&#201;CURIT&#201; &amp; R&#201;GLEMENTATION TRANSPORT" styleClass="eyebrow"/>
+            <Label text="Conformit&#233;, Permis &amp; Visites M&#233;dicales" styleClass="section-heading"/>
+            <Label text="Suivi strict des &#233;ch&#233;ances de permis de conduire, carte FIMC/FCO et examens m&#233;dicaux." styleClass="muted"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="boutonMettreAJour" text="Mettre &#224; jour document" onAction="#mettreAJour" styleClass="btn-primary"/>
+    </HBox>
+
+    <HBox fx:id="banniere" styleClass="banner-red" alignment="CENTER_LEFT" spacing="16">
+        <StackPane fx:id="banniereIcone" styleClass="banner-icon-red">
+            <SVGPath content="M12 2L1 21h22z M11 9v6h2V9z M11 17v2h2v-2z" styleClass="banner-svg"/>
+        </StackPane>
+        <VBox spacing="3">
+            <Label text="Alerte &#201;ch&#233;ances Permis &amp; Visites M&#233;dicales" styleClass="alert-title"/>
+            <Label fx:id="banniereTexte" text="&#8212;" wrapText="true" styleClass="alert-text"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="Registre de Conformit&#233; des Conducteurs" styleClass="panel-title"/>
+                <Label text="Validit&#233; des pi&#232;ces l&#233;gales obligatoires au Maroc." styleClass="panel-sub"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="recherche" promptText="Filtrer par chauffeur..." prefWidth="240" styleClass="search-field"/>
+        </HBox>
+        <TableView fx:id="table" fixedCellSize="56" prefHeight="380" styleClass="flat-table">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+            <placeholder>
+                <Label text="Aucun chauffeur actif ne correspond &#224; la recherche." styleClass="empty-placeholder"/>
+            </placeholder>
+            <columns>
+                <TableColumn fx:id="colChauffeur" text="CHAUFFEUR" prefWidth="170" minWidth="150"/>
+                <TableColumn fx:id="colNumero" text="N&#176; PERMIS" prefWidth="105" minWidth="95"/>
+                <TableColumn fx:id="colCategorie" text="CAT&#201;GORIE" prefWidth="85" minWidth="80"/>
+                <TableColumn fx:id="colExpiration" text="EXPIRATION PERMIS" prefWidth="150" minWidth="135"/>
+                <TableColumn fx:id="colFimc" text="CARTE FIMC/FCO" prefWidth="150" minWidth="135"/>
+                <TableColumn fx:id="colVisite" text="VISITE M&#201;DICALE" prefWidth="150" minWidth="135"/>
+                <TableColumn fx:id="colStatut" text="STATUT GLOBAL" prefWidth="115" minWidth="115"/>
+                <TableColumn fx:id="colAction" text="ACTION" prefWidth="100" minWidth="95" sortable="false"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

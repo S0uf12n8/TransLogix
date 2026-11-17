@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- "Tableau de bord RH" (rh.html rh-dashboard). Layout and wording from Majda's rh-dashboard.fxml.
+     KPI 1-3 and the quick status table come from EmployeService / ConformiteService;
+     "Congés en attente" is a static DÉMO card (leaves arrive in Iteration 3). -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.rh.DashboardController"
+      stylesheets="@../../css/app.css"
+      spacing="24" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <Label text="GESTION DES RESSOURCES HUMAINES" styleClass="eyebrow"/>
+            <Label fx:id="salutation" text="Bienvenue" styleClass="section-heading"/>
+            <Label text="Aper&#231;u global de l'effectif, de la conformit&#233; et des demandes RH." styleClass="muted"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Exporter Rapport RH" onAction="#exporter" styleClass="btn-secondary"/>
+    </HBox>
+
+    <GridPane hgap="16">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+        </columnConstraints>
+
+        <StackPane fx:id="kpiEffectif" styleClass="kpi-card" GridPane.columnIndex="0">
+            <Circle radius="45" styleClass="kpi-decor-orange" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Effectif Total" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurEffectif" text="0" styleClass="kpi-value"/>
+                            <Label text="salari&#233;s" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-orange"><SVGPath content="M8 3a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M1 21c0-4 3-7 7-7s7 3 7 7z M17 5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M16.5 14c4 0 6.5 3 6.5 7h-6c0-2.6-1-4.8-2.8-6.4z" styleClass="svg"/></StackPane>
+                </HBox>
+                <Label fx:id="piedEffectif" text="&#8212;" styleClass="foot-green"/>
+            </VBox>
+        </StackPane>
+
+        <StackPane fx:id="kpiChauffeurs" styleClass="kpi-card" GridPane.columnIndex="1">
+            <Circle radius="45" styleClass="kpi-decor-sky" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Chauffeurs Actifs" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurChauffeurs" text="0" styleClass="kpi-value"/>
+                            <Label fx:id="totalChauffeurs" text="/ 0" styleClass="kpi-unit-large"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-sky"><SVGPath content="M2 5h20v14H2z M5 8v8h6V8z M13 9v2h6V9z M13 13v2h5v-2z" styleClass="svg"/></StackPane>
+                </HBox>
+                <VBox spacing="6">
+                    <ProgressBar fx:id="progressionChauffeurs" progress="0" maxWidth="Infinity" styleClass="kpi-progress"/>
+                    <Label fx:id="piedChauffeurs" text="&#8212;" styleClass="foot-muted"/>
+                </VBox>
+            </VBox>
+        </StackPane>
+
+        <StackPane fx:id="kpiAlertes" styleClass="kpi-card" GridPane.columnIndex="2">
+            <Circle radius="45" styleClass="kpi-decor-red" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Alertes Conformit&#233;" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurAlertes" text="0" styleClass="kpi-value"/>
+                            <Label text="dossiers" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-red"><SVGPath content="M12 2L1 21h22z M11 9v6h2V9z M11 17v2h2v-2z" styleClass="svg"/></StackPane>
+                </HBox>
+                <Label fx:id="piedAlertes" text="&#8212;" styleClass="foot-red"/>
+            </VBox>
+        </StackPane>
+
+        <StackPane fx:id="kpiConges" styleClass="kpi-card" GridPane.columnIndex="3">
+            <Circle radius="45" styleClass="kpi-decor-green" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <HBox spacing="6" alignment="CENTER_LEFT">
+                            <Label text="Cong&#233;s en Attente" styleClass="kpi-title"/>
+                            <Label text="D&#201;MO" styleClass="chip-demo"/>
+                        </HBox>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label text="2" styleClass="kpi-value"/>
+                            <Label text="demandes" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-green"><SVGPath content="M3 5h18v16H3z M5 10v9h14v-9z M7 2h2v4H7z M15 2h2v4h-2z M7 12h3v3H7z" styleClass="svg"/></StackPane>
+                </HBox>
+                <Label text="&#192; valider sous 48h" styleClass="foot-amber"/>
+            </VBox>
+        </StackPane>
+    </GridPane>
+
+    <GridPane hgap="20">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="68"/>
+            <ColumnConstraints percentWidth="32"/>
+        </columnConstraints>
+
+        <VBox styleClass="panel" GridPane.columnIndex="0">
+            <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3">
+                    <Label text="Chauffeurs &amp; Conducteurs - Statut Rapide" styleClass="panel-title"/>
+                    <Label text="Permis, carte FIMC et visite m&#233;dicale des chauffeurs actifs." styleClass="panel-sub"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Voir l'annuaire complet" onAction="#voirAnnuaire" styleClass="btn-secondary"/>
+            </HBox>
+            <TableView fx:id="tableChauffeurs" fixedCellSize="56" prefHeight="260" styleClass="flat-table">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+                </columnResizePolicy>
+                <placeholder>
+                    <Label text="Aucun chauffeur actif." styleClass="empty-placeholder"/>
+                </placeholder>
+                <columns>
+                    <TableColumn fx:id="colEmploye" text="EMPLOY&#201;" prefWidth="150" minWidth="135" sortable="false"/>
+                    <TableColumn fx:id="colPoste" text="POSTE / CAT&#201;GORIE" prefWidth="125" minWidth="110" sortable="false"/>
+                    <TableColumn fx:id="colPermis" text="PERMIS / FIMC" prefWidth="160" minWidth="155" sortable="false"/>
+                    <TableColumn fx:id="colVisite" text="VISITE M&#201;DICALE" prefWidth="155" minWidth="150" sortable="false"/>
+                    <TableColumn fx:id="colStatut" text="STATUT" prefWidth="110" minWidth="110" sortable="false"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <VBox styleClass="card" spacing="14" GridPane.columnIndex="1">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Action Rapide RH" styleClass="panel-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Aujourd'hui" styleClass="chip-orange"/>
+            </HBox>
+            <HBox styleClass="alert-amber" alignment="CENTER_LEFT" spacing="12" onMouseClicked="#saisirConge">
+                <StackPane styleClass="alert-icon">
+                    <SVGPath content="M3 5h18v16H3z M5 10v9h14v-9z M7 2h2v4H7z M15 2h2v4h-2z M11 11h2v2.5h2.5v2H13V18h-2v-2.5H8.5v-2H11z" styleClass="svg-amber"/>
+                </StackPane>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Saisir une demande de cong&#233;" styleClass="alert-title"/>
+                    <Label text="Saisie rapide pour un salari&#233;." wrapText="true" styleClass="alert-text"/>
+                </VBox>
+                <Label text="&#8250;" styleClass="chevron"/>
+            </HBox>
+            <HBox fx:id="actionRenouveler" styleClass="alert-sky" alignment="CENTER_LEFT" spacing="12" onMouseClicked="#renouvelerDocument">
+                <StackPane styleClass="alert-icon">
+                    <SVGPath content="M2 5h20v14H2z M5 8v8h6V8z M13 9v2h6V9z M13 13v2h5v-2z" styleClass="svg-sky"/>
+                </StackPane>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Renouvellement Permis / FIMC" styleClass="alert-title"/>
+                    <Label text="Mettre &#224; jour une visite m&#233;dicale ou carte FCO." wrapText="true" styleClass="alert-text"/>
+                </VBox>
+                <Label text="&#8250;" styleClass="chevron"/>
+            </HBox>
+            <HBox styleClass="alert-purple" alignment="CENTER_LEFT" spacing="12" onMouseClicked="#ouvrirPrimes">
+                <StackPane styleClass="alert-icon">
+                    <SVGPath content="M5 2h14v20H5z M7 4v4h10V4z M7 10v2h2v-2z M11 10v2h2v-2z M15 10v6h2v-6z M7 14v2h2v-2z M11 14v2h2v-2z M7 18v2h2v-2z M11 18v2h6v-2z" styleClass="svg-purple"/>
+                </StackPane>
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Calculateur Prime Route" styleClass="alert-title"/>
+                    <Label text="G&#233;n&#233;rer les indemnit&#233;s de d&#233;placement." wrapText="true" styleClass="alert-text"/>
+                </VBox>
+                <Label text="&#8250;" styleClass="chevron"/>
+            </HBox>
+        </VBox>
+    </GridPane>
+</VBox>

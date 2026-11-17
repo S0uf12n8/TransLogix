@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- "Chauffeurs & Employés" (rh.html staff-directory, issue [M3]). Layout and wording from Majda's rh-staff.fxml.
+     Real data from EmployeService (in-memory DAO). Create / edit in rh/employe-dialog.fxml. -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.rh.EmployesController"
+      stylesheets="@../../css/app.css"
+      spacing="20" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <Label text="EFFECTIF &amp; REGISTRE DU PERSONNEL" styleClass="eyebrow"/>
+            <Label text="Chauffeurs &amp; Employ&#233;s" styleClass="section-heading"/>
+            <Label text="Annuaire complet, contrats, matricules CNSS et affectations." styleClass="muted"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="boutonAjouter" text="Ajouter un employ&#233;" onAction="#ajouter" styleClass="btn-primary">
+            <graphic>
+                <SVGPath content="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z" styleClass="btn-icon-white"/>
+            </graphic>
+        </Button>
+    </HBox>
+
+    <HBox spacing="16">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="Chauffeurs PL / SPL" styleClass="kpi-title"/>
+            <Label fx:id="valeurChauffeurs" text="0" styleClass="kpi-value"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="Personnel Administratif &amp; D&#233;p&#244;t" styleClass="kpi-title"/>
+            <Label fx:id="valeurAdministratif" text="0" styleClass="kpi-value,value-orange"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="Contrats CDI / CDD" styleClass="kpi-title"/>
+            <Label fx:id="valeurContrats" text="0 CDI / 0 CDD" styleClass="kpi-value,value-green"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="Registre du personnel" styleClass="panel-title"/>
+                <Label text="Recherchez un salari&#233; par nom, CIN, N&#176; CNSS ou r&#244;le." styleClass="panel-sub"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="recherche" promptText="Rechercher un salari&#233;..." prefWidth="260" styleClass="search-field"/>
+        </HBox>
+        <TableView fx:id="table" fixedCellSize="56" prefHeight="420" styleClass="flat-table">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+            <placeholder>
+                <Label text="Aucun salari&#233; ne correspond &#224; la recherche." styleClass="empty-placeholder"/>
+            </placeholder>
+            <columns>
+                <TableColumn fx:id="colNom" text="MATRICULE &amp; NOM" prefWidth="190" minWidth="160"/>
+                <TableColumn fx:id="colIdentite" text="CIN &amp; CNSS" prefWidth="140" minWidth="125"/>
+                <TableColumn fx:id="colPoste" text="POSTE" prefWidth="150" minWidth="120"/>
+                <TableColumn fx:id="colPermis" text="PERMIS / CAT&#201;GORIE" prefWidth="150" minWidth="130"/>
+                <TableColumn fx:id="colEmbauche" text="EMBAUCHE" prefWidth="100" minWidth="95"/>
+                <TableColumn fx:id="colStatut" text="STATUT" prefWidth="100" minWidth="95"/>
+                <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="170" minWidth="170" sortable="false"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

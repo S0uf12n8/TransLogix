@@ -642,3 +642,44 @@
     -fx-font-size: 10px;
     -fx-text-fill: #94a3b8;
 }
+
+/* RH (rh.html, from Majda's rh.css): only what the shared classes above do not cover */
+.value-orange { -fx-text-fill: #ea580c; }
+.value-green  { -fx-text-fill: #059669; }
+.cell-green  { -fx-font-weight: bold; -fx-text-fill: #15803d; }
+.cell-amber  { -fx-font-weight: bold; -fx-text-fill: #b45309; }
+.cell-red    { -fx-font-weight: bold; -fx-text-fill: #dc2626; }
+.cell-orange { -fx-font-weight: bold; -fx-text-fill: #ea580c; }
+.alert-purple {
+    -fx-padding: 12;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-background-color: #faf5ff;
+}
+.alert-purple:hover { -fx-background-color: #f3e8ff; }
+.svg-purple { -fx-fill: #9333ea; -fx-scale-x: 0.75; -fx-scale-y: 0.75; }
+.banner-red, .banner-green {
+    -fx-padding: 16;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+.banner-red   { -fx-background-color: #fef2f2; -fx-border-color: #fecaca; }
+.banner-green { -fx-background-color: #f0fdf4; -fx-border-color: #bbf7d0; }
+.banner-icon-red, .banner-icon-green {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-max-width: 40;
+    -fx-max-height: 40;
+    -fx-background-radius: 12;
+}
+.banner-icon-red   { -fx-background-color: #fee2e2; }
+.banner-icon-green { -fx-background-color: #dcfce7; }
+.banner-icon-red .banner-svg   { -fx-fill: #dc2626; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }
+.banner-icon-green .banner-svg { -fx-fill: #16a34a; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }
+.kanban-card {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}

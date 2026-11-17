@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import ma.translogix.model.Role;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +56,40 @@ class NavigationMenuTest {
         assertTrue(NavigationMenu.entreePour(Role.GERANT, "chauffeur/missions.fxml").isEmpty());
         assertTrue(NavigationMenu.entreePour(Role.GERANT, "sans-dossier.fxml").isEmpty());
         assertTrue(NavigationMenu.entreePour(Role.CHAUFFEUR, "admin/audit.fxml").isEmpty());
+    }
+
+    @Test
+    void leMenuRhSuitLOrdreDeLaMaquette() {
+        assertEquals(List.of("rh/dashboard.fxml", "rh/employes.fxml", "rh/conformite.fxml", "rh/conges.fxml",
+                        "rh/primes.fxml", "rh/recrutement.fxml"),
+                NavigationMenu.pour(Role.RH).stream().map(NavigationMenu.Entree::fxml).toList());
+    }
+
+    @Test
+    void lesEcransDuMenuRhExistent() {
+        for (NavigationMenu.Entree e : NavigationMenu.pour(Role.RH)) {
+            assertNotNull(getClass().getResource(NavigationMenu.RACINE + e.fxml()), e.fxml());
+            assertNotNull(e.kicker(), e.libelle());
+            assertNotNull(e.icone(), e.libelle());
+        }
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/employe-dialog.fxml"));
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/document-dialog.fxml"));
+    }
+
+    @Test
+    void seulesLesPagesRhDeLIteration3SontEnDemo() {
+        assertEquals(List.of("rh/conges.fxml", "rh/primes.fxml", "rh/recrutement.fxml"),
+                NavigationMenu.pour(Role.RH).stream().filter(NavigationMenu.Entree::demo)
+                        .map(NavigationMenu.Entree::fxml).toList());
+    }
+
+    @Test
+    void leGerantOuvreLesPagesRhLivrees() {
+        assertEquals("rh/employes.fxml",
+                NavigationMenu.entreePour(Role.GERANT, "rh/employes.fxml").orElseThrow().fxml());
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/conformite.fxml"));
+        assertEquals("Conformité & permis",
+                NavigationMenu.entreePour(Role.RH, "rh/conformite.fxml").orElseThrow().libelle());
     }
 
     @Test
