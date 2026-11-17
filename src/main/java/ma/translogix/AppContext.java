@@ -50,6 +50,7 @@ public final class AppContext {
         // Dev seed data only: one manager account so the screens are not empty.
         // It is a real creation, so the audit log shows it once, done by "Système".
         UTILISATEUR_SERVICE.creer("Principal", "Admin", "admin@translogix.ma", "admin1234", Role.GERANT);
+        UTILISATEUR_SERVICE.creer("Comptable", "Demo", "comptable@translogix.ma", "comptable1234", Role.COMPTABLE);
         semerComptabilite(LocalDate.now());
         demarrageTermine = true;
     }
