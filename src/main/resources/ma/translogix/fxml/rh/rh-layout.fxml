@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="ma.translogix.controller.rh.RhLayoutController"
+           styleClass="rh-root"
+           stylesheets="@../../css/rh.css">
+    <BorderPane>
+        <left>
+            <VBox styleClass="rh-sidebar">
+                <HBox styleClass="rh-brand" alignment="CENTER_LEFT" spacing="12">
+                    <StackPane styleClass="rh-logo"><Label text="T"/></StackPane>
+                    <VBox>
+                        <Label text="Portal RH" styleClass="rh-brand-title"/>
+                        <Label text="TRANSLOGIX &#183; MAROC" styleClass="rh-brand-sub"/>
+                    </VBox>
+                </HBox>
+
+                <VBox styleClass="rh-user">
+                    <HBox styleClass="rh-user-card" alignment="CENTER_LEFT" spacing="12">
+                        <StackPane styleClass="rh-avatar"><Label text="MC"/></StackPane>
+                        <VBox>
+                            <Label text="Mme. Chra&#239;bi" styleClass="rh-user-name"/>
+                            <Label text="Responsable RH" styleClass="rh-user-role"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Circle radius="4" fill="#34d399"/>
+                    </HBox>
+                </VBox>
+
+                <VBox styleClass="rh-nav" spacing="4" VBox.vgrow="ALWAYS">
+                    <Label text="CAPITAL HUMAIN" styleClass="rh-nav-section"/>
+                    <Button fx:id="navDashboard" text="Tableau de bord RH" onAction="#afficherTableauDeBord" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Button fx:id="navPersonnel" text="Chauffeurs &amp; Employ&#233;s" onAction="#afficherPersonnel" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Button fx:id="navConformite" text="Conformit&#233; &amp; Permis &#183; 3" onAction="#afficherConformite" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Button fx:id="navConges" text="Cong&#233;s &amp; Absences &#183; 2" onAction="#afficherConges" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Button fx:id="navPaie" text="Paie &amp; Prime Trajet" onAction="#afficherPaie" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Button fx:id="navRecrutement" text="Recrutement &amp; Onboarding" onAction="#afficherRecrutement" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                </VBox>
+
+                <VBox styleClass="rh-sidebar-foot" spacing="6">
+                    <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="rh-nav-button"/>
+                    <Label text="Portal RH v2.0 &#183; D&#233;mo" styleClass="rh-version"/>
+                </VBox>
+            </VBox>
+        </left>
+
+        <center>
+            <VBox>
+                <HBox styleClass="rh-topbar" alignment="CENTER_LEFT" spacing="12">
+                    <VBox spacing="2">
+                        <Label fx:id="pageKicker" text="Vue Synth&#233;tique" styleClass="rh-eyebrow"/>
+                        <Label fx:id="pageTitle" text="Tableau de bord RH" styleClass="rh-page-title"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT" spacing="2">
+                        <Label fx:id="currentDate" styleClass="rh-muted"/>
+                        <Label text="Espace Responsable RH" styleClass="rh-card-hint"/>
+                    </VBox>
+                    <Button text="+ Ajouter un salari&#233;" onAction="#ajouterSalarie" styleClass="rh-btn-primary"/>
+                    <Button text="Imprimer" onAction="#imprimer" styleClass="rh-btn-secondary"/>
+                </HBox>
+                <ScrollPane fx:id="scroll" fitToWidth="true" styleClass="rh-scroll" VBox.vgrow="ALWAYS">
+                    <StackPane fx:id="contenu" alignment="TOP_LEFT"/>
+                </ScrollPane>
+            </VBox>
+        </center>
+    </BorderPane>
+
+    <Label fx:id="toast" styleClass="rh-toast" visible="false" managed="false" StackPane.alignment="BOTTOM_RIGHT"/>
+</StackPane>
