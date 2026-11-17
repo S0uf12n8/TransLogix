@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.translogix.client.controller.dispatcher.FuelLogsController" spacing="20" style="-fx-padding: 0;">
+
+    <!-- Top Header & Action Button -->
+    <HBox alignment="CENTER_LEFT">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="GESTION CARBURANT &amp; PÉAGES" styleClass="eyebrow"/>
+            <Label text="Bons de Gazole &amp; Cartes Autoroute" styleClass="section-title"/>
+            <Label text="Émission et suivi des bons de carburant par mission (EF-18)." style="-fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+        </VBox>
+        <Button text="⛽ Émettre Bon Gazole" styleClass="btn-primary" onAction="#handleIssueFuelVoucher"/>
+    </HBox>
+
+    <!-- Main Panel Table Container -->
+    <VBox styleClass="panel">
+        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 18px; -fx-border-color: #f1f5f9; -fx-border-width: 0 0 1px 0;">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Historique des Ravitaillements" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #0f172a;"/>
+                <Label text="Suivi des consommations moyennes par camion" style="-fx-font-size: 12px; -fx-text-fill: #94a3b8;"/>
+            </VBox>
+            <TextField fx:id="searchFuelField" promptText="Rechercher bon, station, chauffeur..." prefWidth="280" styleClass="search-field"/>
+        </HBox>
+
+        <!-- TableView m-gadda bla lignes khawyin -->
+        <TableView fx:id="fuelTable" VBox.vgrow="NEVER" maxHeight="280" minHeight="280" style="-fx-background-color: transparent;">
+            <columns>
+                <TableColumn fx:id="colVoucherId" text="N° BON" prefWidth="120"/>
+                <TableColumn fx:id="colTruck" text="CAMION" prefWidth="130"/>
+                <TableColumn fx:id="colDriver" text="CHAUFFEUR" prefWidth="180"/>
+                <TableColumn fx:id="colStation" text="STATION / PROVIDER" prefWidth="260"/>
+                <TableColumn fx:id="colLiters" text="LITRES" prefWidth="100"/>
+                <TableColumn fx:id="colAmount" text="MONTANT EST." prefWidth="130"/>
+                <TableColumn fx:id="colStatus" text="STATUT" prefWidth="140"/>
+            </columns>
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+        </TableView>
+    </VBox>
+</VBox>

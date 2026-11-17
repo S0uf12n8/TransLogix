@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.translogix.client.controller.dispatcher.DispatcherMainController"
+            stylesheets="@../../css/dispatcher.css">
+    <left>
+        <fx:include fx:id="sidebar" source="DispatcherSidebar.fxml"/>
+    </left>
+
+    <center>
+        <BorderPane>
+            <top>
+                <HBox styleClass="topbar" alignment="CENTER_LEFT" spacing="16">
+                    <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                        <Label fx:id="pageKickerLabel" text="OPÉRATIONS EN DIRECT" styleClass="eyebrow"/>
+                        <Label fx:id="pageTitleLabel" text="Ordres &amp; Trajets" styleClass="page-title"/>
+                    </VBox>
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="currentDateLabel" text="Dimanche 1 novembre 2026" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+                        <Label text="Statut réseau: Optimal" style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;"/>
+                    </VBox>
+                    <Button text="+ Nouvelle affectation" styleClass="btn-primary" onAction="#handleNewAssignment"/>
+                </HBox>
+            </top>
+
+            <center>
+                <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-background: #f8fafc;">
+                    <StackPane fx:id="contentArea" style="-fx-padding: 28px;"/>
+                </ScrollPane>
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>

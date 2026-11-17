@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.translogix.client.controller.dispatcher.IncidentsController" spacing="20">
+    <HBox alignment="CENTER_LEFT">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="GESTION DES ALÉAS" styleClass="eyebrow"/>
+            <Label text="Incidents &amp; Retards de Route" styleClass="section-title"/>
+            <Label text="Signalez et gérez les pannes, accidents ou blocages (EF-17)." style="-fx-text-fill: #64748b;"/>
+        </VBox>
+        <Button text="⚠️ Déclarer Incident" styleClass="btn-danger" onAction="#handleDeclareIncident"/>
+    </HBox>
+
+    <GridPane hgap="20">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/>
+            <ColumnConstraints percentWidth="50"/>
+        </columnConstraints>
+
+        <VBox GridPane.columnIndex="0" styleClass="panel" style="-fx-padding: 20px;" spacing="14">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Incidents En Cours" style="-fx-font-weight: bold; -fx-font-size: 14px;" HBox.hgrow="ALWAYS"/>
+                <Label text="2 urgences" styleClass="badge-red"/>
+            </HBox>
+            <VBox spacing="6" style="-fx-background-color: #fef2f2; -fx-border-color: #fecaca; -fx-border-radius: 10px; -fx-background-radius: 10px; -fx-padding: 14px;">
+                <HBox><Label text="Crevaison pneu arrière droit" style="-fx-font-weight: bold; -fx-text-fill: #7f1d1d;" HBox.hgrow="ALWAYS"/><Label text="TRJ-9081" style="-fx-text-fill: #dc2626; -fx-font-weight: bold;"/></HBox>
+                <Label text="Camion 12345-A-6 arrêté sur l'A1 KM 42 près de Bouznika. Assistance pneumatique contactée." wrapText="true" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            </VBox>
+            <VBox spacing="6" style="-fx-background-color: #fffbeb; -fx-border-color: #fde68a; -fx-border-radius: 10px; -fx-background-radius: 10px; -fx-padding: 14px;">
+                <HBox><Label text="Bouchon exceptionnel / Retard quai" style="-fx-font-weight: bold; -fx-text-fill: #78350f;" HBox.hgrow="ALWAYS"/><Label text="TRJ-9084" style="-fx-text-fill: #d97706; -fx-font-weight: bold;"/></HBox>
+                <Label text="Attente de plus de 2h à l'entrée du Port de Casablanca. ETA décalée à 19:00." wrapText="true" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+            </VBox>
+        </VBox>
+
+        <VBox GridPane.columnIndex="1" styleClass="panel" style="-fx-padding: 20px;" spacing="12">
+            <Label text="Procédure d'Urgence Dispatch" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <Label text="• Panne mécanique : Contacter l'assistance 24/7 au 0800-XX-XX-XX et enregistrer la géolocalisation exacte." wrapText="true" style="-fx-text-fill: #475569; -fx-font-size: 12px;"/>
+            <Label text="• Accident de circulation : S'assurer de la sécurité du chauffeur, demander un constat amiable ou rapport de gendarmerie." wrapText="true" style="-fx-text-fill: #475569; -fx-font-size: 12px;"/>
+            <Label text="• Rupture de chaîne du froid : Contacter immédiatement le client et consigner la température enregistrée." wrapText="true" style="-fx-text-fill: #475569; -fx-font-size: 12px;"/>
+        </VBox>
+    </GridPane>
+</VBox>

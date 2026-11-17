@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.translogix.client.controller.dispatcher.OrdersController"
+      spacing="24" style="-fx-padding: 0;">
+
+    <!-- Top Header -->
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="SUIVI OPÉRATIONNEL" styleClass="eyebrow"/>
+            <Label text="Tableau de Dispatching 🚛" styleClass="section-title"/>
+            <Label text="Gestion en temps réel des départs, livraisons et affectations (EF-13, EF-14, EF-15)." style="-fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+        </VBox>
+        <Button text="📄 Exporter la feuille de route (CSV)" styleClass="btn-secondary" onAction="#handleExportCsv"/>
+    </HBox>
+
+    <!-- KPI Cards Grid (Flexible Width) -->
+    <GridPane hgap="16" vgap="16">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+            <ColumnConstraints percentWidth="25"/>
+        </columnConstraints>
+
+        <VBox styleClass="panel" style="-fx-padding: 18px;" spacing="10" GridPane.columnIndex="0">
+            <Label text="Missions en cours" style="-fx-text-fill: #64748b; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label text="6" styleClass="kpi-value"/>
+                <Label text="camions" styleClass="kpi-sub"/>
+            </HBox>
+            <Label text="↗ 3 sur autoroute A1" style="-fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <VBox styleClass="panel" style="-fx-padding: 18px;" spacing="10" GridPane.columnIndex="1">
+            <Label text="Camions dispo" style="-fx-text-fill: #64748b; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label text="12" styleClass="kpi-value"/>
+                <Label text="/ 22" styleClass="kpi-sub"/>
+            </HBox>
+            <ProgressBar progress="0.54" maxWidth="Infinity" prefHeight="6" style="-fx-accent: #2563eb;"/>
+        </VBox>
+
+        <VBox styleClass="panel" style="-fx-padding: 18px;" spacing="10" GridPane.columnIndex="2">
+            <Label text="En attente de quai" style="-fx-text-fill: #64748b; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label text="4" styleClass="kpi-value"/>
+                <Label text="chargements" styleClass="kpi-sub"/>
+            </HBox>
+            <Label text="🕒 Port de Casablanca" style="-fx-text-fill: #d97706; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <VBox styleClass="panel" style="-fx-padding: 18px;" spacing="10" GridPane.columnIndex="3">
+            <Label text="Alertes Retard / Incidents" style="-fx-text-fill: #64748b; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label text="2" styleClass="kpi-value"/>
+                <Label text="cas" styleClass="kpi-sub"/>
+            </HBox>
+            <Label text="⚠️ 1 panne mineure + 1 retard" style="-fx-text-fill: #dc2626; -fx-font-size: 11px; -fx-font-weight: bold;"/>
+        </VBox>
+    </GridPane>
+
+    <!-- Table Container w vgrow="ALWAYS" باش يتأقلم مع حجم الشاشة -->
+    <VBox styleClass="panel" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 18px; -fx-border-color: #f1f5f9; -fx-border-width: 0 0 1px 0;">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Ordres de Transport Actifs" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #0f172a;"/>
+                <Label text="Consultez et modifiez les missions programmées" style="-fx-font-size: 12px; -fx-text-fill: #94a3b8;"/>
+            </VBox>
+            <TextField fx:id="searchField" promptText="Rechercher trajet, chauffeur, ville..." prefWidth="280" styleClass="search-field"/>
+        </HBox>
+
+        <!-- TableView كتاخذ المساحة المتاحة بمرونة وبلا حدود ثابتة قبيحة -->
+        <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+            <columns>
+                <TableColumn fx:id="colRef" text="RÉF. MISSION" minWidth="110" prefWidth="130"/>
+                <TableColumn fx:id="colDriverTruck" text="CHAUFFEUR &amp; CAMION" minWidth="200" prefWidth="240"/>
+                <TableColumn fx:id="colRoute" text="ITINÉRAIRE" minWidth="200" prefWidth="250"/>
+                <TableColumn fx:id="colCargo" text="CARGAISON" minWidth="150" prefWidth="180"/>
+                <TableColumn fx:id="colEta" text="ETA / ARRIVÉE PRÉV." minWidth="150" prefWidth="180"/>
+                <TableColumn fx:id="colStatus" text="STATUT" minWidth="130" prefWidth="160"/>
+                <TableColumn fx:id="colActions" text="ACTIONS" minWidth="130" prefWidth="160"/>
+            </columns>
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+        </TableView>
+    </VBox>
+</VBox>

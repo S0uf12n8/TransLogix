@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.translogix.client.controller.dispatcher.DriverPlanningController" spacing="20">
+    <HBox alignment="CENTER_LEFT">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="RESSOURCES &amp; DISPONIBILITÉ" styleClass="eyebrow"/>
+            <Label text="Planning &amp; Affectation Chauffeurs" styleClass="section-title"/>
+            <Label text="Vérification des permis, disponibilité et temps de conduite (EF-16)." style="-fx-text-fill: #64748b;"/>
+        </VBox>
+        <Button text="🔗 Assigner Chauffeur / Camion" styleClass="btn-primary" onAction="#handleOpenAssignDialog"/>
+    </HBox>
+
+    <VBox styleClass="panel">
+        <TableView fx:id="planningTable" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colDriverName" text="CHAUFFEUR" prefWidth="180"/>
+                <TableColumn fx:id="colAssignedTruck" text="CAMION ASSIGNÉ" prefWidth="180"/>
+                <TableColumn fx:id="colLicense" text="PERMIS / VALIDITÉ" prefWidth="160"/>
+                <TableColumn fx:id="colDrivingHours" text="HEURES CONDUITE (AUJ.)" prefWidth="180"/>
+                <TableColumn fx:id="colAvailability" text="DISPONIBILITÉ" prefWidth="150"/>
+            </columns>
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+        </TableView>
+    </VBox>
+</VBox>
