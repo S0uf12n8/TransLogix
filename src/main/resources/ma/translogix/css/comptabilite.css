@@ -1,0 +1,139 @@
+
+.root {
+    -fx-font-family: "Arial";
+    -fx-background-color: #F8FAFC;
+}
+
+/* Sidebar */
+
+.sidebar {
+    -fx-background-color: #0A192F;
+}
+
+.brand {
+    -fx-text-fill: white;
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-subtitle {
+    -fx-text-fill: #94A3B8;
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 20 0;
+}
+
+/* Navigation */
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #E2E8F0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+    -fx-font-size: 12px;
+}
+
+.nav-button:hover {
+    -fx-background-color: #1E3555;
+    -fx-text-fill: white;
+}
+
+/* Top bar */
+
+.topbar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+}
+
+.topbar .label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F172A;
+}
+
+/* Main content */
+
+.content-area {
+    -fx-background-color: #F8FAFC;
+}
+
+.section-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0F172A;
+}
+
+.muted {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 12px;
+}
+
+/* Dashboard cards */
+
+.kpi-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12px;
+    -fx-padding: 22px;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12px;
+    -fx-min-width: 250px;
+}
+
+.kpi-value {
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0A192F;
+}
+
+.panel {
+    -fx-background-color: white;
+    -fx-background-radius: 12px;
+    -fx-padding: 20px;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12px;
+}
+
+/* Buttons */
+
+.primary-button {
+    -fx-background-color: #F97316;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-padding: 11px 20px;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #EA580C;
+}
+
+/* Inputs */
+
+.text-field,
+.combo-box,
+.date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 8px;
+}
+
+/* Tables */
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-background-radius: 8px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #F1F5F9;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #334155;
+    -fx-font-weight: bold;
+}

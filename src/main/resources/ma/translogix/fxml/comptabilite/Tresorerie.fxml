@@ -1,0 +1,34 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ma.translogix.controller.comptabilite.TresorerieController"
+      spacing="15">
+
+    <padding>
+        <Insets top="25" right="28" bottom="28" left="28"/>
+    </padding>
+
+    <Label text="Trésorerie" styleClass="section-title"/>
+
+    <Label fx:id="messageLabel" text=""/>
+
+    <Button text="Actualiser"
+            onAction="#actualiser"
+            styleClass="primary-button"/>
+
+    <TableView>
+        <columns>
+            <TableColumn text="Date" prefWidth="120"/>
+            <TableColumn text="Libellé" prefWidth="200"/>
+            <TableColumn text="Entrée" prefWidth="130"/>
+            <TableColumn text="Sortie" prefWidth="130"/>
+            <TableColumn text="Solde" prefWidth="130"/>
+        </columns>
+    </TableView>
+
+</VBox>
