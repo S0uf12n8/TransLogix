@@ -98,6 +98,7 @@ class NavigationMenuTest {
         assertFalse(e.demo());
         assertEquals(null, e.kicker());
     }
+
     @Test
     void menuComptableDansLOrdreDeLaMaquette() {
         assertEquals(List.of("Tableau de bord", "Facturation clients", "Clients", "Valider dépenses",
@@ -121,5 +122,39 @@ class NavigationMenuTest {
     void comptabiliteDuGerantOuvreLaFacturation() {
         assertTrue(NavigationMenu.pour(Role.GERANT).stream()
                 .anyMatch(e -> e.libelle().equals("Comptabilité & finance") && e.fxml().equals("comptable/factures.fxml")));
+    }
+
+    @Test
+    void leMenuDispatcherSuitLOrdreDeLaMaquette() {
+        assertEquals(List.of("dispatcher/missions.fxml", "dispatcher/flotte.fxml", "dispatcher/planning.fxml",
+                        "dispatcher/incidents.fxml", "dispatcher/carburant.fxml"),
+                NavigationMenu.pour(Role.DISPATCHER).stream().map(NavigationMenu.Entree::fxml).toList());
+        assertEquals("EXPLOITATION LOGISTIQUE", NavigationMenu.sousTitre(Role.DISPATCHER));
+    }
+
+    @Test
+    void lesEcransDuMenuDispatcherExistent() {
+        for (NavigationMenu.Entree e : NavigationMenu.pour(Role.DISPATCHER)) {
+            assertNotNull(getClass().getResource(NavigationMenu.RACINE + e.fxml()), e.fxml());
+            assertNotNull(e.kicker(), e.libelle());
+            assertNotNull(e.icone(), e.libelle());
+        }
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "dispatcher/mission-dialog.fxml"));
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "dispatcher/vehicule-dialog.fxml"));
+    }
+
+    @Test
+    void seulesLesPagesDispatcherDeLIteration3SontEnDemo() {
+        assertEquals(List.of("dispatcher/incidents.fxml", "dispatcher/carburant.fxml"),
+                NavigationMenu.pour(Role.DISPATCHER).stream().filter(NavigationMenu.Entree::demo)
+                        .map(NavigationMenu.Entree::fxml).toList());
+    }
+
+    @Test
+    void leGerantOuvreLeDispatchingEtLaFlotte() {
+        assertEquals("Dispatching & flotte",
+                NavigationMenu.entreePour(Role.GERANT, "dispatcher/missions.fxml").orElseThrow().libelle());
+        assertEquals("Dispatching & flotte",
+                NavigationMenu.entreePour(Role.GERANT, "dispatcher/flotte.fxml").orElseThrow().libelle());
     }
 }

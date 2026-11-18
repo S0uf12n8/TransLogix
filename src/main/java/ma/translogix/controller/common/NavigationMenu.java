@@ -44,6 +44,12 @@ public final class NavigationMenu {
     static final String ICONE_FACTURE = "M5 2h10l5 5v15H5z M8 10h9v2H8z M8 14h9v2H8z M8 18h6v1.5H8z";
     static final String ICONE_RECU = "M4 2h16v20l-2.7-1.8L14.7 22L12 20.2L9.3 22l-2.6-1.8L4 22z "
             + "M7 7h10v2H7z M7 11h10v2H7z M7 15h6v2H7z";
+    // Dispatcher icons (dispatcher.html): map pin, warning sign, fuel pump. Holes are drawn opposite to the outline.
+    static final String ICONE_POSITION = "M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z "
+            + "M12 6.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z";
+    static final String ICONE_ALERTE = "M12 2L1 21h22z M11 9h2v6h-2z M11 17h2v2h-2z";
+    static final String ICONE_CARBURANT = "M4 3h10v18H4z M6 5v5h6V5z M14 8h2a2 2 0 0 1 2 2v7a1 1 0 0 0 2 0V9l-3-3"
+            + "l1.4-1.4L22 8.2V17a3 3 0 0 1-6 0v-7h-2z";
     static final String ICONE_LIVRE = "M3 4h7a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H3z M21 4h-7a2 2 0 0 0-2 2v15a2 2 0 0 1 2-2h7z";
 
     private NavigationMenu() {
@@ -95,6 +101,18 @@ public final class NavigationMenu {
                             ICONE_PORTEFEUILLE, false),
                     new Entree("Journal comptable", "comptable/journal.fxml", "Traçabilité & écritures",
                             ICONE_LIVRE, false));
+            // Dispatcher menu, in dispatcher.html order. Incidents and fuel vouchers are Iteration 3 (DÉMO).
+            case DISPATCHER -> List.of(
+                    new Entree("Ordres & trajets", "dispatcher/missions.fxml", "Opérations en direct",
+                            ICONE_CAMION, false),
+                    new Entree("Suivi flotte", "dispatcher/flotte.fxml", "Flotte & disponibilité",
+                            ICONE_POSITION, false),
+                    new Entree("Planning chauffeurs", "dispatcher/planning.fxml", "Ressources & disponibilité",
+                            ICONE_CALENDRIER, false),
+                    new Entree("Incidents & alertes", "dispatcher/incidents.fxml", "Gestion des aléas",
+                            ICONE_ALERTE, true),
+                    new Entree("Carburant & bons", "dispatcher/carburant.fxml", "Carburant & péages",
+                            ICONE_CARBURANT, true));
             default -> List.of(); // other roles: added by their owner
         };
     }
@@ -121,6 +139,7 @@ public final class NavigationMenu {
             case GERANT -> "ERP LOGISTIQUE · MAROC";
             case RH -> "PORTAIL RH";
             case COMPTABLE -> "COMPTA & FINANCE";
+            case DISPATCHER -> "EXPLOITATION LOGISTIQUE";
             default -> "TRANSLOGIX";
         };
     }

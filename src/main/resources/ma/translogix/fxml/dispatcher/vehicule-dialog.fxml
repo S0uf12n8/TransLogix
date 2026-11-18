@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Add / edit a vehicle ([H3]), shown by FlotteController. Buttons are added by DispatcherUi. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.dispatcher.VehiculeFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="480" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="FLOTTE" styleClass="eyebrow"/>
+            <Label fx:id="titre" text="Nouveau v&#233;hicule" styleClass="dialog-title"/>
+            <Label fx:id="description" text="Ajoutez un camion &#224; la flotte. Il est cr&#233;&#233; &#171; En service &#187;."
+                   wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="50"/>
+                <ColumnConstraints percentWidth="50"/>
+            </columnConstraints>
+            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <Label text="Matricule" styleClass="form-label"/>
+                <TextField fx:id="champMatricule" promptText="Ex : 12345-A-6" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <Label text="Capacit&#233; (tonnes)" styleClass="form-label"/>
+                <TextField fx:id="champCapacite" promptText="Ex : 26" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                <Label text="Marque" styleClass="form-label"/>
+                <TextField fx:id="champMarque" promptText="Ex : Volvo" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <Label text="Mod&#232;le" styleClass="form-label"/>
+                <TextField fx:id="champModele" promptText="Ex : FH" styleClass="search-field"/>
+            </VBox>
+        </GridPane>
+    </content>
+</DialogPane>

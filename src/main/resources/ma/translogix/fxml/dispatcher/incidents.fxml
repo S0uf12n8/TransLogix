@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- "Incidents & Retards de Route" (dispatcher.html incidents): Iteration 3. Hamid's IncidentsView layout and
+     sample incidents, shown as DÉMO; every action says "Module pas encore livré (itération 3)". -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.dispatcher.IncidentsController"
+      stylesheets="@../../css/app.css"
+      spacing="20" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="GESTION DES AL&#201;AS" styleClass="eyebrow"/>
+                <Label text="D&#201;MO" styleClass="chip-demo"/>
+            </HBox>
+            <Label text="Incidents &amp; Retards de Route" styleClass="section-heading"/>
+            <Label text="Signalez et g&#233;rez les pannes, accidents ou blocages." styleClass="muted"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="D&#233;clarer Incident" onAction="#pasEncoreLivre" styleClass="btn-danger"/>
+    </HBox>
+
+    <GridPane hgap="20">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/>
+            <ColumnConstraints percentWidth="50"/>
+        </columnConstraints>
+
+        <VBox styleClass="card" spacing="14" GridPane.columnIndex="0">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Incidents En Cours" styleClass="panel-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="2 urgences" styleClass="badge-red"/>
+            </HBox>
+            <VBox spacing="8" styleClass="incident-red">
+                <HBox>
+                    <Label text="Crevaison pneu arri&#232;re droit" styleClass="incident-title-red"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="TRJ-9081" styleClass="incident-ref-red"/>
+                </HBox>
+                <Label text="Camion 12345-A-6 arr&#234;t&#233; sur l'A1 KM 42 pr&#232;s de Bouznika. Assistance pneumatique contact&#233;e."
+                       wrapText="true" styleClass="incident-text"/>
+                <HBox spacing="14">
+                    <Button text="Appeler Assistance" onAction="#pasEncoreLivre" styleClass="link-red"/>
+                    <Button text="R&#233;soudre" onAction="#pasEncoreLivre" styleClass="link-green"/>
+                </HBox>
+            </VBox>
+            <VBox spacing="8" styleClass="incident-amber">
+                <HBox>
+                    <Label text="Bouchon exceptionnel / Retard quai" styleClass="incident-title-amber"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="TRJ-9084" styleClass="incident-ref-amber"/>
+                </HBox>
+                <Label text="Attente de plus de 2h &#224; l'entr&#233;e du Port de Casablanca. ETA d&#233;cal&#233;e &#224; 19:00."
+                       wrapText="true" styleClass="incident-text"/>
+                <HBox spacing="14">
+                    <Button text="Pr&#233;venir Client" onAction="#pasEncoreLivre" styleClass="link-orange"/>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <VBox styleClass="card" spacing="12" GridPane.columnIndex="1">
+            <Label text="Proc&#233;dure d'Urgence Dispatch" styleClass="panel-title"/>
+            <Label text="&#8226; Panne m&#233;canique : Contacter l'assistance 24/7 au 0800-XX-XX-XX et enregistrer la g&#233;olocalisation exacte."
+                   wrapText="true" styleClass="incident-text"/>
+            <Label text="&#8226; Accident de circulation : S'assurer de la s&#233;curit&#233; du chauffeur, demander un constat amiable ou rapport de gendarmerie."
+                   wrapText="true" styleClass="incident-text"/>
+            <Label text="&#8226; Rupture de cha&#238;ne du froid : Contacter imm&#233;diatement le client et consigner la temp&#233;rature enregistr&#233;e."
+                   wrapText="true" styleClass="incident-text"/>
+        </VBox>
+    </GridPane>
+</VBox>

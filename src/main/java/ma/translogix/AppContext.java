@@ -3,33 +3,43 @@ package ma.translogix;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
+import ma.translogix.dao.VehiculeDao;
 import ma.translogix.dao.memory.InMemoryAuditDao;
 import ma.translogix.dao.memory.InMemoryClientDao;
 import ma.translogix.dao.memory.InMemoryDocumentConformiteDao;
 import ma.translogix.dao.memory.InMemoryEmployeDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
+import ma.translogix.dao.memory.InMemoryMissionDao;
 import ma.translogix.dao.memory.InMemoryPaiementDao;
 import ma.translogix.dao.memory.InMemoryUtilisateurDao;
+import ma.translogix.dao.memory.InMemoryVehiculeDao;
 import ma.translogix.model.Client;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Facture;
+import ma.translogix.model.Mission;
 import ma.translogix.model.ModePaiement;
 import ma.translogix.model.Poste;
 import ma.translogix.model.Role;
+import ma.translogix.model.StatutVehicule;
 import ma.translogix.model.TypeContrat;
 import ma.translogix.model.TypeDocument;
 import ma.translogix.model.Utilisateur;
+import ma.translogix.model.Vehicule;
 import ma.translogix.service.AuditService;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.ConformiteService;
 import ma.translogix.service.FactureService;
+import ma.translogix.service.MissionService;
 import ma.translogix.service.DashboardService;
 import ma.translogix.service.DemoDashboardService;
 import ma.translogix.service.EmployeService;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.UtilisateurService;
+import ma.translogix.service.VehiculeService;
 import ma.translogix.util.Session;
 
 /**
@@ -56,6 +66,11 @@ public final class AppContext {
     private static final ClientService CLIENT_SERVICE = new ClientService(CLIENT_DAO, FACTURE_DAO);
     private static final FactureService FACTURE_SERVICE =
             new FactureService(FACTURE_DAO, CLIENT_DAO, new InMemoryPaiementDao(), Clock.systemDefaultZone());
+    // Dispatcher module ([H2]-[H4]): in memory until the JDBC DAOs of [H6] exist.
+    private static final VehiculeDao VEHICULE_DAO = new InMemoryVehiculeDao();
+    private static final VehiculeService VEHICULE_SERVICE = new VehiculeService(VEHICULE_DAO);
+    private static final MissionService MISSION_SERVICE = new MissionService(new InMemoryMissionDao(), VEHICULE_DAO,
+            EMPLOYE_SERVICE, CLIENT_SERVICE, Clock.systemDefaultZone());
 
     /** False while the seed runs. This class loads lazily, often after login, so the session alone is not enough. */
     private static boolean demarrageTermine;
@@ -66,6 +81,7 @@ public final class AppContext {
         UTILISATEUR_SERVICE.creer("Principal", "Admin", "admin@translogix.ma", "admin1234", Role.GERANT);
         semerRh(LocalDate.now());
         semerComptabilite(LocalDate.now());
+        semerDispatcher(LocalDateTime.now().truncatedTo(ChronoUnit.HOURS));
         demarrageTermine = true;
     }
 
@@ -131,6 +147,14 @@ public final class AppContext {
         EMPLOYE_SERVICE.lierCompte(bennani.getId(), compteChauffeur.getId());
     }
 
+    public static VehiculeService vehiculeService() {
+        return VEHICULE_SERVICE;
+    }
+
+    public static MissionService missionService() {
+        return MISSION_SERVICE;
+    }
+
     public static ClientService clientService() {
         return CLIENT_SERVICE;
     }
@@ -168,6 +192,51 @@ public final class AppContext {
                 aujourdhui.minusDays(92));
         FACTURE_SERVICE.creer(primeurs.getId(), new BigDecimal("33333.33"), "TRJ-9084", null, hier);
         FACTURE_SERVICE.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-882910", aujourdhui);
+    }
+
+    /**
+     * Demo fleet and missions from dispatcher.html (Hamid's sample rows). Missions go through MissionService, so
+     * the seed obeys the no-overlap rule; drivers are the RH seed drivers, clients the comptable seed clients.
+     * Times are relative to now so the demo looks right at any hour: TRJ-9081 on the road, TRJ-9082 delivered
+     * 15 days ago (before El Amrani's licence expired), TRJ-9084 loading today and TRJ-9083 tomorrow 09:00.
+     * TRJ-9084 goes to Youssef Amrani (the mockup's Karim El Idrissi is not an RH seed employee).
+     */
+    private static void semerDispatcher(LocalDateTime maintenant) {
+        Vehicule volvo = VEHICULE_SERVICE.creer("12345-A-6", "Volvo", "FH", new BigDecimal("26"));
+        Vehicule scania = VEHICULE_SERVICE.creer("67890-B-2", "Scania", "R500", new BigDecimal("26"));
+        Vehicule man = VEHICULE_SERVICE.creer("45678-C-1", "MAN", "TGX", new BigDecimal("32"));
+        Vehicule daf = VEHICULE_SERVICE.creer("11223-D-8", "DAF", "XF", new BigDecimal("30"));
+        Vehicule atelier = VEHICULE_SERVICE.creer("98765-B-2", "Scania", "R450", new BigDecimal("26"));
+        VEHICULE_SERVICE.changerStatut(atelier.getId(), StatutVehicule.MAINTENANCE);
+
+        Long bennani = chauffeur("Bennani");
+        Long elAmrani = chauffeur("El Amrani");
+        Long amrani = chauffeur("Amrani");
+
+        Mission m9081 = MISSION_SERVICE.creer(client("LogiMaroc SARL"), volvo.getId(), bennani, "Casablanca",
+                "Tanger Med", "Produits frais", new BigDecimal("24"), maintenant.minusHours(4),
+                maintenant.plusHours(2).plusMinutes(30));
+        Mission m9082 = MISSION_SERVICE.creer(client("Atlas Prime Transports"), scania.getId(), elAmrani, "Agadir",
+                "Marrakech", "Agrumes", new BigDecimal("18"), maintenant.minusDays(15).minusHours(5),
+                maintenant.minusDays(15).minusMinutes(45));
+        LocalDateTime demain9h = maintenant.toLocalDate().plusDays(1).atTime(9, 0);
+        MISSION_SERVICE.creer(client("Souss Express Logistique"), man.getId(), amrani, "Rabat", "Fès",
+                "Matériaux const.", new BigDecimal("30"), demain9h, demain9h.plusHours(5));
+        MISSION_SERVICE.creer(client("Maroc Primeurs Agadir"), daf.getId(), amrani, "Jorf Lasfar", "Casablanca",
+                "Engrais", new BigDecimal("28"), maintenant.plusHours(1), maintenant.plusHours(4));
+
+        MISSION_SERVICE.demarrer(m9081.getId());
+        MISSION_SERVICE.demarrer(m9082.getId());
+        MISSION_SERVICE.livrer(m9082.getId());
+    }
+
+    private static Long chauffeur(String nom) {
+        return EMPLOYE_SERVICE.listerChauffeurs().stream().filter(e -> e.getNom().equals(nom))
+                .findFirst().orElseThrow().getId();
+    }
+
+    private static Long client(String nom) {
+        return CLIENT_SERVICE.lister().stream().filter(c -> c.getNom().equals(nom)).findFirst().orElseThrow().getId();
     }
 
     /** Who the audit log names: the logged-in user, or "Système" for actions done at startup. */

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- "Suivi Flotte" (dispatcher.html fleet-map, issues [H3], [H5]). Hamid's FleetGpsView without the simulated
+     GPS map: his "Positions GPS récentes" list becomes a real vehicle table (VehiculeService + MissionService). -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.dispatcher.FlotteController"
+      stylesheets="@../../css/app.css"
+      spacing="20" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <Label text="FLOTTE &amp; DISPONIBILIT&#201;" styleClass="eyebrow"/>
+            <Label text="Suivi Flotte" styleClass="section-heading"/>
+            <Label text="&#201;tat des v&#233;hicules, affectations en cours et maintenance." styleClass="muted"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="boutonAjouter" text="Ajouter un v&#233;hicule" onAction="#ajouter" styleClass="btn-primary">
+            <graphic>
+                <SVGPath content="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z" styleClass="btn-icon-white"/>
+            </graphic>
+        </Button>
+    </HBox>
+
+    <HBox spacing="16">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="V&#233;hicules en service" styleClass="kpi-title"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label fx:id="valeurEnService" text="0" styleClass="kpi-value,value-green"/>
+                <Label fx:id="totalVehicules" text="/ 0" styleClass="kpi-unit"/>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="En maintenance" styleClass="kpi-title"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label fx:id="valeurMaintenance" text="0" styleClass="kpi-value,value-orange"/>
+                <Label fx:id="horsService" text="" styleClass="kpi-unit"/>
+            </HBox>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="Missions en cours" styleClass="kpi-title"/>
+            <HBox alignment="BASELINE_LEFT" spacing="6">
+                <Label fx:id="valeurMissions" text="0" styleClass="kpi-value"/>
+                <Label text="camions sur la route" styleClass="kpi-unit"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="V&#233;hicules de la flotte" styleClass="panel-title"/>
+                <Label text="Position = mission en cours (pas de balise GPS dans cette version)." styleClass="panel-sub"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="recherche" promptText="Rechercher matricule, marque..." prefWidth="260" styleClass="search-field"/>
+        </HBox>
+        <TableView fx:id="table" fixedCellSize="56" prefHeight="360" styleClass="flat-table">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+            <placeholder>
+                <Label text="Aucun v&#233;hicule ne correspond &#224; la recherche." styleClass="empty-placeholder"/>
+            </placeholder>
+            <columns>
+                <TableColumn fx:id="colVehicule" text="V&#201;HICULE" prefWidth="180" minWidth="150" sortable="false"/>
+                <TableColumn fx:id="colCapacite" text="CAPACIT&#201;" prefWidth="90" minWidth="80" sortable="false"/>
+                <TableColumn fx:id="colPosition" text="POSITION / MISSION" prefWidth="260" minWidth="200" sortable="false"/>
+                <TableColumn fx:id="colStatut" text="STATUT" prefWidth="130" minWidth="125" sortable="false"/>
+                <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="180" minWidth="180" sortable="false"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

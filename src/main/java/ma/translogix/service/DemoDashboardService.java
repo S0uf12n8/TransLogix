@@ -72,7 +72,7 @@ public class DemoDashboardService implements DashboardService {
                 new Alerte("Factures impayées", "89 400 MAD à suivre.",
                         Niveau.ATTENTION, "comptable/factures.fxml"),
                 new Alerte("Maintenance flotte", "4 véhicules à l'atelier.",
-                        Niveau.INFO, "dispatcher/missions.fxml"));
+                        Niveau.INFO, "dispatcher/flotte.fxml"));
     }
 
     @Override
