@@ -113,7 +113,19 @@ public final class NavigationMenu {
                             ICONE_ALERTE, true),
                     new Entree("Carburant & bons", "dispatcher/carburant.fxml", "Carburant & péages",
                             ICONE_CARBURANT, true));
-            default -> List.of(); // other roles: added by their owner
+            // Driver menu, in chefaire.html order. Only "Mes ordres de transport" is built ([O3]);
+            // the other screens do not exist yet, so the shell shows "pas encore livré".
+            case CHAUFFEUR -> List.of(
+                    new Entree("Tableau de bord", "chauffeur/accueil.fxml", "Cockpit chauffeur",
+                            ICONE_TABLEAU, false),
+                    new Entree("Mes ordres de transport", "chauffeur/missions.fxml", "Carnet de route",
+                            ICONE_CAMION, false),
+                    new Entree("Reçus & carburant", "chauffeur/frais.fxml", "Frais de route & justificatifs",
+                            ICONE_RECU, false),
+                    new Entree("Permis & documents", "chauffeur/documents.fxml", "Dossier administratif",
+                            ICONE_CARTE, false),
+                    new Entree("Incidents & support", "chauffeur/incidents.fxml", "Urgence & assistance routière",
+                            ICONE_ALERTE, false));
         };
     }
 
@@ -140,7 +152,7 @@ public final class NavigationMenu {
             case RH -> "PORTAIL RH";
             case COMPTABLE -> "COMPTA & FINANCE";
             case DISPATCHER -> "EXPLOITATION LOGISTIQUE";
-            default -> "TRANSLOGIX";
+            case CHAUFFEUR -> "ESPACE CHAUFFEUR";
         };
     }
 

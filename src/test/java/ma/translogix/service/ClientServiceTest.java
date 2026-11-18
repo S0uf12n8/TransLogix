@@ -24,13 +24,16 @@ class ClientServiceTest {
 
     private ClientService service;
     private FactureService factures;
+    private MissionsDeTest flotte;
 
     @BeforeEach
     void setUp() {
         InMemoryClientDao clientDao = new InMemoryClientDao();
         InMemoryFactureDao factureDao = new InMemoryFactureDao();
         service = new ClientService(clientDao, factureDao);
-        factures = new FactureService(factureDao, clientDao, new InMemoryPaiementDao(), Clock.systemDefaultZone());
+        flotte = new MissionsDeTest(clientDao, factureDao, Clock.systemDefaultZone());
+        factures = new FactureService(factureDao, clientDao, new InMemoryPaiementDao(), flotte.missions,
+                Clock.systemDefaultZone());
     }
 
     private Client creer(String nom, String ice, String email) {
@@ -122,7 +125,7 @@ class ClientServiceTest {
     @Test
     void clientAvecFacturesNePeutPasEtreSupprime() {
         Client c = creer("LogiMaroc SARL", null, null);
-        factures.creer(c.getId(), new BigDecimal("1000"), null, null);
+        factures.creer(flotte.livree(c.getId()).getId(), new BigDecimal("1000"), null);
 
         assertThrows(ValidationException.class, () -> service.supprimer(c.getId()));
         assertEquals(1, service.lister().size());
