@@ -7,7 +7,8 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- "Créer une facture transport" (contable.html openInvoiceModal). Buttons are added by ComptableUi. -->
+<!-- "Créer une facture transport" (contable.html openInvoiceModal). Buttons are added by ComptableUi.
+     [C3]: the invoice comes from a delivered mission; client and reference are taken from it. -->
 <DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ma.translogix.controller.comptable.FactureFormulaireController"
             stylesheets="@../../css/app.css"
@@ -16,22 +17,20 @@
         <VBox spacing="4" styleClass="form-dialog-header">
             <Label text="COMPTABILIT&#201; &amp; FINANCE" styleClass="eyebrow"/>
             <Label fx:id="titre" text="Cr&#233;er une facture transport" styleClass="dialog-title"/>
-            <Label text="&#201;mettez une nouvelle facture client avec TVA (14 %)." wrapText="true" styleClass="muted"/>
+            <Label text="Facturez une mission livr&#233;e, avec TVA (14 %)." wrapText="true" styleClass="muted"/>
         </VBox>
     </header>
     <content>
         <VBox spacing="12">
             <VBox spacing="6">
-                <Label text="Client" styleClass="form-label"/>
-                <ComboBox fx:id="champClient" promptText="Choisir un client" maxWidth="Infinity" styleClass="form-combo"/>
+                <Label text="Mission livr&#233;e" styleClass="form-label"/>
+                <ComboBox fx:id="champMission" promptText="Choisir une mission livr&#233;e" maxWidth="Infinity"
+                          styleClass="form-combo"/>
+                <Label fx:id="clientMission" text="Client : &#8212;" styleClass="form-note"/>
             </VBox>
             <VBox spacing="6">
                 <Label text="Montant hors taxe (HT en MAD)" styleClass="form-label"/>
                 <TextField fx:id="champMontant" promptText="Ex : 20000" styleClass="search-field"/>
-            </VBox>
-            <VBox spacing="6">
-                <Label text="R&#233;f&#233;rence trajet / ordre" styleClass="form-label"/>
-                <TextField fx:id="champReference" promptText="Ex : TRJ-9081" styleClass="search-field"/>
             </VBox>
             <VBox spacing="6">
                 <Label text="Conditions de r&#232;glement" styleClass="form-label"/>
@@ -54,7 +53,8 @@
                     <Label fx:id="apercuEcheance" text="&#8212;" styleClass="apercu-libelle"/>
                 </HBox>
             </VBox>
-            <Label text="Num&#233;ro FACT-AAAA-NNN attribu&#233; automatiquement." styleClass="form-note"/>
+            <Label text="Num&#233;ro FACT-AAAA-NNN attribu&#233; automatiquement. La mission passe &#224; &#171; Factur&#233;e &#187;."
+                   wrapText="true" styleClass="form-note"/>
         </VBox>
     </content>
 </DialogPane>

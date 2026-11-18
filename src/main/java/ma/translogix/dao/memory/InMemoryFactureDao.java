@@ -29,6 +29,11 @@ public class InMemoryFactureDao implements FactureDao {
     }
 
     @Override
+    public Optional<Facture> findByMission(Long missionId) {
+        return donnees.values().stream().filter(f -> missionId.equals(f.getMissionId())).findFirst();
+    }
+
+    @Override
     public Facture save(Facture facture) {
         facture.setId(prochainId++);
         donnees.put(facture.getId(), facture);

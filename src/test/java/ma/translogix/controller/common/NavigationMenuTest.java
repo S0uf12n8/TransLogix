@@ -157,4 +157,29 @@ class NavigationMenuTest {
         assertEquals("Dispatching & flotte",
                 NavigationMenu.entreePour(Role.GERANT, "dispatcher/flotte.fxml").orElseThrow().libelle());
     }
+
+    @Test
+    void leMenuChauffeurSuitLOrdreDeLaMaquette() {
+        assertEquals(List.of("Tableau de bord", "Mes ordres de transport", "Reçus & carburant",
+                        "Permis & documents", "Incidents & support"),
+                NavigationMenu.pour(Role.CHAUFFEUR).stream().map(NavigationMenu.Entree::libelle).toList());
+        assertEquals("ESPACE CHAUFFEUR", NavigationMenu.sousTitre(Role.CHAUFFEUR));
+    }
+
+    @Test
+    void seulsMesOrdresDeTransportSontLivresPourLeChauffeur() {
+        List<String> livres = NavigationMenu.pour(Role.CHAUFFEUR).stream()
+                .filter(e -> getClass().getResource(NavigationMenu.RACINE + e.fxml()) != null)
+                .map(NavigationMenu.Entree::fxml).toList();
+        assertEquals(List.of("chauffeur/missions.fxml"), livres); // the others show "pas encore livré"
+        for (NavigationMenu.Entree e : NavigationMenu.pour(Role.CHAUFFEUR)) {
+            assertNotNull(e.kicker(), e.libelle());
+            assertNotNull(e.icone(), e.libelle());
+        }
+    }
+
+    @Test
+    void ecranDeConnexionExiste() {
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "auth/login.fxml"));
+    }
 }

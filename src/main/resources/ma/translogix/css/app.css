@@ -748,3 +748,84 @@
 .incident-ref-red     { -fx-font-weight: bold; -fx-text-fill: #dc2626; }
 .incident-ref-amber   { -fx-font-weight: bold; -fx-text-fill: #d97706; }
 .incident-text { -fx-font-size: 12px; -fx-text-fill: #475569; }
+
+/* =========================== Login =========================== */
+/* login.html: dark card (glass-login-card) on a light background, orange logo and button. */
+.login-root {
+    -fx-background-color: radial-gradient(center 10% 0%, radius 60%, rgba(255,102,0,0.12), transparent),
+                          radial-gradient(center 95% 100%, radius 60%, rgba(217,119,6,0.12), transparent),
+                          #f8fafc;
+    -fx-padding: 24;
+}
+.login-card {
+    -fx-background-color: #0b0f19;
+    -fx-background-radius: 24;
+    -fx-border-color: #ff6600 transparent transparent transparent, rgba(255,102,0,0.25);
+    -fx-border-width: 3 0 0 0, 1;
+    -fx-border-radius: 24;
+    -fx-padding: 32 36 32 36;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 40, 0.1, 0, 16);
+}
+.login-logo {
+    -fx-background-color: linear-gradient(to bottom right, #ff6600, #d97706);
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(255,102,0,0.45), 22, 0.2, 0, 0);
+}
+.login-logo-icon {
+    -fx-fill: white;
+    -fx-scale-x: 1.4;
+    -fx-scale-y: 1.4;
+}
+.login-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
+.login-sub {
+    -fx-font-size: 12px;
+    -fx-text-fill: #94a3b8;
+}
+.login-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #cbd5e1;
+}
+.login-field {
+    -fx-background-color: #111827;
+    -fx-border-color: #374151;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #64748b;
+    -fx-highlight-fill: #ff6600;
+    -fx-font-size: 13px;
+    -fx-padding: 11 14;
+}
+.login-field:focused {
+    -fx-border-color: #ff6600;
+}
+.login-error {
+    -fx-background-color: rgba(220,38,38,0.15);
+    -fx-background-radius: 10;
+    -fx-text-fill: #fca5a5;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 12;
+}
+.login-button {
+    -fx-background-color: linear-gradient(to right, #ff6600, #d97706);
+    -fx-background-radius: 12;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+    -fx-padding: 13 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(255,102,0,0.3), 16, 0.1, 0, 6);
+}
+.login-button:hover {
+    -fx-background-color: linear-gradient(to right, #e65c00, #b45309);
+}
+.login-footer {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}

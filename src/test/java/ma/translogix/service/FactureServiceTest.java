@@ -2,7 +2,6 @@ package ma.translogix.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,13 +10,16 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import ma.translogix.dao.memory.InMemoryClientDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
 import ma.translogix.dao.memory.InMemoryPaiementDao;
 import ma.translogix.model.Client;
 import ma.translogix.model.Facture;
+import ma.translogix.model.Mission;
 import ma.translogix.model.ModePaiement;
 import ma.translogix.model.StatutFacture;
+import ma.translogix.model.StatutMission;
 import ma.translogix.util.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,7 @@ class FactureServiceTest {
 
     private InMemoryPaiementDao paiementDao;
     private FactureService service;
+    private MissionsDeTest flotte;
     private Client client;
 
     @BeforeEach
@@ -38,12 +41,18 @@ class FactureServiceTest {
         InMemoryClientDao clientDao = new InMemoryClientDao();
         InMemoryFactureDao factureDao = new InMemoryFactureDao();
         paiementDao = new InMemoryPaiementDao();
-        service = new FactureService(factureDao, clientDao, paiementDao, HORLOGE);
+        flotte = new MissionsDeTest(clientDao, factureDao, HORLOGE);
+        service = new FactureService(factureDao, clientDao, paiementDao, flotte.missions, HORLOGE);
         client = clientDao.save(new Client(null, "LogiMaroc SARL", null, null, null, null, 30));
     }
 
+    /** A new delivered mission of the client. */
+    private Long livree() {
+        return flotte.livree(client.getId()).getId();
+    }
+
     private Facture facture(String ht) {
-        return service.creer(client.getId(), new BigDecimal(ht), "TRJ-9081", null);
+        return service.creer(livree(), new BigDecimal(ht), null);
     }
 
     @Test
@@ -79,27 +88,69 @@ class FactureServiceTest {
     @Test
     void conditionChoisieRemplaceLeDelaiDuClient() {
         assertEquals(AUJOURDHUI.plusDays(60),
-                service.creer(client.getId(), BigDecimal.TEN, null, 60).getDateEcheance());
+                service.creer(livree(), BigDecimal.TEN, 60).getDateEcheance());
         assertEquals(AUJOURDHUI, // comptant
-                service.creer(client.getId(), BigDecimal.TEN, null, 0).getDateEcheance());
+                service.creer(livree(), BigDecimal.TEN, 0).getDateEcheance());
     }
 
     @Test
     void numerosGeneresParAnnee() {
         assertEquals("FACT-2026-001", facture("10").getNumero());
         assertEquals("FACT-2026-002", facture("10").getNumero());
-        assertEquals("FACT-2025-001", service.creer(client.getId(), BigDecimal.TEN, null, null,
+        assertEquals("FACT-2025-001", service.creer(livree(), BigDecimal.TEN, null,
                 LocalDate.of(2025, 12, 30)).getNumero());
         assertEquals("FACT-2026-003", facture("10").getNumero());
     }
 
     @Test
-    void nouvelleFactureEnAttenteSansMission() {
-        Facture f = facture("1000");
+    void factureDUneMissionLivreeReprendSonClientEtSaReferenceEtLaPasseAFacturee() {
+        Mission m = flotte.livree(client.getId());
+
+        Facture f = service.creer(m.getId(), new BigDecimal("1000"), null);
 
         assertEquals(StatutFacture.EN_ATTENTE, f.getStatut());
-        assertNull(f.getMissionId()); // TODO [H2]
-        assertEquals("TRJ-9081", f.getReferenceTrajet());
+        assertEquals(m.getId(), f.getMissionId());
+        assertEquals(client.getId(), f.getClientId());
+        assertEquals(m.getReference(), f.getReferenceTrajet());
+        assertEquals(StatutMission.FACTUREE, flotte.missions.trouver(m.getId()).getStatut());
+    }
+
+    @Test
+    void missionNonLivreeEstRefusee() {
+        Mission planifiee = flotte.planifiee(client.getId());
+        Mission enCours = flotte.planifiee(client.getId());
+        flotte.missions.demarrer(enCours.getId());
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.creer(planifiee.getId(), new BigDecimal("1000"), null));
+        assertEquals("Seule une mission livrée peut être facturée (" + planifiee.getReference()
+                + " est « Planifiée »).", e.getMessage());
+        assertThrows(ValidationException.class, () -> service.creer(enCours.getId(), new BigDecimal("1000"), null));
+        assertTrue(service.lister().isEmpty());
+        assertEquals(StatutMission.EN_COURS, flotte.missions.trouver(enCours.getId()).getStatut());
+    }
+
+    @Test
+    void uneSecondeFacturePourLaMemeMissionEstRefusee() {
+        Long mission = livree();
+        Facture premiere = service.creer(mission, new BigDecimal("1000"), null);
+        service.annuler(premiere.getId()); // even a cancelled invoice keeps the mission taken (mission_id UNIQUE)
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.creer(mission, new BigDecimal("1000"), null));
+        assertTrue(e.getMessage().contains("déjà facturée (" + premiere.getNumero() + ")"), e.getMessage());
+        assertEquals(1, service.lister().size());
+    }
+
+    @Test
+    void seulesLesMissionsLivreesSansFactureSontProposees() {
+        Long aFacturer = livree();
+        Long facturee = livree();
+        flotte.planifiee(client.getId());
+        service.creer(facturee, BigDecimal.TEN, null);
+
+        assertEquals(List.of(aFacturer),
+                service.missionsAFacturer().stream().map(Mission::getId).toList());
     }
 
     @Test
@@ -107,15 +158,15 @@ class FactureServiceTest {
         assertThrows(ValidationException.class, () -> facture("0"));
         assertThrows(ValidationException.class, () -> facture("-5"));
         assertThrows(ValidationException.class,
-                () -> service.creer(null, BigDecimal.TEN, null, null));
+                () -> service.creer(null, BigDecimal.TEN, null));
         assertThrows(ValidationException.class,
-                () -> service.creer(client.getId(), null, null, null));
+                () -> service.creer(livree(), null, null));
     }
 
     @Test
     void factureDontLEcheanceEstPasseeEstEnRetard() {
-        Facture echue = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(31));
-        Facture echueAujourdhui = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(30));
+        Facture echue = service.creer(livree(), BigDecimal.TEN, 30, AUJOURDHUI.minusDays(31));
+        Facture echueAujourdhui = service.creer(livree(), BigDecimal.TEN, 30, AUJOURDHUI.minusDays(30));
         Facture recente = facture("10");
 
         assertTrue(service.estEnRetard(echue));
@@ -128,8 +179,8 @@ class FactureServiceTest {
 
     @Test
     void factureRegleeOuAnnuleeNEstJamaisEnRetard() {
-        Facture payee = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(60));
-        Facture annulee = service.creer(client.getId(), BigDecimal.TEN, null, 30, AUJOURDHUI.minusDays(60));
+        Facture payee = service.creer(livree(), BigDecimal.TEN, 30, AUJOURDHUI.minusDays(60));
+        Facture annulee = service.creer(livree(), BigDecimal.TEN, 30, AUJOURDHUI.minusDays(60));
         service.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
         service.annuler(annulee.getId());
 
@@ -198,7 +249,7 @@ class FactureServiceTest {
     void syntheseCalculeeDepuisLesFactures() {
         Facture payee = facture("1000");                     // this month, paid today
         facture("2000");                                     // this month, pending
-        service.creer(client.getId(), new BigDecimal("500"), null, 30, AUJOURDHUI.minusDays(45)); // overdue
+        service.creer(livree(), new BigDecimal("500"), 30, AUJOURDHUI.minusDays(45)); // overdue
         Facture annulee = facture("9999");
         service.annuler(annulee.getId());
         service.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI);
@@ -215,7 +266,7 @@ class FactureServiceTest {
 
     @Test
     void listeTrieeDeLaPlusRecenteALaPlusAncienne() {
-        Facture ancienne = service.creer(client.getId(), BigDecimal.TEN, null, null, AUJOURDHUI.minusDays(10));
+        Facture ancienne = service.creer(livree(), BigDecimal.TEN, null, AUJOURDHUI.minusDays(10));
         Facture recente = facture("10");
 
         assertEquals(recente.getId(), service.lister().get(0).getId());

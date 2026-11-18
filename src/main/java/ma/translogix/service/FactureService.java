@@ -15,14 +15,18 @@ import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.PaiementDao;
 import ma.translogix.model.Client;
 import ma.translogix.model.Facture;
+import ma.translogix.model.Mission;
 import ma.translogix.model.ModePaiement;
 import ma.translogix.model.Paiement;
 import ma.translogix.model.StatutFacture;
+import ma.translogix.model.StatutMission;
 import ma.translogix.util.ValidationException;
 
 /**
  * Business rules for invoices and payments. Issue [C3]. No JavaFX and no SQL here.
  * <ul>
+ *   <li>Only a LIVREE mission is invoiced, once (cancelled invoice included); the client comes from the mission,
+ *       and the mission then moves to FACTUREE through MissionService (promise 2).</li>
  *   <li>VAT 14 %, HALF_UP, 2 decimals; TTC = HT + VAT.</li>
  *   <li>Due date = emission date + payment delay (the client's delay unless another condition is chosen).</li>
  *   <li>"En retard" is computed (unpaid and past due), never stored.</li>
@@ -46,12 +50,15 @@ public class FactureService {
     private final FactureDao dao;
     private final ClientDao clientDao;
     private final PaiementDao paiementDao;
+    private final MissionService missions;
     private final Clock horloge;
 
-    public FactureService(FactureDao dao, ClientDao clientDao, PaiementDao paiementDao, Clock horloge) {
+    public FactureService(FactureDao dao, ClientDao clientDao, PaiementDao paiementDao, MissionService missions,
+                          Clock horloge) {
         this.dao = dao;
         this.clientDao = clientDao;
         this.paiementDao = paiementDao;
+        this.missions = missions;
         this.horloge = horloge;
     }
 
@@ -78,20 +85,34 @@ public class FactureService {
         return dao.findById(id).orElseThrow(() -> new ValidationException("Facture introuvable."));
     }
 
-    /** Issues an invoice dated today. delaiJours null means "the client's payment delay". */
-    public Facture creer(Long clientId, BigDecimal montantHT, String referenceTrajet, Integer delaiJours) {
-        return creer(clientId, montantHT, referenceTrajet, delaiJours, aujourdhui());
+    /** Delivered missions without an invoice yet: what the "Créer une facture" dialog offers. */
+    public List<Mission> missionsAFacturer() {
+        return missions.lister().stream()
+                .filter(m -> m.getStatut() == StatutMission.LIVREE)
+                .filter(m -> dao.findByMission(m.getId()).isEmpty())
+                .toList();
+    }
+
+    /** Invoices a delivered mission, dated today. delaiJours null means "the client's payment delay". */
+    public Facture creer(Long missionId, BigDecimal montantHT, Integer delaiJours) {
+        return creer(missionId, montantHT, delaiJours, aujourdhui());
     }
 
     /** Same, with an explicit emission date (demo seed data). */
-    public Facture creer(Long clientId, BigDecimal montantHT, String referenceTrajet, Integer delaiJours,
-                         LocalDate dateEmission) {
-        // TODO [H2]: when Mission exists, take a missionId and accept only missions with statut LIVREE
-        //  (one invoice per mission), then ask MissionService to move the mission to FACTUREE.
-        if (clientId == null) {
-            throw new ValidationException("Choisissez un client.");
+    public Facture creer(Long missionId, BigDecimal montantHT, Integer delaiJours, LocalDate dateEmission) {
+        if (missionId == null) {
+            throw new ValidationException("Choisissez une mission livrée.");
         }
-        Client client = clientDao.findById(clientId)
+        Mission mission = missions.trouver(missionId);
+        dao.findByMission(missionId).ifPresent(f -> {
+            throw new ValidationException("La mission " + mission.getReference() + " est déjà facturée ("
+                    + f.getNumero() + ").");
+        });
+        if (mission.getStatut() != StatutMission.LIVREE) {
+            throw new ValidationException("Seule une mission livrée peut être facturée (" + mission.getReference()
+                    + " est « " + mission.getStatut().getLibelle() + " »).");
+        }
+        Client client = clientDao.findById(mission.getClientId())
                 .orElseThrow(() -> new ValidationException("Client introuvable."));
         if (montantHT == null || montantHT.signum() <= 0) {
             throw new ValidationException("Le montant HT doit être supérieur à 0.");
@@ -102,9 +123,9 @@ public class FactureService {
         }
         Facture facture = new Facture();
         facture.setNumero(prochainNumero(dateEmission.getYear()));
-        facture.setClientId(clientId);
-        facture.setReferenceTrajet(referenceTrajet == null || referenceTrajet.isBlank()
-                ? null : referenceTrajet.trim().toUpperCase());
+        facture.setClientId(client.getId());
+        facture.setMissionId(mission.getId());
+        facture.setReferenceTrajet(mission.getReference());
         facture.setMontantHT(arrondir(montantHT));
         facture.setTauxTva(TAUX_TVA);
         facture.setMontantTva(calculerTva(montantHT));
@@ -112,7 +133,10 @@ public class FactureService {
         facture.setDateEmission(dateEmission);
         facture.setDateEcheance(dateEmission.plusDays(delai));
         facture.setStatut(StatutFacture.EN_ATTENTE);
-        return dao.save(facture);
+        // JDBC ([C5]): the insert and the mission update must run in ONE transaction.
+        Facture enregistree = dao.save(facture);
+        missions.marquerFacturee(mission.getId());
+        return enregistree;
     }
 
     /** Records the client's payment; the invoice becomes PAYEE. */
