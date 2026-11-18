@@ -642,3 +642,109 @@
     -fx-font-size: 10px;
     -fx-text-fill: #94a3b8;
 }
+
+/* RH (rh.html, from Majda's rh.css): only what the shared classes above do not cover */
+.value-orange { -fx-text-fill: #ea580c; }
+.value-green  { -fx-text-fill: #059669; }
+.cell-green  { -fx-font-weight: bold; -fx-text-fill: #15803d; }
+.cell-amber  { -fx-font-weight: bold; -fx-text-fill: #b45309; }
+.cell-red    { -fx-font-weight: bold; -fx-text-fill: #dc2626; }
+.cell-orange { -fx-font-weight: bold; -fx-text-fill: #ea580c; }
+.alert-purple {
+    -fx-padding: 12;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-background-color: #faf5ff;
+}
+.alert-purple:hover { -fx-background-color: #f3e8ff; }
+.svg-purple { -fx-fill: #9333ea; -fx-scale-x: 0.75; -fx-scale-y: 0.75; }
+.banner-red, .banner-green {
+    -fx-padding: 16;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+.banner-red   { -fx-background-color: #fef2f2; -fx-border-color: #fecaca; }
+.banner-green { -fx-background-color: #f0fdf4; -fx-border-color: #bbf7d0; }
+.banner-icon-red, .banner-icon-green {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-max-width: 40;
+    -fx-max-height: 40;
+    -fx-background-radius: 12;
+}
+.banner-icon-red   { -fx-background-color: #fee2e2; }
+.banner-icon-green { -fx-background-color: #dcfce7; }
+.banner-icon-red .banner-svg   { -fx-fill: #dc2626; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }
+.banner-icon-green .banner-svg { -fx-fill: #16a34a; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }
+.kanban-card {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+/* =========================== Comptable =========================== */
+/* Live VAT / TTC preview in the invoice dialog (mockup: "calcul automatique TVA 14%"). */
+.apercu-tva {
+    -fx-background-color: #fff7ed;
+    -fx-border-color: #fed7aa;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 14;
+}
+.apercu-libelle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9a3412;
+}
+.apercu-total {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+
+/* =========================== Dispatcher =========================== */
+/* dispatcher.html / Hamid's dispatcher.css: only what the shared classes above do not cover. */
+.badge-purple {
+    -fx-background-radius: 999;
+    -fx-padding: 4 9;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #7e22ce;
+}
+.link-blue, .link-green {
+    -fx-background-color: transparent;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 6;
+    -fx-cursor: hand;
+}
+.link-blue  { -fx-text-fill: #2563eb; }
+.link-green { -fx-text-fill: #15803d; }
+.link-blue:hover, .link-green:hover {
+    -fx-underline: true;
+}
+.foot-blue { -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; }
+.btn-danger {
+    -fx-background-color: #dc2626;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 15;
+    -fx-background-radius: 9;
+    -fx-cursor: hand;
+}
+.btn-danger:hover { -fx-background-color: #b91c1c; }
+.incident-red, .incident-amber {
+    -fx-padding: 14;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+.incident-red   { -fx-background-color: #fef2f2; -fx-border-color: #fecaca; }
+.incident-amber { -fx-background-color: #fffbeb; -fx-border-color: #fde68a; }
+.incident-title-red   { -fx-font-weight: bold; -fx-text-fill: #7f1d1d; }
+.incident-title-amber { -fx-font-weight: bold; -fx-text-fill: #78350f; }
+.incident-ref-red     { -fx-font-weight: bold; -fx-text-fill: #dc2626; }
+.incident-ref-amber   { -fx-font-weight: bold; -fx-text-fill: #d97706; }
+.incident-text { -fx-font-size: 12px; -fx-text-fill: #475569; }

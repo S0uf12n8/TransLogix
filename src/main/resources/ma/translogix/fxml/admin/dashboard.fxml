@@ -232,7 +232,7 @@
                 <Label text="Suivi des derniers ordres de transport" styleClass="panel-sub"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Voir la flotte   &#8594;" onAction="#ouvrirDispatching" styleClass="btn-secondary"/>
+            <Button text="Voir la flotte   &#8594;" onAction="#ouvrirFlotte" styleClass="btn-secondary"/>
         </HBox>
         <TableView fx:id="tableTrajets" fixedCellSize="58" prefHeight="214" styleClass="flat-table">
             <columnResizePolicy>

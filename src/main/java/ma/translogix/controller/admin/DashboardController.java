@@ -177,10 +177,16 @@ public class DashboardController {
 
     // Targets owned by other members. Until their FXML exists, Navigator shows "Module pas encore livré".
 
-    /** "+ Nouvel ordre de transport", "Voir la flotte", alert "Maintenance flotte". */
+    /** "+ Nouvel ordre de transport". */
     @FXML
     private void ouvrirDispatching() {
         Navigator.ouvrir("dispatcher/missions.fxml");
+    }
+
+    /** "Voir la flotte" (the alert "Maintenance flotte" opens the same page through DashboardService). */
+    @FXML
+    private void ouvrirFlotte() {
+        Navigator.ouvrir("dispatcher/flotte.fxml");
     }
 
     /** "Voir le journal" in "Dernières actions". */
