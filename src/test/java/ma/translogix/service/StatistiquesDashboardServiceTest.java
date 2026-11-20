@@ -136,7 +136,9 @@ class StatistiquesDashboardServiceTest {
         List<Part> parts = service.missionsParStatut();
 
         assertEquals(DashboardService.STATUTS_MISSION, parts.stream().map(Part::libelle).toList());
-        assertEquals(List.of(0, 2, 1, 0, 1, 1, 1), parts.stream().map(Part::nombre).toList());
+        assertEquals(List.of("Planifiée", "En cours", "Livrée", "Facturée", "Annulée"),
+                parts.stream().map(Part::libelle).toList());
+        assertEquals(List.of(2, 1, 1, 1, 1), parts.stream().map(Part::nombre).toList());
     }
 
     @Test

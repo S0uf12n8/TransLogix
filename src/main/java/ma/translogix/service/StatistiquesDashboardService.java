@@ -82,8 +82,7 @@ public class StatistiquesDashboardService implements DashboardService {
     }
 
     /**
-     * One Part per label of STATUTS_MISSION, in that order (contract of the interface).
-     * A label with no matching StatutMission (today "Créée" and "Suspendue") counts 0.
+     * One Part per label of STATUTS_MISSION, in that order (contract of the interface), zero counts included.
      */
     @Override
     public List<Part> missionsParStatut() {

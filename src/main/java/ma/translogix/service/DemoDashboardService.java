@@ -21,7 +21,7 @@ public class DemoDashboardService implements DashboardService {
     };
 
     /** Same order as STATUTS_MISSION. */
-    private static final int[] MISSIONS_DEMO = {3, 5, 6, 1, 9, 14, 2};
+    private static final int[] MISSIONS_DEMO = {5, 6, 9, 14, 2};
 
     private final AuditService audit;
     private final Clock horloge;
