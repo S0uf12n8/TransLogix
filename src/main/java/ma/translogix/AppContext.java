@@ -56,7 +56,6 @@ public final class AppContext {
     private static final UtilisateurService UTILISATEUR_SERVICE =
             new UtilisateurService(UTILISATEUR_DAO, AUDIT_SERVICE);
     private static final AuthService AUTH_SERVICE = new AuthService(UTILISATEUR_DAO);
-    private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE);
 
     // RH module ([M2], [M4]): in memory until the JDBC DAOs of [M6] exist.
     private static final EmployeDao EMPLOYE_DAO = new InMemoryEmployeDao();
@@ -81,6 +80,10 @@ public final class AppContext {
     // Gérant dashboard: real figures read from the services above, so it must be built after them.
     private static final DashboardService DASHBOARD_SERVICE = new StatistiquesDashboardService(MISSION_SERVICE,
             VEHICULE_SERVICE, FACTURE_SERVICE, CONFORMITE_SERVICE, AUDIT_SERVICE, Clock.systemDefaultZone());
+    // Reports page: filtered reports read from the services above, so it must be built after them.
+    private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE, FACTURE_SERVICE,
+            MISSION_SERVICE, CLIENT_SERVICE, VEHICULE_SERVICE, EMPLOYE_SERVICE, CONFORMITE_SERVICE,
+            Clock.systemDefaultZone());
 
     /** False while the seed runs. This class loads lazily, often after login, so the session alone is not enough. */
     private static boolean demarrageTermine;

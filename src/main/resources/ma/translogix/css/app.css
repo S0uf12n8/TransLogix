@@ -827,3 +827,10 @@
     -fx-font-size: 11px;
     -fx-text-fill: #64748b;
 }
+
+/* Inline validation message on a light page (e.g. an impossible period on the reports page). */
+.form-error {
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
