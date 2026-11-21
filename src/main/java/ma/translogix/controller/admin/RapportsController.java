@@ -9,9 +9,12 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import ma.translogix.AppContext;
@@ -72,6 +75,7 @@ public class RapportsController {
         choixClient.valueProperty().addListener((obs, avant, apres) -> actualiser());
 
         choixStatut.valueProperty().addListener((obs, avant, apres) -> actualiser());
+        table.setRowFactory(t -> ligneAvecMenu());
 
         choixRapport.setItems(FXCollections.observableArrayList(TypeRapport.values()));
         choixRapport.valueProperty().addListener((obs, avant, apres) -> changerDeRapport(apres));
@@ -122,6 +126,23 @@ public class RapportsController {
         }
         montrerErreur(null);
         afficher(rapport);
+    }
+
+    /** Right-click on a preview row: copy it, or the whole filtered table, ready to paste into Excel. */
+    private TableRow<List<String>> ligneAvecMenu() {
+        TableRow<List<String>> ligne = new TableRow<>();
+        MenuItem copierLigne = new MenuItem("Copier la ligne");
+        MenuItem copierTableau = new MenuItem("Copier tout le tableau (avec les en-têtes)");
+        copierLigne.setOnAction(e -> PressePapiers.copierLigne(ligne.getItem()));
+        copierTableau.setOnAction(e -> {
+            List<String> lignes = new ArrayList<>();
+            lignes.add(String.join("\t", rapport.entetes()));
+            rapport.lignes().forEach(l -> lignes.add(String.join("\t", l)));
+            PressePapiers.copier(String.join("\n", lignes));
+        });
+        ContextMenu menu = new ContextMenu(copierLigne, copierTableau);
+        ligne.emptyProperty().addListener((obs, avant, vide) -> ligne.setContextMenu(vide ? null : menu));
+        return ligne;
     }
 
     private void afficher(Rapport r) {
