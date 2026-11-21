@@ -131,6 +131,41 @@ public class UtilisateurService {
         return dao.findAll().stream().filter(u -> u.getRole() == Role.GERANT).findFirst();
     }
 
+    /** Activates or deactivates an account (right-click action). The Gérant account cannot be deactivated. */
+    public void changerStatut(Long id, boolean actif) {
+        Utilisateur utilisateur = trouver(id);
+        if (utilisateur.isActif() == actif) {
+            return; // nothing to change, nothing to log
+        }
+        if (utilisateur.getRole() == Role.GERANT && !actif) {
+            refuser("Désactivation refusée : compte Gérant (" + utilisateur.getEmail() + ")",
+                    "Le compte Gérant ne peut pas être désactivé.");
+        }
+        utilisateur.setActif(actif);
+        dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, (actif ? "Activation" : "Désactivation") + " du compte "
+                + utilisateur.getEmail(), ResultatAudit.REUSSI);
+    }
+
+    /**
+     * Sets a new password chosen by the admin. Same length rule as creation; the confirmation must match.
+     * Only the hash is stored, and the audit log never contains the password.
+     */
+    public void reinitialiserMotDePasse(Long id, String nouveau, String confirmation) {
+        Utilisateur utilisateur = trouver(id);
+        if (nouveau == null || nouveau.length() < MOT_DE_PASSE_MIN) {
+            throw new ValidationException("Le mot de passe doit contenir au moins "
+                    + MOT_DE_PASSE_MIN + " caractères.");
+        }
+        if (!nouveau.equals(confirmation)) {
+            throw new ValidationException("Les deux mots de passe ne sont pas identiques.");
+        }
+        utilisateur.setMotDePasseHash(PasswordHasher.hash(nouveau));
+        dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Réinitialisation du mot de passe de " + utilisateur.getEmail(),
+                ResultatAudit.REUSSI);
+    }
+
     /** Logs a refused Gérant-protection action, then rejects it. */
     private void refuser(String actionAudit, String message) {
         audit.enregistrer(MODULE_AUDIT, actionAudit, ResultatAudit.REFUSE);
