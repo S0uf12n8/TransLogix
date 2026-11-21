@@ -834,3 +834,26 @@
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
+
+/* Right-click menus of the tables (users, audit, reports). Destructive entries in red. */
+.context-menu {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+}
+.context-menu .menu-item {
+    -fx-background-radius: 6;
+    -fx-padding: 7 14;
+}
+.context-menu .menu-item .label {
+    -fx-text-fill: #172033;
+    -fx-font-size: 13px;
+}
+.context-menu .menu-item:focused {
+    -fx-background-color: #fff7ed;
+}
+.context-menu .menu-item.menu-danger .label {
+    -fx-text-fill: #dc2626;
+}
