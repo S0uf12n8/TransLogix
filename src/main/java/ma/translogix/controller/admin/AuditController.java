@@ -1,5 +1,6 @@
 package ma.translogix.controller.admin;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,13 +9,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.EvenementAudit;
 import ma.translogix.model.ResultatAudit;
 import ma.translogix.service.AuditService;
@@ -92,6 +99,7 @@ public class AuditController {
         du.valueProperty().addListener((obs, avant, apres) -> appliquerFiltres());
         au.valueProperty().addListener((obs, avant, apres) -> appliquerFiltres());
         table.setItems(filtres);
+        table.setRowFactory(t -> ligneAvecMenu());
         appliquerFiltres();
     }
 
@@ -117,6 +125,46 @@ public class AuditController {
                 ? "Aucune action enregistrée pour cette session."
                 : "Aucun événement ne correspond aux filtres.");
         majCompteur(filtres.size());
+    }
+
+    /** Right-click menu of a log line; double-click opens the detail (long actions are cut in the table). */
+    private TableRow<EvenementAudit> ligneAvecMenu() {
+        TableRow<EvenementAudit> ligne = new TableRow<>();
+        MenuItem detail = new MenuItem("Voir le détail…");
+        MenuItem copier = new MenuItem("Copier la ligne");
+        MenuItem memeModule = new MenuItem();
+        MenuItem memeJour = new MenuItem("Filtrer sur ce jour");
+        detail.setOnAction(e -> afficherDetail(ligne.getItem()));
+        copier.setOnAction(e -> PressePapiers.copierLigne(cellules(ligne.getItem())));
+        memeModule.setOnAction(e -> filtreModule.getSelectionModel().select(ligne.getItem().getModule()));
+        memeJour.setOnAction(e -> {
+            LocalDate jour = ligne.getItem().getHorodatage().toLocalDate();
+            du.setValue(jour);
+            au.setValue(jour);
+        });
+        ContextMenu menu = new ContextMenu(detail, copier, new SeparatorMenuItem(), memeModule, memeJour);
+        menu.setOnShowing(e -> memeModule.setText("Filtrer sur le module « " + ligne.getItem().getModule() + " »"));
+        ligne.emptyProperty().addListener((obs, avant, vide) -> ligne.setContextMenu(vide ? null : menu));
+        ligne.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2 && !ligne.isEmpty()) {
+                afficherDetail(ligne.getItem());
+            }
+        });
+        return ligne;
+    }
+
+    private void afficherDetail(EvenementAudit e) {
+        Dialogues.info("Détail de l'événement",
+                "Date : " + e.getHorodatage().format(AuditService.FORMAT_DATE)
+                        + "\nUtilisateur : " + e.getUtilisateur()
+                        + "\nModule : " + e.getModule()
+                        + "\nRésultat : " + e.getResultat().getLibelle()
+                        + "\n\nAction :\n" + e.getAction());
+    }
+
+    private static List<String> cellules(EvenementAudit e) {
+        return List.of(e.getHorodatage().format(AuditService.FORMAT_DATE), e.getUtilisateur(), e.getModule(),
+                e.getAction(), e.getResultat().getLibelle());
     }
 
     @FXML
