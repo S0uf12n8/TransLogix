@@ -20,17 +20,24 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import ma.translogix.AppContext;
 import ma.translogix.controller.common.Dialogues;
+import ma.translogix.controller.common.ExportRapport;
+import ma.translogix.controller.common.ImpressionRapport;
+import ma.translogix.controller.common.Imprimable;
 import ma.translogix.model.Client;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
 import ma.translogix.model.StatutVehicule;
 import ma.translogix.model.Vehicule;
+import ma.translogix.service.FiltreRapport;
 import ma.translogix.service.MissionService;
+import ma.translogix.service.Rapport;
+import ma.translogix.service.RapportService;
+import ma.translogix.service.TypeRapport;
 import ma.translogix.util.Recherche;
 
 /** "Ordres & Trajets" ([H5]): Hamid's orders table on real missions, with the status actions of MissionService. */
-public class MissionsController {
+public class MissionsController implements Imprimable {
 
     /** One mission with the names it shows (looked up once per refresh). */
     record Ligne(Mission mission, String chauffeur, String vehicule, String client) {
@@ -93,9 +100,30 @@ public class MissionsController {
         ouvrirFormulaire(null);
     }
 
+    /** "Exporter la feuille de route": print / PDF or CSV of the missions to drive. */
     @FXML
     private void exporter() {
-        DispatcherUi.pasEncoreLivre();
+        ExportRapport.proposer(documentAImprimer(), table.getScene().getWindow());
+    }
+
+    /**
+     * Road sheet: missions on the road first, then planned ones, each by departure time, with client,
+     * driver, truck, route and times (real data, through RapportService). Also used by the top-bar "Imprimer".
+     */
+    @Override
+    public ImpressionRapport.Document documentAImprimer() {
+        RapportService rapports = AppContext.rapportService();
+        Rapport enCours = rapports.generer(TypeRapport.MISSIONS,
+                new FiltreRapport(null, null, null, StatutMission.EN_COURS.getLibelle()));
+        Rapport planifiees = rapports.generer(TypeRapport.MISSIONS,
+                new FiltreRapport(null, null, null, StatutMission.PLANIFIEE.getLibelle()));
+        List<List<String>> lignes = new ArrayList<>(enCours.lignes());
+        lignes.addAll(planifiees.lignes());
+        Rapport feuille = new Rapport("Feuille de route", "feuille-de-route-" + LocalDate.now() + ".csv",
+                enCours.entetes(), lignes,
+                enCours.lignes().size() + " en cours · " + planifiees.lignes().size() + " planifiée(s)");
+        return new ImpressionRapport.Document(feuille,
+                List.of("Missions en cours puis missions planifiées, par heure de départ."), false);
     }
 
     /** dispatcher.html actions, mapped to the lifecycle: planned -> edit / start / cancel, in progress -> delivered / cancel. */
