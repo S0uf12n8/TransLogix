@@ -1,6 +1,8 @@
 package ma.translogix.controller.admin;
 
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,10 +33,14 @@ import javafx.scene.shape.FillRule;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.SVGPath;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.ImpressionRapport;
+import ma.translogix.controller.common.Imprimable;
 import ma.translogix.model.EvenementAudit;
 import ma.translogix.model.ResultatAudit;
 import ma.translogix.service.AuditService;
 import ma.translogix.service.DashboardService;
+import ma.translogix.service.Rapport;
+import ma.translogix.util.Formats;
 import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
@@ -43,7 +49,7 @@ import ma.translogix.util.Session;
  * KPI cards and "Trajets récents" are static DEMO values from the mockup. Charts, alerts and
  * "Dernières actions" come from DashboardService (demo figures labelled as such; audit events are real).
  */
-public class DashboardController {
+public class DashboardController implements Imprimable {
 
     /** One row of the "Trajets recents" table. */
     public record LigneTrajet(String reference, String chauffeur, String camion,
@@ -364,6 +370,41 @@ public class DashboardController {
 
     private static String mad(long montant) {
         return String.format(Locale.ROOT, "%,d", montant).replace(',', ' ') + " MAD";
+    }
+
+    // ------------------------------------------------------------------ printing
+
+    /**
+     * "Imprimer": a summary built from DashboardService (the same figures as the charts and alerts),
+     * not a screenshot. The KPI cards and "Trajets récents" are mockup values and are left out.
+     */
+    @Override
+    public ImpressionRapport.Document documentAImprimer() {
+        List<List<String>> lignes = new ArrayList<>();
+        long total = 0;
+        for (DashboardService.ChiffreMensuel m : service.chiffreAffairesParMois(NB_MOIS)) {
+            lignes.add(List.of("Chiffre d'affaires HT", m.mois().format(MOIS_LONG), mad(m.montantMad())));
+            total += m.montantMad();
+        }
+        lignes.add(List.of("Chiffre d'affaires HT", "Total " + NB_MOIS + " mois", mad(total)));
+        for (DashboardService.Part p : service.missionsParStatut()) {
+            lignes.add(List.of("Missions par statut", p.libelle(), String.valueOf(p.nombre())));
+        }
+        for (DashboardService.Part p : service.etatFlotte()) {
+            lignes.add(List.of("État de la flotte", p.libelle(), String.valueOf(p.nombre())));
+        }
+        List<DashboardService.Alerte> alertes = service.alertesConformite();
+        if (alertes.isEmpty()) {
+            lignes.add(List.of("Alertes", "Aucune alerte", ""));
+        }
+        for (DashboardService.Alerte a : alertes) {
+            lignes.add(List.of("Alertes (" + a.niveau().name().toLowerCase(Locale.FRENCH) + ")", a.titre(), a.detail()));
+        }
+        String jour = Formats.date(LocalDate.now());
+        Rapport rapport = new Rapport("Synthèse du tableau de bord", "synthese-tableau-de-bord-"
+                + LocalDate.now() + ".csv", List.of("Rubrique", "Indicateur", "Valeur"), lignes,
+                "Situation au " + jour + " · chiffre d'affaires, missions, flotte et alertes");
+        return new ImpressionRapport.Document(rapport, List.of(), service.estDemo());
     }
 
     /** Rounded clip so the tinted circle stays inside the card, like overflow:hidden in the mockup. */

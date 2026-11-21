@@ -1,7 +1,5 @@
 package ma.translogix.controller.admin;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
@@ -16,21 +14,22 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.stage.FileChooser;
 import ma.translogix.AppContext;
-import ma.translogix.controller.common.Dialogues;
+import ma.translogix.controller.common.ExportRapport;
+import ma.translogix.controller.common.ImpressionRapport;
+import ma.translogix.controller.common.Imprimable;
 import ma.translogix.service.FiltreRapport;
 import ma.translogix.service.Rapport;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.TypeRapport;
-import ma.translogix.util.CsvExporter;
+import ma.translogix.util.Formats;
 import ma.translogix.util.ValidationException;
 
 /**
  * "Rapports & analytics": any filter change rebuilds the report through RapportService and refreshes the preview.
  * The export writes exactly the previewed rows. Filters a report does not use are disabled.
  */
-public class RapportsController {
+public class RapportsController implements Imprimable {
 
     /** One entry of the client filter; id null = all clients. */
     private record ChoixClient(Long id, String nom) {
@@ -54,6 +53,7 @@ public class RapportsController {
     @FXML private Label titre;
     @FXML private Label resume;
     @FXML private Button boutonExport;
+    @FXML private Button boutonImprimer;
     @FXML private TableView<List<String>> table;
 
     private Rapport rapport;
@@ -159,6 +159,7 @@ public class RapportsController {
         }
         table.setItems(FXCollections.observableArrayList(r.lignes()));
         boutonExport.setDisable(r.lignes().isEmpty());
+        boutonImprimer.setDisable(false);
     }
 
     /** null hides the message. An invalid period empties the preview so nothing stale can be exported. */
@@ -172,31 +173,54 @@ public class RapportsController {
             table.getItems().clear();
             resume.setText("");
             boutonExport.setDisable(true);
+            boutonImprimer.setDisable(true);
         }
     }
 
+    /** "Exporter CSV": exactly the previewed rows. */
     @FXML
     private void exporter() {
+        if (rapport != null) {
+            ExportRapport.exporterCsv(documentAImprimer(), table.getScene().getWindow());
+        }
+    }
+
+    /** "Imprimer / PDF": the previewed report as a paginated document, with the active filters. */
+    @FXML
+    private void imprimer() {
+        if (rapport != null) {
+            ImpressionRapport.imprimer(documentAImprimer(), table.getScene().getWindow());
+        }
+    }
+
+    /** Also used by the top-bar "Imprimer". */
+    @Override
+    public ImpressionRapport.Document documentAImprimer() {
         if (rapport == null) {
-            return;
+            throw new ValidationException("Corrigez les filtres avant d'imprimer : " + erreur.getText());
         }
-        FileChooser choix = new FileChooser();
-        choix.setTitle("Exporter « " + rapport.titre() + " »");
-        choix.setInitialFileName(rapport.nomFichier());
-        choix.getExtensionFilters().add(new FileChooser.ExtensionFilter("Fichier CSV (*.csv)", "*.csv"));
-        File fichier = choix.showSaveDialog(table.getScene().getWindow());
-        if (fichier == null) {
-            return; // cancelled
+        return new ImpressionRapport.Document(rapport, filtresActifs(), false);
+    }
+
+    /** One readable line per filter in use, printed under the title. */
+    private List<String> filtresActifs() {
+        TypeRapport type = choixRapport.getValue();
+        List<String> lignes = new ArrayList<>();
+        if (type.utiliseDates() && (du.getValue() != null || au.getValue() != null)) {
+            lignes.add("Période : " + (du.getValue() == null ? "début" : Formats.date(du.getValue()))
+                    + " → " + (au.getValue() == null ? "aujourd'hui et après" : Formats.date(au.getValue())));
         }
-        if (!fichier.getName().toLowerCase().endsWith(".csv")) {
-            fichier = new File(fichier.getParentFile(), fichier.getName() + ".csv");
+        ChoixClient client = choixClient.getValue();
+        if (type.utiliseClient() && client != null && client.id() != null) {
+            lignes.add("Client : " + client.nom());
         }
-        try {
-            CsvExporter.ecrire(fichier.toPath(), rapport.entetes(), rapport.lignes());
-        } catch (IOException ex) {
-            Dialogues.erreur("Impossible d'écrire le fichier :\n" + fichier + "\n" + ex.getMessage());
-            return;
+        String statut = choixStatut.getValue();
+        if (statut != null && !TOUS_LES_STATUTS.equals(statut)) {
+            lignes.add("Statut : " + statut);
         }
-        Dialogues.info("Export réussi", rapport.lignes().size() + " ligne(s) exportée(s) dans :\n" + fichier);
+        if (lignes.isEmpty()) {
+            lignes.add("Aucun filtre : toutes les données.");
+        }
+        return lignes;
     }
 }
