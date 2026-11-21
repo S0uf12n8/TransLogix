@@ -2,7 +2,6 @@ package ma.translogix.controller.admin;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
-import javafx.util.StringConverter;
 import ma.translogix.AppContext;
 import ma.translogix.controller.common.Dialogues;
 import ma.translogix.service.FiltreRapport;
@@ -23,7 +21,6 @@ import ma.translogix.service.Rapport;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.TypeRapport;
 import ma.translogix.util.CsvExporter;
-import ma.translogix.util.Formats;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -63,26 +60,7 @@ public class RapportsController {
     @FXML
     private void initialize() {
         for (DatePicker champ : List.of(du, au)) {
-            champ.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(LocalDate date) {
-                    return Formats.date(date);
-                }
-
-                /** A badly typed date keeps the previous value and shows why, instead of throwing. */
-                @Override
-                public LocalDate fromString(String texte) {
-                    if (texte == null || texte.isBlank()) {
-                        return null;
-                    }
-                    try {
-                        return Formats.lireDate(texte);
-                    } catch (ValidationException ex) {
-                        montrerErreur(ex.getMessage());
-                        return champ.getValue();
-                    }
-                }
-            });
+            ChampDate.configurer(champ, this::montrerErreur);
             champ.valueProperty().addListener((obs, avant, apres) -> actualiser());
         }
 
