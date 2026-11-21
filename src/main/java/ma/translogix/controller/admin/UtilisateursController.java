@@ -1,6 +1,9 @@
 package ma.translogix.controller.admin;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,6 +18,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
@@ -28,16 +32,24 @@ import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.service.UtilisateurService;
+import ma.translogix.service.UtilisateurService.CritereUtilisateur;
 import ma.translogix.util.Navigator;
-import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
-/** User management screen: searchable table, create/edit in a dialog. No business rules here. */
+/** User management screen: multi-criteria search (text, role, status), create/edit in a dialog. No business rules here. */
 public class UtilisateursController {
 
     private static final String FORMULAIRE = Navigator.RACINE + "admin/utilisateur-dialog.fxml";
 
+    private static final String TOUS_LES_ROLES = "Tous les rôles";
+    private static final String TOUS_LES_STATUTS = "Tous les statuts";
+    private static final String ACTIFS = "Actifs";
+    private static final String INACTIFS = "Inactifs";
+
     @FXML private TextField recherche;
+    @FXML private ComboBox<String> filtreRole;
+    @FXML private ComboBox<String> filtreStatut;
+    @FXML private Label compteur;
     @FXML private TableView<Utilisateur> table;
     @FXML private TableColumn<Utilisateur, String> colNom;
     @FXML private TableColumn<Utilisateur, String> colPrenom;
@@ -48,6 +60,7 @@ public class UtilisateursController {
 
     private final UtilisateurService service = AppContext.utilisateurService();
     private final ObservableList<Utilisateur> donnees = FXCollections.observableArrayList();
+    private FilteredList<Utilisateur> filtres;
 
     @FXML
     private void initialize() {
@@ -91,14 +104,41 @@ public class UtilisateursController {
             }
         });
 
-        FilteredList<Utilisateur> filtres = new FilteredList<>(donnees);
-        recherche.textProperty().addListener((obs, ancien, requete) ->
-                filtres.setPredicate(u -> Recherche.correspond(requete, u.getNom(), u.getPrenom(),
-                        u.getEmail(), u.getRole().getLibelle(), u.isActif() ? "Actif" : "Inactif")));
+        List<String> roles = new ArrayList<>();
+        roles.add(TOUS_LES_ROLES);
+        Arrays.stream(Role.values()).map(Role::getLibelle).forEach(roles::add);
+        filtreRole.setItems(FXCollections.observableArrayList(roles));
+        filtreStatut.setItems(FXCollections.observableArrayList(TOUS_LES_STATUTS, ACTIFS, INACTIFS));
+        filtreRole.getSelectionModel().select(TOUS_LES_ROLES);
+        filtreStatut.getSelectionModel().select(TOUS_LES_STATUTS);
+
+        filtres = new FilteredList<>(donnees);
+        recherche.textProperty().addListener((obs, avant, apres) -> appliquerFiltres());
+        filtreRole.valueProperty().addListener((obs, avant, apres) -> appliquerFiltres());
+        filtreStatut.valueProperty().addListener((obs, avant, apres) -> appliquerFiltres());
         SortedList<Utilisateur> tries = new SortedList<>(filtres);
         tries.comparatorProperty().bind(table.comparatorProperty());
         table.setItems(tries);
         rafraichir();
+    }
+
+    /** Text, role and status combined (AND); the rule itself lives in UtilisateurService.correspond. */
+    private void appliquerFiltres() {
+        Role role = Arrays.stream(Role.values())
+                .filter(r -> r.getLibelle().equals(filtreRole.getValue())).findFirst().orElse(null);
+        String statut = filtreStatut.getValue();
+        Boolean actif = ACTIFS.equals(statut) ? Boolean.TRUE : INACTIFS.equals(statut) ? Boolean.FALSE : null;
+        CritereUtilisateur critere = new CritereUtilisateur(recherche.getText(), role, actif);
+        filtres.setPredicate(u -> UtilisateurService.correspond(u, critere));
+        int n = filtres.size();
+        compteur.setText(n + (n > 1 ? " comptes" : " compte") + " sur " + donnees.size());
+    }
+
+    @FXML
+    private void reinitialiser() {
+        recherche.clear();
+        filtreRole.getSelectionModel().select(TOUS_LES_ROLES);
+        filtreStatut.getSelectionModel().select(TOUS_LES_STATUTS);
     }
 
     @FXML
@@ -158,6 +198,7 @@ public class UtilisateursController {
 
     private void rafraichir() {
         donnees.setAll(service.lister());
+        appliquerFiltres();
     }
 
     private static TableCell<Utilisateur, String> texte(String styleClass) {

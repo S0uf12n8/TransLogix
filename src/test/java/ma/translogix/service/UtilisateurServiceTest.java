@@ -214,4 +214,48 @@ class UtilisateurServiceTest {
 
         assertTrue(audit.lister().isEmpty());
     }
+
+    // ------------------------------------------------------------------ multi-criteria search
+
+    private void troisComptes() {
+        service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+        Utilisateur ali = service.creer("Bennani", "Ali", "ali@translogix.ma", "motdepasse1", Role.DISPATCHER);
+        service.modifier(ali.getId(), "Bennani", "Ali", "ali@translogix.ma", Role.DISPATCHER, false);
+        service.creer("Élhadi", "Nora", "nora@translogix.ma", "motdepasse1", Role.RH);
+    }
+
+    private List<String> emails(UtilisateurService.CritereUtilisateur critere) {
+        return service.filtrer(critere).stream().map(Utilisateur::getEmail).sorted().toList();
+    }
+
+    @Test
+    void criteresSeCombinentEnEt() {
+        troisComptes();
+
+        assertEquals(List.of("ali@translogix.ma", "sara@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur(null, Role.DISPATCHER, null)));
+        assertEquals(List.of("sara@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur(null, Role.DISPATCHER, true)));
+        assertEquals(List.of("ali@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur("benn", Role.DISPATCHER, false)));
+        assertEquals(List.of(), emails(new UtilisateurService.CritereUtilisateur("sara", Role.RH, null)));
+    }
+
+    @Test
+    void texteCherche_dansNomPrenomEmail_sansAccents() {
+        troisComptes();
+
+        assertEquals(List.of("nora@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur("ELHADI", null, null)));
+        assertEquals(List.of("ali@translogix.ma"), emails(new UtilisateurService.CritereUtilisateur("ali@", null, null)));
+    }
+
+    @Test
+    void sansCritereToutEstRenvoye() {
+        troisComptes();
+
+        assertEquals(3, service.filtrer(UtilisateurService.CritereUtilisateur.AUCUN).size());
+        assertEquals(3, service.filtrer(null).size());
+        assertEquals(3, service.filtrer(new UtilisateurService.CritereUtilisateur("  ", null, null)).size());
+    }
 }

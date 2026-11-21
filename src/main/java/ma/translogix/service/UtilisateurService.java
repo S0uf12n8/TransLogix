@@ -8,6 +8,7 @@ import ma.translogix.model.ResultatAudit;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.PasswordHasher;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -33,6 +34,28 @@ public class UtilisateurService {
 
     public List<Utilisateur> lister() {
         return dao.findAll();
+    }
+
+    /**
+     * Search criteria of the users screen, all combined (AND). null or blank = criterion not used.
+     * @param texte  found in last name, first name or email (case and accents ignored)
+     * @param actif  true = active accounts only, false = inactive only
+     */
+    public record CritereUtilisateur(String texte, Role role, Boolean actif) {
+        public static final CritereUtilisateur AUCUN = new CritereUtilisateur(null, null, null);
+    }
+
+    /** Accounts matching every criterion. */
+    public List<Utilisateur> filtrer(CritereUtilisateur critere) {
+        return lister().stream().filter(u -> correspond(u, critere)).toList();
+    }
+
+    /** Same rule as filtrer, for one account (the screen filters its own list with it). */
+    public static boolean correspond(Utilisateur u, CritereUtilisateur critere) {
+        CritereUtilisateur c = critere == null ? CritereUtilisateur.AUCUN : critere;
+        return (c.role() == null || u.getRole() == c.role())
+                && (c.actif() == null || u.isActif() == c.actif())
+                && Recherche.correspond(c.texte(), u.getNom(), u.getPrenom(), u.getEmail());
     }
 
     public Utilisateur creer(String nom, String prenom, String email, String motDePasse, Role role) {
