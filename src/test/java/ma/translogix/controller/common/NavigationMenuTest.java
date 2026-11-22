@@ -34,9 +34,10 @@ class NavigationMenuTest {
     }
 
     @Test
-    void seulLeTableauDeBordEstEnDemo() {
-        assertEquals(1, NavigationMenu.pour(Role.GERANT).stream().filter(NavigationMenu.Entree::demo).count());
-        assertTrue(NavigationMenu.entreePour(Role.GERANT, "admin/dashboard.fxml").orElseThrow().demo());
+    void aucunePageDuGerantNEstEnDemo() {
+        // The dashboard reads real figures since Iteration 3 (KPI cards, charts, alerts, recent trips).
+        assertEquals(0, NavigationMenu.pour(Role.GERANT).stream().filter(NavigationMenu.Entree::demo).count());
+        assertFalse(NavigationMenu.entreePour(Role.GERANT, "admin/dashboard.fxml").orElseThrow().demo());
     }
 
     @Test
