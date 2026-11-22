@@ -79,7 +79,7 @@ public final class AppContext {
             EMPLOYE_DAO, () -> Session.utilisateur().getId());
     // Gérant dashboard: real figures read from the services above, so it must be built after them.
     private static final DashboardService DASHBOARD_SERVICE = new StatistiquesDashboardService(MISSION_SERVICE,
-            VEHICULE_SERVICE, FACTURE_SERVICE, CONFORMITE_SERVICE, AUDIT_SERVICE, Clock.systemDefaultZone());
+            VEHICULE_SERVICE, FACTURE_SERVICE, CONFORMITE_SERVICE, EMPLOYE_SERVICE, AUDIT_SERVICE, Clock.systemDefaultZone());
     // Reports page: filtered reports read from the services above, so it must be built after them.
     private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE, FACTURE_SERVICE,
             MISSION_SERVICE, CLIENT_SERVICE, VEHICULE_SERVICE, EMPLOYE_SERVICE, CONFORMITE_SERVICE,

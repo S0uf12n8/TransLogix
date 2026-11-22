@@ -58,4 +58,28 @@ public interface DashboardService {
 
     /** The n most recent audit events, newest first (fewer if the log is shorter). */
     List<EvenementAudit> derniersEvenementsAudit(int n);
+
+    /**
+     * The four KPI cards.
+     * @param chiffreMoisMad          revenue HT of the current month
+     * @param variationPourcent       vs the previous month, rounded; null when last month had no revenue
+     * @param flotteOperationnelle    vehicles in service (on a mission or available)
+     * @param flotteTotale            every vehicle, out of service included
+     * @param conformitePourcent      active employees without an expired or expiring document, in percent
+     */
+    record Indicateurs(long chiffreMoisMad, Integer variationPourcent,
+                       int flotteOperationnelle, int flotteTotale, int enMaintenance,
+                       long creancesMad, int facturesEnRetard,
+                       int conformitePourcent, int documentsExpires, int documentsARenouveler) {
+    }
+
+    /** One row of "Trajets récents". montantFacture is the invoice amount HT, or null when not invoiced yet. */
+    record Trajet(String reference, String chauffeur, String camion, String depart, String arrivee,
+                  String statut, String montantFacture) {
+    }
+
+    Indicateurs indicateurs();
+
+    /** The n missions with the latest start, latest first. */
+    List<Trajet> trajetsRecents(int n);
 }

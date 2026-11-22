@@ -37,17 +37,83 @@ public class StatistiquesDashboardService implements DashboardService {
     private final VehiculeService vehicules;
     private final FactureService factures;
     private final ConformiteService conformite;
+    private final EmployeService employes;
     private final AuditService audit;
     private final Clock horloge;
 
     public StatistiquesDashboardService(MissionService missions, VehiculeService vehicules, FactureService factures,
-                                        ConformiteService conformite, AuditService audit, Clock horloge) {
+                                        ConformiteService conformite, EmployeService employes, AuditService audit,
+                                        Clock horloge) {
         this.missions = missions;
         this.vehicules = vehicules;
         this.factures = factures;
         this.conformite = conformite;
+        this.employes = employes;
         this.audit = audit;
         this.horloge = horloge;
+    }
+
+    /**
+     * KPI cards. Revenue: same definition as the chart (HT, cancelled invoices excluded). Receivables: TTC of
+     * every unpaid invoice (EN_ATTENTE), overdue ones counted apart. HR compliance: share of active employees
+     * with no document in ConformiteService.alertes() (expired or expiring within 30 days).
+     */
+    @Override
+    public Indicateurs indicateurs() {
+        List<ChiffreMensuel> deuxMois = chiffreAffairesParMois(2);
+        long precedent = deuxMois.get(0).montantMad();
+        long courant = deuxMois.get(1).montantMad();
+        Integer variation = precedent == 0 ? null : (int) Math.round((courant - precedent) * 100.0 / precedent);
+
+        List<Vehicule> parc = vehicules.lister();
+        int operationnels = (int) parc.stream().filter(v -> v.getStatut() == StatutVehicule.EN_SERVICE).count();
+        int atelier = (int) parc.stream().filter(v -> v.getStatut() == StatutVehicule.MAINTENANCE).count();
+
+        List<Facture> impayees = factures.lister().stream()
+                .filter(f -> f.getStatut() == StatutFacture.EN_ATTENTE).toList();
+        BigDecimal du = impayees.stream().map(Facture::getMontantTtc).reduce(BigDecimal.ZERO, BigDecimal::add);
+        int enRetard = (int) impayees.stream().filter(factures::estEnRetard).count();
+
+        List<DocumentConformite> aTraiter = conformite.alertes();
+        int expires = (int) aTraiter.stream().filter(d -> conformite.statut(d) == StatutConformite.EXPIRE).count();
+        Set<Long> nonConformes = aTraiter.stream().map(DocumentConformite::getEmployeId).collect(Collectors.toSet());
+        long actifs = employes.lister().stream().filter(e -> e.isActif()).count();
+        int conformes = actifs == 0 ? 100
+                : (int) Math.round((actifs - nonConformes.size()) * 100.0 / actifs);
+
+        return new Indicateurs(courant, variation, operationnels, parc.size(), atelier,
+                du.setScale(0, RoundingMode.HALF_UP).longValueExact(), enRetard,
+                conformes, expires, aTraiter.size() - expires);
+    }
+
+    /**
+     * Latest missions by start time. Driver, truck and invoice come from one list each (no N+1);
+     * the invoiced amount links the delivered mission to its invoice (core rule of the app).
+     */
+    @Override
+    public List<Trajet> trajetsRecents(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("n doit être positif : " + n);
+        }
+        Map<Long, String> chauffeurs = employes.lister().stream()
+                .collect(Collectors.toMap(e -> e.getId(), e -> e.getNomComplet(), (a, b) -> a));
+        Map<Long, Vehicule> camions = vehicules.lister().stream()
+                .collect(Collectors.toMap(Vehicule::getId, v -> v, (a, b) -> a));
+        Map<Long, BigDecimal> facture = factures.lister().stream()
+                .filter(f -> f.getMissionId() != null && f.getStatut() != StatutFacture.ANNULEE)
+                .collect(Collectors.toMap(Facture::getMissionId, Facture::getMontantHT, (a, b) -> a));
+        return missions.lister().stream()
+                .sorted(Comparator.comparing(Mission::getDateDebut).reversed())
+                .limit(n)
+                .map(m -> {
+                    Vehicule v = camions.get(m.getVehiculeId());
+                    BigDecimal montant = facture.get(m.getId());
+                    return new Trajet(m.getReference(), chauffeurs.getOrDefault(m.getChauffeurId(), ""),
+                            v == null ? "" : v.getMatricule() + " · " + v.getMarque(),
+                            m.getVilleDepart(), m.getVilleArrivee(), m.getStatut().getLibelle(),
+                            montant == null ? null : Formats.mad(montant));
+                })
+                .toList();
     }
 
     @Override

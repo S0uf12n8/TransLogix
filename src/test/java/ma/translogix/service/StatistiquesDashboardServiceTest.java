@@ -53,7 +53,8 @@ class StatistiquesDashboardServiceTest {
         factures = new FactureService(factureDao, clientDao, new InMemoryPaiementDao(), flotte.missions, HORLOGE);
         conformite = new ConformiteService(new InMemoryDocumentConformiteDao(), flotte.employeDao, HORLOGE);
         audit = new AuditService(new InMemoryAuditDao(), HORLOGE, () -> "Test");
-        service = new StatistiquesDashboardService(flotte.missions, flotte.vehicules, factures, conformite, audit,
+        service = new StatistiquesDashboardService(flotte.missions, flotte.vehicules, factures, conformite,
+                flotte.employes, audit,
                 HORLOGE);
         client = clientDao.save(new Client(null, "Client Test SARL", null, null, null, null, 30));
     }
@@ -221,5 +222,96 @@ class StatistiquesDashboardServiceTest {
         assertEquals(List.of("action 2"),
                 service.derniersEvenementsAudit(1).stream().map(EvenementAudit::getAction).toList());
         assertThrows(IllegalArgumentException.class, () -> service.derniersEvenementsAudit(-1));
+    }
+
+    // ------------------------------------------------------------------ KPI cards
+
+    @Test
+    void indicateursSansDonnees() {
+        DashboardService.Indicateurs k = service.indicateurs();
+
+        assertEquals(0, k.chiffreMoisMad());
+        assertEquals(null, k.variationPourcent()); // no revenue last month: no fake percentage
+        assertEquals(1, k.flotteOperationnelle()); // the fixture truck
+        assertEquals(1, k.flotteTotale());
+        assertEquals(0, k.creancesMad());
+        assertEquals(100, k.conformitePourcent());
+    }
+
+    @Test
+    void chiffreDuMoisEtVariation() {
+        facture("1000.00", LocalDate.of(2026, 10, 5));
+        facture("1250.00", LocalDate.of(2026, 11, 5));
+
+        DashboardService.Indicateurs k = service.indicateurs();
+
+        assertEquals(1250, k.chiffreMoisMad());
+        assertEquals(25, k.variationPourcent());
+    }
+
+    @Test
+    void flotteOperationnelleSurLeParcComplet() {
+        Long atelier = flotte.vehicules.creer("44444-D-4", "DAF", "XF", new BigDecimal("30")).getId();
+        flotte.vehicules.changerStatut(atelier, StatutVehicule.MAINTENANCE);
+        Long horsService = flotte.vehicules.creer("55555-E-5", "Iveco", "S-Way", new BigDecimal("26")).getId();
+        flotte.vehicules.changerStatut(horsService, StatutVehicule.HORS_SERVICE);
+
+        DashboardService.Indicateurs k = service.indicateurs();
+
+        assertEquals(1, k.flotteOperationnelle());
+        assertEquals(3, k.flotteTotale());
+        assertEquals(1, k.enMaintenance());
+    }
+
+    @Test
+    void creancesTtcDesFacturesImpayeesSeulement() {
+        facture("1000.00", AUJOURDHUI);                     // unpaid, not due: 1 140 TTC
+        facture("2000.00", LocalDate.of(2026, 9, 1));       // unpaid and overdue: 2 280 TTC
+        Facture payee = facture("5000.00", AUJOURDHUI);
+        factures.enregistrerPaiement(payee.getId(), ma.translogix.model.ModePaiement.VIREMENT, "VIR-T", AUJOURDHUI);
+        factures.annuler(facture("9000.00", AUJOURDHUI).getId());
+
+        DashboardService.Indicateurs k = service.indicateurs();
+
+        assertEquals(3420, k.creancesMad());
+        assertEquals(1, k.facturesEnRetard());
+    }
+
+    @Test
+    void conformiteRhPartDesEmployesActifsSansDocumentATraiter() {
+        Employe expire = flotte.nouveauChauffeur("Beta");
+        Employe bientot = flotte.nouveauChauffeur("Gamma");
+        Employe enRegle = flotte.nouveauChauffeur("Delta");
+        conformite.renouveler(expire.getId(), TypeDocument.PERMIS, "PRM-T1", "C", AUJOURDHUI.minusDays(1));
+        conformite.renouveler(bientot.getId(), TypeDocument.FIMC, "FIMC-T1", null, AUJOURDHUI.plusDays(10));
+        conformite.renouveler(enRegle.getId(), TypeDocument.PERMIS, "PRM-T2", "C", AUJOURDHUI.plusYears(2));
+
+        DashboardService.Indicateurs k = service.indicateurs();
+
+        assertEquals(50, k.conformitePourcent()); // 2 of 4 active employees (fixture driver included)
+        assertEquals(1, k.documentsExpires());
+        assertEquals(1, k.documentsARenouveler());
+    }
+
+    // ------------------------------------------------------------------ recent trips
+
+    @Test
+    void trajetsRecentsDuPlusRecentAvecChauffeurCamionEtFacture() {
+        Mission premiere = flotte.planifiee(client.getId());
+        Mission livree = flotte.livree(client.getId());
+        factures.creer(livree.getId(), new BigDecimal("1000.00"), null, AUJOURDHUI);
+        Mission derniere = flotte.planifiee(client.getId());
+
+        List<DashboardService.Trajet> trajets = service.trajetsRecents(5);
+
+        assertEquals(List.of(derniere.getReference(), livree.getReference(), premiere.getReference()),
+                trajets.stream().map(DashboardService.Trajet::reference).toList());
+        DashboardService.Trajet facturee = trajets.get(1);
+        assertEquals(flotte.chauffeur.getNomComplet(), facturee.chauffeur());
+        assertEquals("11111-A-1 · Volvo", facturee.camion());
+        assertEquals("Facturée", facturee.statut());
+        assertEquals("1 000,00 MAD", facturee.montantFacture());
+        assertEquals(null, trajets.get(0).montantFacture());
+        assertEquals(2, service.trajetsRecents(2).size());
     }
 }
