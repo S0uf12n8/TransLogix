@@ -8,6 +8,7 @@ import ma.translogix.model.ResultatAudit;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.PasswordHasher;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -33,6 +34,28 @@ public class UtilisateurService {
 
     public List<Utilisateur> lister() {
         return dao.findAll();
+    }
+
+    /**
+     * Search criteria of the users screen, all combined (AND). null or blank = criterion not used.
+     * @param texte  found in last name, first name or email (case and accents ignored)
+     * @param actif  true = active accounts only, false = inactive only
+     */
+    public record CritereUtilisateur(String texte, Role role, Boolean actif) {
+        public static final CritereUtilisateur AUCUN = new CritereUtilisateur(null, null, null);
+    }
+
+    /** Accounts matching every criterion. */
+    public List<Utilisateur> filtrer(CritereUtilisateur critere) {
+        return lister().stream().filter(u -> correspond(u, critere)).toList();
+    }
+
+    /** Same rule as filtrer, for one account (the screen filters its own list with it). */
+    public static boolean correspond(Utilisateur u, CritereUtilisateur critere) {
+        CritereUtilisateur c = critere == null ? CritereUtilisateur.AUCUN : critere;
+        return (c.role() == null || u.getRole() == c.role())
+                && (c.actif() == null || u.isActif() == c.actif())
+                && Recherche.correspond(c.texte(), u.getNom(), u.getPrenom(), u.getEmail());
     }
 
     public Utilisateur creer(String nom, String prenom, String email, String motDePasse, Role role) {
@@ -106,6 +129,41 @@ public class UtilisateurService {
     /** The single CEO account, if it exists yet. */
     public Optional<Utilisateur> gerantExistant() {
         return dao.findAll().stream().filter(u -> u.getRole() == Role.GERANT).findFirst();
+    }
+
+    /** Activates or deactivates an account (right-click action). The Gérant account cannot be deactivated. */
+    public void changerStatut(Long id, boolean actif) {
+        Utilisateur utilisateur = trouver(id);
+        if (utilisateur.isActif() == actif) {
+            return; // nothing to change, nothing to log
+        }
+        if (utilisateur.getRole() == Role.GERANT && !actif) {
+            refuser("Désactivation refusée : compte Gérant (" + utilisateur.getEmail() + ")",
+                    "Le compte Gérant ne peut pas être désactivé.");
+        }
+        utilisateur.setActif(actif);
+        dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, (actif ? "Activation" : "Désactivation") + " du compte "
+                + utilisateur.getEmail(), ResultatAudit.REUSSI);
+    }
+
+    /**
+     * Sets a new password chosen by the admin. Same length rule as creation; the confirmation must match.
+     * Only the hash is stored, and the audit log never contains the password.
+     */
+    public void reinitialiserMotDePasse(Long id, String nouveau, String confirmation) {
+        Utilisateur utilisateur = trouver(id);
+        if (nouveau == null || nouveau.length() < MOT_DE_PASSE_MIN) {
+            throw new ValidationException("Le mot de passe doit contenir au moins "
+                    + MOT_DE_PASSE_MIN + " caractères.");
+        }
+        if (!nouveau.equals(confirmation)) {
+            throw new ValidationException("Les deux mots de passe ne sont pas identiques.");
+        }
+        utilisateur.setMotDePasseHash(PasswordHasher.hash(nouveau));
+        dao.update(utilisateur);
+        audit.enregistrer(MODULE_AUDIT, "Réinitialisation du mot de passe de " + utilisateur.getEmail(),
+                ResultatAudit.REUSSI);
     }
 
     /** Logs a refused Gérant-protection action, then rejects it. */

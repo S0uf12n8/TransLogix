@@ -37,10 +37,10 @@ import ma.translogix.service.ConformiteService;
 import ma.translogix.service.FactureService;
 import ma.translogix.service.MissionService;
 import ma.translogix.service.DashboardService;
-import ma.translogix.service.DemoDashboardService;
 import ma.translogix.service.EmployeService;
 import ma.translogix.service.EspaceChauffeurService;
 import ma.translogix.service.RapportService;
+import ma.translogix.service.StatistiquesDashboardService;
 import ma.translogix.service.UtilisateurService;
 import ma.translogix.service.VehiculeService;
 import ma.translogix.util.Session;
@@ -56,9 +56,6 @@ public final class AppContext {
     private static final UtilisateurService UTILISATEUR_SERVICE =
             new UtilisateurService(UTILISATEUR_DAO, AUDIT_SERVICE);
     private static final AuthService AUTH_SERVICE = new AuthService(UTILISATEUR_DAO);
-    private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE);
-    private static final DashboardService DASHBOARD_SERVICE =
-            new DemoDashboardService(AUDIT_SERVICE, Clock.systemDefaultZone());
 
     // RH module ([M2], [M4]): in memory until the JDBC DAOs of [M6] exist.
     private static final EmployeDao EMPLOYE_DAO = new InMemoryEmployeDao();
@@ -80,6 +77,13 @@ public final class AppContext {
     // Driver space ([O3]): the logged-in account's own missions.
     private static final EspaceChauffeurService ESPACE_CHAUFFEUR_SERVICE = new EspaceChauffeurService(MISSION_SERVICE,
             EMPLOYE_DAO, () -> Session.utilisateur().getId());
+    // Gérant dashboard: real figures read from the services above, so it must be built after them.
+    private static final DashboardService DASHBOARD_SERVICE = new StatistiquesDashboardService(MISSION_SERVICE,
+            VEHICULE_SERVICE, FACTURE_SERVICE, CONFORMITE_SERVICE, EMPLOYE_SERVICE, AUDIT_SERVICE, Clock.systemDefaultZone());
+    // Reports page: filtered reports read from the services above, so it must be built after them.
+    private static final RapportService RAPPORT_SERVICE = new RapportService(UTILISATEUR_SERVICE, FACTURE_SERVICE,
+            MISSION_SERVICE, CLIENT_SERVICE, VEHICULE_SERVICE, EMPLOYE_SERVICE, CONFORMITE_SERVICE,
+            Clock.systemDefaultZone());
 
     /** False while the seed runs. This class loads lazily, often after login, so the session alone is not enough. */
     private static boolean demarrageTermine;

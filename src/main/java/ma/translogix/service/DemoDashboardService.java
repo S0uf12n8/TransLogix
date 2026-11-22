@@ -21,7 +21,7 @@ public class DemoDashboardService implements DashboardService {
     };
 
     /** Same order as STATUTS_MISSION. */
-    private static final int[] MISSIONS_DEMO = {3, 5, 6, 1, 9, 14, 2};
+    private static final int[] MISSIONS_DEMO = {5, 6, 9, 14, 2};
 
     private final AuditService audit;
     private final Clock horloge;
@@ -81,5 +81,23 @@ public class DemoDashboardService implements DashboardService {
             throw new IllegalArgumentException("n doit être positif : " + n);
         }
         return audit.lister().stream().limit(n).toList();
+    }
+
+    /** The mockup's KPI cards (admine.html). */
+    @Override
+    public Indicateurs indicateurs() {
+        return new Indicateurs(452_000, 14, 18, 22, 4, 89_400, 3, 95, 0, 1);
+    }
+
+    /** The mockup's "Trajets récents" rows. */
+    @Override
+    public List<Trajet> trajetsRecents(int n) {
+        return List.of(
+                new Trajet("TRJ-9081", "Mohammed Bennani", "12345-A-6 · Volvo", "Casablanca", "Tanger",
+                        "En cours", null),
+                new Trajet("TRJ-9082", "Abderrahim El Amrani", "67890-B-2 · Scania", "Agadir", "Marrakech",
+                        "Livrée", "12 100 MAD"),
+                new Trajet("TRJ-9083", "Youssef Amrani", "45678-C-1 · MAN", "Rabat", "Fès", "Planifiée", null))
+                .stream().limit(Math.max(0, n)).toList();
     }
 }

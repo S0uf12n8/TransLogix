@@ -22,7 +22,7 @@
                 <Label text="TL" styleClass="logo-tile"/>
                 <VBox spacing="3">
                     <Label text="Translogix" styleClass="brand-title"/>
-                    <Label fx:id="sousTitre" text="ERP LOGISTIQUE" styleClass="brand-subtitle"/>
+                    <Label fx:id="sousTitre" text="TRANSPORT &amp; LOGISTIQUE" styleClass="brand-subtitle"/>
                 </VBox>
             </HBox>
             <HBox styleClass="user-card" alignment="CENTER_LEFT" spacing="10">

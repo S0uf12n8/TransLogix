@@ -1,6 +1,8 @@
 package ma.translogix.controller.admin;
 
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,6 +20,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -31,37 +34,33 @@ import javafx.scene.shape.FillRule;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.SVGPath;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.ImpressionRapport;
+import ma.translogix.controller.common.Imprimable;
 import ma.translogix.model.EvenementAudit;
 import ma.translogix.model.ResultatAudit;
 import ma.translogix.service.AuditService;
 import ma.translogix.service.DashboardService;
+import ma.translogix.service.Rapport;
+import ma.translogix.util.Formats;
 import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
 /**
  * Gérant (CEO) dashboard: money, fleet, risk. Layout from admine.html.
- * KPI cards and "Trajets récents" are static DEMO values from the mockup. Charts, alerts and
- * "Dernières actions" come from DashboardService (demo figures labelled as such; audit events are real).
+ * KPI cards, charts, alerts and "Trajets récents" come from DashboardService (real figures; demo chips appear
+ * only if a demo implementation is plugged in). "Dernières actions" reads the real audit log.
  */
-public class DashboardController {
+public class DashboardController implements Imprimable {
 
-    /** One row of the "Trajets recents" table. */
-    public record LigneTrajet(String reference, String chauffeur, String camion,
-                              String depart, String arrivee, String statut, String marge) {
-    }
-
-    private static final List<LigneTrajet> DEMO = List.of(
-            new LigneTrajet("TRJ-9081", "Mohammed Bennani", "12345-A-6 · Volvo",
-                    "Casablanca", "Tanger", "En cours", "8 400 MAD"),
-            new LigneTrajet("TRJ-9082", "Abderrahim El Amrani", "67890-B-2 · Scania",
-                    "Agadir", "Marrakech", "Terminé", "12 100 MAD"),
-            new LigneTrajet("TRJ-9083", "Youssef Amrani", "45678-C-1 · MAN",
-                    "Rabat", "Fès", "Planifié", "6 700 MAD"));
-
+    /** Badge colour per mission status (StatutMission labels). */
     private static final Map<String, String> BADGES = Map.of(
+            "Planifiée", "badge-amber",
             "En cours", "badge-blue",
-            "Terminé", "badge-green",
-            "Planifié", "badge-amber");
+            "Livrée", "badge-green",
+            "Facturée", "badge-green",
+            "Annulée", "badge-red");
+
+    private static final int NB_TRAJETS = 5;
 
     private static final int NB_MOIS = 6;
     private static final int NB_EVENEMENTS = 5;
@@ -88,6 +87,17 @@ public class DashboardController {
     @FXML private StackPane kpiFlotte;
     @FXML private StackPane kpiCreances;
     @FXML private StackPane kpiConformite;
+    @FXML private Label valeurCa;
+    @FXML private Label variationCa;
+    @FXML private Label piedCa;
+    @FXML private Label valeurFlotte;
+    @FXML private Label totalFlotte;
+    @FXML private ProgressBar progressionFlotte;
+    @FXML private Label piedFlotte;
+    @FXML private Label valeurCreances;
+    @FXML private Label piedCreances;
+    @FXML private Label valeurConformite;
+    @FXML private Label piedConformite;
     @FXML private Label chipCa;
     @FXML private Label chipMissions;
     @FXML private Label chipFlotte;
@@ -104,12 +114,12 @@ public class DashboardController {
     @FXML private NumberAxis axeFlotte;
     @FXML private VBox listeAlertes;
     @FXML private VBox listeAudit;
-    @FXML private TableView<LigneTrajet> tableTrajets;
-    @FXML private TableColumn<LigneTrajet, String> colReference;
-    @FXML private TableColumn<LigneTrajet, String> colChauffeur;
-    @FXML private TableColumn<LigneTrajet, String> colTrajet;
-    @FXML private TableColumn<LigneTrajet, String> colStatut;
-    @FXML private TableColumn<LigneTrajet, String> colMarge;
+    @FXML private TableView<DashboardService.Trajet> tableTrajets;
+    @FXML private TableColumn<DashboardService.Trajet, String> colReference;
+    @FXML private TableColumn<DashboardService.Trajet, String> colChauffeur;
+    @FXML private TableColumn<DashboardService.Trajet, String> colTrajet;
+    @FXML private TableColumn<DashboardService.Trajet, String> colStatut;
+    @FXML private TableColumn<DashboardService.Trajet, String> colMarge;
 
     @FXML
     private void initialize() {
@@ -126,7 +136,7 @@ public class DashboardController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                LigneTrajet ligne = empty || getTableRow() == null ? null : getTableRow().getItem();
+                DashboardService.Trajet ligne = empty || getTableRow() == null ? null : getTableRow().getItem();
                 setText(null);
                 if (ligne == null) {
                     setGraphic(null);
@@ -162,12 +172,13 @@ public class DashboardController {
             }
         });
 
-        colMarge.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().marge()));
+        colMarge.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().montantFacture() == null ? "—" : c.getValue().montantFacture()));
         colMarge.setCellFactory(col -> celluleTexte("cell-strong"));
 
-        tableTrajets.setItems(FXCollections.observableArrayList(DEMO));
+        tableTrajets.setItems(FXCollections.observableArrayList(service.trajetsRecents(NB_TRAJETS)));
 
         marquerDemo();
+        remplirIndicateurs();
         remplirChiffreAffaires();
         remplirMissions();
         remplirFlotte();
@@ -193,6 +204,43 @@ public class DashboardController {
     @FXML
     private void ouvrirJournal() {
         Navigator.ouvrir("admin/audit.fxml");
+    }
+
+    // ------------------------------------------------------------------ KPI CARDS
+
+    private void remplirIndicateurs() {
+        DashboardService.Indicateurs k = service.indicateurs();
+        valeurCa.setText(milliers(k.chiffreMoisMad()));
+        if (k.variationPourcent() == null) {
+            variationCa.setText("—");
+            piedCa.setText("pas de chiffre le mois dernier");
+        } else {
+            int v = k.variationPourcent();
+            variationCa.setText((v >= 0 ? "↗ +" : "↘ ") + v + " %");
+            variationCa.getStyleClass().setAll(v >= 0 ? "foot-green" : "foot-red");
+        }
+
+        valeurFlotte.setText(String.valueOf(k.flotteOperationnelle()));
+        totalFlotte.setText("/ " + k.flotteTotale());
+        progressionFlotte.setProgress(k.flotteTotale() == 0 ? 0 : (double) k.flotteOperationnelle() / k.flotteTotale());
+        piedFlotte.setText(k.enMaintenance() + (k.enMaintenance() > 1 ? " véhicules" : " véhicule") + " en maintenance");
+
+        valeurCreances.setText(milliers(k.creancesMad()));
+        piedCreances.setText(k.facturesEnRetard() == 0 ? "● Aucune facture en retard"
+                : "● " + k.facturesEnRetard() + (k.facturesEnRetard() > 1 ? " factures" : " facture") + " en retard");
+        piedCreances.getStyleClass().setAll(k.facturesEnRetard() == 0 ? "foot-muted" : "foot-red");
+
+        valeurConformite.setText(String.valueOf(k.conformitePourcent()));
+        int aTraiter = k.documentsExpires() + k.documentsARenouveler();
+        piedConformite.setText(aTraiter == 0 ? "● Tous les documents sont à jour"
+                : "● " + k.documentsExpires() + " expiré(s) · " + k.documentsARenouveler() + " à renouveler");
+        piedConformite.getStyleClass().setAll(k.documentsExpires() > 0 ? "foot-red"
+                : aTraiter > 0 ? "foot-amber" : "foot-muted");
+    }
+
+    /** "54 386" (thousands separated by a space, like the mockup). */
+    private static String milliers(long valeur) {
+        return String.format(Locale.ROOT, "%,d", valeur).replace(',', ' ');
     }
 
     // ------------------------------------------------------------------ MONEY
@@ -366,6 +414,50 @@ public class DashboardController {
         return String.format(Locale.ROOT, "%,d", montant).replace(',', ' ') + " MAD";
     }
 
+    // ------------------------------------------------------------------ printing
+
+    /**
+     * "Imprimer": a summary built from DashboardService (the same figures as the KPI cards, charts and alerts),
+     * not a screenshot.
+     */
+    @Override
+    public ImpressionRapport.Document documentAImprimer() {
+        List<List<String>> lignes = new ArrayList<>();
+        DashboardService.Indicateurs k = service.indicateurs();
+        lignes.add(List.of("Indicateurs", "Chiffre d'affaires HT du mois", mad(k.chiffreMoisMad())
+                + (k.variationPourcent() == null ? "" : " (" + (k.variationPourcent() >= 0 ? "+" : "")
+                + k.variationPourcent() + " % vs mois dernier)")));
+        lignes.add(List.of("Indicateurs", "Flotte opérationnelle", k.flotteOperationnelle() + " / " + k.flotteTotale()
+                + " (" + k.enMaintenance() + " en maintenance)"));
+        lignes.add(List.of("Indicateurs", "Créances clients TTC", mad(k.creancesMad()) + " (" + k.facturesEnRetard()
+                + " facture(s) en retard)"));
+        lignes.add(List.of("Indicateurs", "Conformité RH", k.conformitePourcent() + " % des employés actifs à jour"));
+        long total = 0;
+        for (DashboardService.ChiffreMensuel m : service.chiffreAffairesParMois(NB_MOIS)) {
+            lignes.add(List.of("Chiffre d'affaires HT", m.mois().format(MOIS_LONG), mad(m.montantMad())));
+            total += m.montantMad();
+        }
+        lignes.add(List.of("Chiffre d'affaires HT", "Total " + NB_MOIS + " mois", mad(total)));
+        for (DashboardService.Part p : service.missionsParStatut()) {
+            lignes.add(List.of("Missions par statut", p.libelle(), String.valueOf(p.nombre())));
+        }
+        for (DashboardService.Part p : service.etatFlotte()) {
+            lignes.add(List.of("État de la flotte", p.libelle(), String.valueOf(p.nombre())));
+        }
+        List<DashboardService.Alerte> alertes = service.alertesConformite();
+        if (alertes.isEmpty()) {
+            lignes.add(List.of("Alertes", "Aucune alerte", ""));
+        }
+        for (DashboardService.Alerte a : alertes) {
+            lignes.add(List.of("Alertes (" + a.niveau().name().toLowerCase(Locale.FRENCH) + ")", a.titre(), a.detail()));
+        }
+        String jour = Formats.date(LocalDate.now());
+        Rapport rapport = new Rapport("Synthèse du tableau de bord", "synthese-tableau-de-bord-"
+                + LocalDate.now() + ".csv", List.of("Rubrique", "Indicateur", "Valeur"), lignes,
+                "Situation au " + jour + " · chiffre d'affaires, missions, flotte et alertes");
+        return new ImpressionRapport.Document(rapport, List.of(), service.estDemo());
+    }
+
     /** Rounded clip so the tinted circle stays inside the card, like overflow:hidden in the mockup. */
     private static void arrondir(Region carte) {
         Rectangle clip = new Rectangle();
@@ -376,7 +468,7 @@ public class DashboardController {
         carte.setClip(clip);
     }
 
-    private static TableCell<LigneTrajet, String> celluleTexte(String styleClass) {
+    private static TableCell<DashboardService.Trajet, String> celluleTexte(String styleClass) {
         return new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Password reset of one account, opened from the right-click menu of the users table.
+     Buttons (Annuler / Confirmer) are added by UtilisateursController, like the user form. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.admin.MotDePasseFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="420" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="S&#201;CURIT&#201;" styleClass="eyebrow"/>
+            <Label fx:id="titre" text="R&#233;initialiser le mot de passe" styleClass="dialog-title"/>
+            <Label fx:id="description" wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <VBox spacing="6">
+                <Label text="Nouveau mot de passe (8 caract&#232;res minimum)" styleClass="form-label"/>
+                <PasswordField fx:id="champNouveau" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="Confirmer le mot de passe" styleClass="form-label"/>
+                <PasswordField fx:id="champConfirmation" styleClass="search-field"/>
+            </VBox>
+            <Label text="Communiquez le nouveau mot de passe &#224; la personne de vive voix. Il n'appara&#238;t jamais dans le journal d'audit." wrapText="true" styleClass="form-note"/>
+        </VBox>
+    </content>
+</DialogPane>

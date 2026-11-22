@@ -1,6 +1,7 @@
 package ma.translogix.service;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -61,6 +62,48 @@ public class AuditService {
     public static boolean correspond(EvenementAudit e, String requete) {
         return Recherche.correspond(requete, e.getHorodatage().format(FORMAT_DATE),
                 e.getUtilisateur(), e.getModule(), e.getAction(), e.getResultat().getLibelle());
+    }
+
+    /**
+     * Search criteria of the audit screen, all combined (AND). null or blank = criterion not used.
+     * @param texte  free text, as in rechercher(String)
+     * @param du     first day included
+     * @param au     last day included
+     */
+    public record CritereAudit(String texte, String module, ResultatAudit resultat, LocalDate du, LocalDate au) {
+        public static final CritereAudit AUCUN = new CritereAudit(null, null, null, null, null);
+    }
+
+    /**
+     * Events matching every criterion, most recent first.
+     * @throws ValidationException if the period ends before it starts
+     */
+    public List<EvenementAudit> filtrer(CritereAudit critere) {
+        verifierPeriode(critere);
+        return lister().stream().filter(e -> correspond(e, critere)).toList();
+    }
+
+    /** Same rule as filtrer, for one event (the screen filters its own list with it). */
+    public static boolean correspond(EvenementAudit e, CritereAudit critere) {
+        CritereAudit c = critere == null ? CritereAudit.AUCUN : critere;
+        LocalDate jour = e.getHorodatage().toLocalDate();
+        return (estVide(c.module()) || e.getModule().equals(c.module()))
+                && (c.resultat() == null || e.getResultat() == c.resultat())
+                && (c.du() == null || !jour.isBefore(c.du()))
+                && (c.au() == null || !jour.isAfter(c.au()))
+                && correspond(e, c.texte());
+    }
+
+    /** @throws ValidationException if the period ends before it starts */
+    public static void verifierPeriode(CritereAudit c) {
+        if (c != null && c.du() != null && c.au() != null && c.au().isBefore(c.du())) {
+            throw new ValidationException("La date de fin doit être après la date de début.");
+        }
+    }
+
+    /** Module names present in the log, alphabetical: the choices of the module filter. */
+    public List<String> modules() {
+        return dao.findAll().stream().map(EvenementAudit::getModule).distinct().sorted().toList();
     }
 
     private static boolean estVide(String valeur) {
