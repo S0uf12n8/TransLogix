@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,11 +17,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.model.Rows.MissionRow;
-import ma.translogix.chauffeur.util.TableUtil;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.MissionRow;
 import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
@@ -60,7 +56,7 @@ public class MissionsController {
 
     /** Reconstruit la liste depuis le service TransLogix ; le filtre de recherche est conservé. */
     public void refresh() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         List<MissionRow> lignes = new ArrayList<>();
         for (Mission m : ctx.missions()) {
             StatutMission statut = m.getStatut() == null ? StatutMission.PLANIFIEE : m.getStatut();
@@ -88,7 +84,7 @@ public class MissionsController {
     }
 
     private HBox actionButtons(MissionRow r) {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         String cls = "Livrée".equals(r.action1Label) ? "link-green"
                 : (r.action1Orange ? "link-orange" : "link-slate");
         Button a = link(r.action1Label, cls);
@@ -172,7 +168,7 @@ public class MissionsController {
 
     @FXML
     private void syncOrders() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.reload();
         refresh();
         ctx.toast("Ordres synchronisés depuis le service TransLogix.");

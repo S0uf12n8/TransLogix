@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -9,9 +9,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.util.FileInput;
-import ma.translogix.chauffeur.util.Ui;
 
 /** Fenêtre « Signaler un Incident sur la Route » (mode « incident » de la modale d'origine). */
 public class IncidentModalController {
@@ -25,7 +22,7 @@ public class IncidentModalController {
 
     @FXML
     private void initialize() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         tripRef.setItems(FXCollections.observableArrayList(ctx.missionData.values().stream()
                 .map(d -> d.ref + " · " + d.from + " → " + d.to)
                 .toList()));
@@ -46,12 +43,12 @@ public class IncidentModalController {
         if (!Ui.requireText(locationField)) return;
         if (details.getText().isEmpty()) { Ui.invalid(details, "Veuillez renseigner ce champ."); return; }
         if (tripRef.getValue() == null) { Ui.invalid(tripRef, "Sélectionnez une mission."); return; }
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.addIncident(tripRef.getValue(), incidentType.getValue(), severity.getValue(), locationField.getText(),
                 attachment.getFile() == null ? null : attachment.getFile().getName());
         ctx.toast("Incident (gravité : " + severity.getValue() + ") transmis en urgence au dispatching. Restez à l'écoute.");
         ctx.closeModal();
     }
 
-    @FXML private void close() { AppContext.get().closeModal(); }
+    @FXML private void close() { EspaceChauffeurUi.get().closeModal(); }
 }

@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.model;
+package ma.translogix.controller.chauffeur;
 
 /** Lignes des différents tableaux. */
 public final class Rows {

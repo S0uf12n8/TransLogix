@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -6,7 +6,6 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
-import ma.translogix.chauffeur.util.Ui;
 
 /** Gabarit d'un point de contrôle (components/InspectionItem.fxml). */
 public class InspectionItemController {

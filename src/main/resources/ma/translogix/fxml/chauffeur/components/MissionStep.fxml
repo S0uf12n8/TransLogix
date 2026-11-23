@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox fx:id="root" spacing="12.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.MissionStepController">
+<HBox fx:id="root" spacing="12.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.MissionStepController">
    <children>
       <StackPane alignment="TOP_CENTER" maxWidth="32.0" minWidth="32.0" prefWidth="32.0">
          <children>

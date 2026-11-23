@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,9 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.util.Ui;
 
 /** Section 7 : Détail &amp; Suivi de mission. */
 public class MissionDetailController {
@@ -32,7 +29,7 @@ public class MissionDetailController {
 
     @FXML
     private void initialize() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.register(this);
         List<String> labels = new ArrayList<>();
         for (MissionData m : ctx.missionData.values()) {
@@ -58,7 +55,7 @@ public class MissionDetailController {
     }
 
     public void renderMissionDetail(String ref) {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         MissionData m = ref == null ? null : ctx.missionData.get(ref);
         if (m == null) return;
         currentMissionRef = ref;
@@ -101,7 +98,7 @@ public class MissionDetailController {
         mdInstructions.getChildren().clear();
         for (String s : m.instructions) mdInstructions.getChildren().add(Ui.bullet(s, "fs-12", "c-s600"));
 
-        int total = AppContext.STEP_LABELS.length;
+        int total = EspaceChauffeurUi.STEP_LABELS.length;
         mdStepCount.setText(m.done + " / " + total + " étapes");
         mdProgressBar.setProgress(Math.round((double) m.done / total * 100) / 100.0);
         mdSteps.getChildren().clear();
@@ -113,7 +110,7 @@ public class MissionDetailController {
                 FXMLLoader l = new FXMLLoader(getClass().getResource("/ma/translogix/fxml/chauffeur/components/MissionStep.fxml"));
                 javafx.scene.Node node = l.load();
                 MissionStepController c = l.getController();
-                c.setData(AppContext.STEP_LABELS[i], state, sub, i < total - 1, i == total - 1);
+                c.setData(EspaceChauffeurUi.STEP_LABELS[i], state, sub, i < total - 1, i == total - 1);
                 mdSteps.getChildren().add(node);
             } catch (IOException e) { throw new IllegalStateException(e); }
         }
@@ -124,14 +121,14 @@ public class MissionDetailController {
         icon.getStyleClass().addAll("fa", "fs-12");
         mdConfirmBtn.setGraphic(icon);
         mdConfirmBtn.setText(finished ? "Mission terminée"
-                : (m.done == total - 1 ? "Aller à la preuve de livraison" : "Confirmer : " + AppContext.STEP_LABELS[m.done]));
+                : (m.done == total - 1 ? "Aller à la preuve de livraison" : "Confirmer : " + EspaceChauffeurUi.STEP_LABELS[m.done]));
     }
 
     @FXML
     private void confirmMissionStep() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         MissionData m = ctx.missionData.get(currentMissionRef);
-        int total = AppContext.STEP_LABELS.length;
+        int total = EspaceChauffeurUi.STEP_LABELS.length;
         if (m == null || m.done >= total) return;
         if (m.done == total - 1) {
             ctx.navigate("driver-pod");
@@ -145,10 +142,10 @@ public class MissionDetailController {
         MissionData miseAJour = ctx.missionData.get(currentMissionRef);
         if (miseAJour != null) miseAJour.times[etape] = heure;
         renderMissionDetail(currentMissionRef);
-        ctx.toast("Étape confirmée : " + AppContext.STEP_LABELS[etape]);
+        ctx.toast("Étape confirmée : " + EspaceChauffeurUi.STEP_LABELS[etape]);
     }
 
-    @FXML private void backToMissions() { AppContext.get().navigate("driver-missions"); }
-    @FXML private void goPod() { AppContext.get().navigate("driver-pod"); }
-    @FXML private void goExceptional() { AppContext.get().navigate("driver-exceptional"); }
+    @FXML private void backToMissions() { EspaceChauffeurUi.get().navigate("driver-missions"); }
+    @FXML private void goPod() { EspaceChauffeurUi.get().navigate("driver-pod"); }
+    @FXML private void goExceptional() { EspaceChauffeurUi.get().navigate("driver-exceptional"); }
 }

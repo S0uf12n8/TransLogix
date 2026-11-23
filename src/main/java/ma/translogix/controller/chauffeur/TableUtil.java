@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.util;
+package ma.translogix.controller.chauffeur;
 
 import java.util.function.Function;
 

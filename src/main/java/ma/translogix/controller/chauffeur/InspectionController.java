@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,9 +10,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.util.Ui;
 
 /** Section 9 : Inspection du camion (check-list avant départ). */
 public class InspectionController {
@@ -63,13 +60,13 @@ public class InspectionController {
     private void setInspStatus(String cls, String text) { Ui.setPill(inspStatus, cls, text); }
 
     private MissionData activeMission() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         return ctx.missionData.get(ctx.selectedMissionRef);
     }
 
     @FXML
     private void submitInspection() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         MissionData mission = activeMission();
         String prefix = mission == null ? "" : "Mission " + mission.ref + " · ";
         String suffix = mission == null ? "" : " pour la mission " + mission.ref;

@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.model;
+package ma.translogix.controller.chauffeur;
 
 /** Notification du centre de messages (données de démonstration, comme dans le HTML d'origine). */
 public class Notification {

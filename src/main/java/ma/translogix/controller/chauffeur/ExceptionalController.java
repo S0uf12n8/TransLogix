@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,11 +11,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.Rows.ExceptionalRow;
-import ma.translogix.chauffeur.util.FileInput;
-import ma.translogix.chauffeur.util.TableUtil;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.ExceptionalRow;
 
 /** Section 11 : Demande d'intervention exceptionnelle. */
 public class ExceptionalController {
@@ -39,7 +35,7 @@ public class ExceptionalController {
 
     @FXML
     private void initialize() {
-        excMission.setItems(FXCollections.observableArrayList(AppContext.get().missionData.values().stream()
+        excMission.setItems(FXCollections.observableArrayList(EspaceChauffeurUi.get().missionData.values().stream()
                 .map(d -> d.ref + " · " + d.from + " → " + d.to)
                 .toList()));
         excReason.setItems(FXCollections.observableArrayList("Panne grave du véhicule", "Problème de santé",
@@ -74,7 +70,7 @@ public class ExceptionalController {
         String mission = Ui.firstToken(excMission.getValue());
         String reason = excReason.getValue();
         rows.add(0, new ExceptionalRow("INT-2026-" + (++excSeq), mission, reason, Ui.todayShort()));
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.addNotification("instruction", "Demande transmise au Dispatching",
                 mission + " · " + reason + ". La mission reste à exécuter jusqu’à la décision du Dispatching.", null, null, null);
         ctx.toast("Demande transmise. La décision appartient au Dispatching : la mission reste à exécuter.");
@@ -91,7 +87,7 @@ public class ExceptionalController {
         r.decisionLabel = outcome[1];
         r.decided = true;
         table.refresh();
-        AppContext.get().addNotification("instruction", "Décision du Dispatching",
+        EspaceChauffeurUi.get().addNotification("instruction", "Décision du Dispatching",
                 r.mission + " : " + outcome[1] + " (simulation).", null, null, null);
     }
 }

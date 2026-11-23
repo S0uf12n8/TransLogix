@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.util.Locale;
 
@@ -9,10 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.Rows.ExpenseRow;
-import ma.translogix.chauffeur.util.TableUtil;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.ExpenseRow;
 
 /** Section 3 : Reçus &amp; Carburant. */
 public class ExpensesController {
@@ -21,7 +18,7 @@ public class ExpensesController {
     @FXML private TextField searchField;
     @FXML private Label driverPendingAmount, validatedAmount, fuelConsumption;
 
-    private final AppContext ctx = AppContext.get();
+    private final EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
     private final FilteredList<ExpenseRow> filtered = new FilteredList<>(ctx.expenseRows, r -> true);
 
     @FXML

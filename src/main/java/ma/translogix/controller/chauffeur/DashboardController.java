@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -6,9 +6,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.util.Ui;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
@@ -32,7 +29,7 @@ public class DashboardController {
             if (n instanceof Region) Ui.clipRounded((Region) n, 14);
         }
 
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         Employe chauffeur = ctx.chauffeur();
         String prenom = chauffeur == null || chauffeur.getPrenom() == null || chauffeur.getPrenom().isBlank()
                 ? "—" : chauffeur.getPrenom();
@@ -49,12 +46,12 @@ public class DashboardController {
                 : "Client : " + nvl(active.client) + " · Produit : " + nvl(active.cargoDetail));
         bannerEta.setText(active == null ? "—" : nvl(active.end));
         etaDeltaLabel.setText("");                      // aucun écart ETA calculé par le service
-        bannerCargo.setText(active == null ? "—" : nvl(active.cargo));   // poids + " T" (voir AppContext.reload)
+        bannerCargo.setText(active == null ? "—" : nvl(active.cargo));   // poids + " T" (voir EspaceChauffeurUi.reload)
         tachyLabel.setText("Non renseigné par le service");
         remainingDistanceLabel.setText("—");                            // distance non portée par Mission
         cmrLabel.setText(active == null ? "—" : cmr(active));
 
-        int totalSteps = AppContext.STEP_LABELS.length;
+        int totalSteps = EspaceChauffeurUi.STEP_LABELS.length;
         double progression = active == null ? 0
                 : Math.min(1.0, Math.max(0.0, (double) active.done / totalSteps));
         tripProgressLabel.setText(Math.round(progression * 100) + "% effectué");
@@ -94,10 +91,10 @@ public class DashboardController {
     }
 
     @FXML private void updateMissionProgress() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         MissionData active = ctx.missionData.get(ctx.selectedMissionRef);
         // Le point GPS ne modifie pas le statut métier : on réaffiche la progression réelle.
-        int totalSteps = AppContext.STEP_LABELS.length;
+        int totalSteps = EspaceChauffeurUi.STEP_LABELS.length;
         double progression = active == null ? 0
                 : Math.min(1.0, Math.max(0.0, (double) active.done / totalSteps));
         tripProgressBar.setProgress(progression);
@@ -105,12 +102,12 @@ public class DashboardController {
         ctx.toast("Point GPS mis à jour : position enregistrée sur la mission "
                 + (active == null ? "—" : nvl(active.ref)) + ".");
     }
-    @FXML private void openIncident() { AppContext.get().openIncidentModal(); }
-    @FXML private void openExpense() { AppContext.get().openExpenseModal(); }
-    @FXML private void onPause() { AppContext.get().toast("Début de pause obligatoire enregistré sur le tachygraphe."); }
-    @FXML private void goInspection() { AppContext.get().navigate("driver-inspection"); }
-    @FXML private void goPod() { AppContext.get().navigate("driver-pod"); }
-    @FXML private void goChat() { AppContext.get().navigate("driver-chat"); }
+    @FXML private void openIncident() { EspaceChauffeurUi.get().openIncidentModal(); }
+    @FXML private void openExpense() { EspaceChauffeurUi.get().openExpenseModal(); }
+    @FXML private void onPause() { EspaceChauffeurUi.get().toast("Début de pause obligatoire enregistré sur le tachygraphe."); }
+    @FXML private void goInspection() { EspaceChauffeurUi.get().navigate("driver-inspection"); }
+    @FXML private void goPod() { EspaceChauffeurUi.get().navigate("driver-pod"); }
+    @FXML private void goChat() { EspaceChauffeurUi.get().navigate("driver-chat"); }
 
     private static String cmr(MissionData m) {
         return switch (nvl(m.status)) {

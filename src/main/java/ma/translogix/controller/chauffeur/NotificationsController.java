@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.io.IOException;
 
@@ -10,8 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.Notification;
 
 /** Section 6 : Notifications (liste filtrable, marquage lu / non lu). */
 public class NotificationsController {
@@ -23,7 +21,7 @@ public class NotificationsController {
 
     @FXML
     private void initialize() {
-        AppContext.get().notifications.addListener((ListChangeListener<Notification>) c -> refresh());
+        EspaceChauffeurUi.get().notifications.addListener((ListChangeListener<Notification>) c -> refresh());
         refresh();
     }
 
@@ -33,7 +31,7 @@ public class NotificationsController {
     }
 
     private void render() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         notifList.getChildren().clear();
         long shown = ctx.notifications.stream().filter(n -> "all".equals(notifFilter) || n.type.equals(notifFilter)).count();
         if (shown == 0) {
@@ -72,14 +70,14 @@ public class NotificationsController {
     private void openNotification(Notification n) {
         n.read = true;
         refresh();
-        if (n.actionRef != null) AppContext.get().openMissionDetail(n.actionRef);
-        else if (n.actionTab != null) AppContext.get().navigate(n.actionTab);
+        if (n.actionRef != null) EspaceChauffeurUi.get().openMissionDetail(n.actionRef);
+        else if (n.actionTab != null) EspaceChauffeurUi.get().navigate(n.actionTab);
     }
 
     @FXML
     private void markAll() {
-        AppContext.get().notifications.forEach(n -> n.read = true);
+        EspaceChauffeurUi.get().notifications.forEach(n -> n.read = true);
         refresh();
-        AppContext.get().toast("Toutes les notifications sont marquées comme lues.");
+        EspaceChauffeurUi.get().toast("Toutes les notifications sont marquées comme lues.");
     }
 }

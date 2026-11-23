@@ -1,19 +1,16 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.Rows.IncidentRow;
-import ma.translogix.chauffeur.util.TableUtil;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.IncidentRow;
 
 /** Section 5 : Incidents &amp; Support. */
 public class IncidentsController {
     @FXML private TableView<IncidentRow> table;
     @FXML private TableColumn<IncidentRow, ?> colRef, colMission, colType, colSeverity, colLocation, colAttachment, colStatus;
 
-    private final AppContext ctx = AppContext.get();
+    private final EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
 
     @FXML
     private void initialize() {

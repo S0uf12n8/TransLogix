@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,10 +23,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.FileChooser;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.util.FileInput;
-import ma.translogix.chauffeur.util.Ui;
 import ma.translogix.controller.common.Dialogues;
 
 /** Section 8 : Preuve de livraison (photo, signature à main levée, quantité, remarques). */
@@ -52,7 +48,7 @@ public class PodController {
 
     @FXML
     private void initialize() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         List<String> refs = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         for (MissionData m : ctx.missionData.values()) {
@@ -131,7 +127,7 @@ public class PodController {
         if (!Ui.requireText(podReceiver)) return;
         if (!Ui.requireNumber(podQty, 0.0)) return;
 
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         if (!sigDirty) { ctx.toast("La signature du réceptionnaire est requise."); return; }
         String selection = podMission.getValue();
         String ref = Ui.firstToken(selection);   // le combo affiche « REF · … » : on isole la référence

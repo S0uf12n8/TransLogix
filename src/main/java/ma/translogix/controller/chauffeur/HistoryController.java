@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,11 +16,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.model.Rows.HistoryRow;
-import ma.translogix.chauffeur.util.TableUtil;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.HistoryRow;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
 
@@ -50,7 +46,7 @@ public class HistoryController {
         TableUtil.node(colStatus, r -> Ui.pill(r.statusLabel, r.statusCls));
         TableUtil.node(colAction, r -> {
             Button b = MissionsController.link("Détails", "link-orange");
-            b.setOnAction(e -> AppContext.get().openMissionDetail(r.ref));
+            b.setOnAction(e -> EspaceChauffeurUi.get().openMissionDetail(r.ref));
             return b;
         });
         table.setItems(filtered);
@@ -61,7 +57,7 @@ public class HistoryController {
 
     /** Missions livrées / facturées / annulées, du plus récent au plus ancien. */
     public void refresh() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         List<HistoryRow> lignes = new ArrayList<>();
         ctx.missions().stream()
                 .filter(m -> estArchive(m.getStatut()))

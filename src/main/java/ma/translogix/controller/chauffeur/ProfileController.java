@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -11,8 +11,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.util.Ui;
 import ma.translogix.model.DocumentConformite;
 import ma.translogix.model.Employe;
 import ma.translogix.model.StatutConformite;
@@ -27,7 +25,7 @@ public class ProfileController {
 
     @FXML
     private void initialize() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         Employe chauffeur = ctx.chauffeur();
         if (chauffeur == null) {
             avatarInitials.setText("—");
@@ -120,9 +118,9 @@ public class ProfileController {
     }
 
     @FXML private void requestAttestation() {
-        Employe chauffeur = AppContext.get().chauffeur();
+        Employe chauffeur = EspaceChauffeurUi.get().chauffeur();
         String nom = chauffeur == null ? "—" : nvl(chauffeur.getNomComplet());
-        AppContext.get().toast("Demande d'attestation de travail transmise aux RH pour " + nom + ".");
+        EspaceChauffeurUi.get().toast("Demande d'attestation de travail transmise aux RH pour " + nom + ".");
     }
 
     private static String nvl(String s) { return s == null || s.isBlank() ? "—" : s; }

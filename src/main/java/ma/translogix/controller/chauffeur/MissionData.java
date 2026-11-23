@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.model;
+package ma.translogix.controller.chauffeur;
 
 import java.util.ArrayList;
 import java.util.Arrays;

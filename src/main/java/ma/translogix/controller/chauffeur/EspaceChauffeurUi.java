@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur;
+package ma.translogix.controller.chauffeur;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,15 +27,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import ma.translogix.chauffeur.controller.ChatController;
-import ma.translogix.chauffeur.controller.ExpensesController;
-import ma.translogix.chauffeur.controller.IncidentsController;
-import ma.translogix.chauffeur.controller.MissionDetailController;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.model.Notification;
-import ma.translogix.chauffeur.model.Rows.ExpenseRow;
-import ma.translogix.chauffeur.model.Rows.IncidentRow;
-import ma.translogix.chauffeur.util.Ui;
+import ma.translogix.controller.chauffeur.Rows.ExpenseRow;
+import ma.translogix.controller.chauffeur.Rows.IncidentRow;
 import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Client;
 import ma.translogix.model.DocumentConformite;
@@ -57,7 +50,7 @@ import ma.translogix.util.Session;
  * (EspaceChauffeurService -> MissionService -> DAO). Switching the DAOs from InMemory to
  * JDBC will make these screens follow without touching a controller.
  */
-public final class AppContext {
+public final class EspaceChauffeurUi {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRENCH);
     private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm", Locale.FRENCH);
@@ -79,9 +72,9 @@ public final class AppContext {
     public static final String[] STEP_LABELS = {"Ordre accepté", "Chargement terminé", "Départ du site de chargement",
             "Arrivée au site de déchargement", "Déchargement terminé", "Preuve de livraison transmise"};
 
-    private static final AppContext INSTANCE = new AppContext();
+    private static final EspaceChauffeurUi INSTANCE = new EspaceChauffeurUi();
 
-    public static AppContext get() {
+    public static EspaceChauffeurUi get() {
         // The bridge is often created before login (FXML preview). Refresh on first access
         // after a session change so every screen sees the current driver's data.
         INSTANCE.ensureSynced();
@@ -119,7 +112,7 @@ public final class AppContext {
     private ChatController chat;
     private Stage modalStage;
 
-    private AppContext() {
+    private EspaceChauffeurUi() {
         reload();
     }
 
@@ -456,7 +449,7 @@ public final class AppContext {
     private static String nvl(String s) { return s == null ? "" : s; }
 
     private static void loadFont(String path) {
-        try (InputStream in = AppContext.class.getResourceAsStream(path)) {
+        try (InputStream in = EspaceChauffeurUi.class.getResourceAsStream(path)) {
             if (in != null) {
                 Font.loadFont(in, 16);
             }

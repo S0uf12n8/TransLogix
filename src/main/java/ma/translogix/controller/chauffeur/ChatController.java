@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -10,9 +10,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import ma.translogix.chauffeur.AppContext;
-import ma.translogix.chauffeur.model.MissionData;
-import ma.translogix.chauffeur.util.Ui;
 import ma.translogix.model.Employe;
 
 /** Section 10 : Messagerie Dispatching (démo, réponse automatique après 1,2 s). */
@@ -23,7 +20,7 @@ public class ChatController {
 
     @FXML
     private void initialize() {
-        AppContext ctx = AppContext.get();
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.register(this);
         Employe driver = ctx.chauffeur();
         String prenom = driver == null || driver.getPrenom() == null || driver.getPrenom().isBlank()
@@ -66,7 +63,7 @@ public class ChatController {
     }
 
     @FXML private void quickEta() {
-        MissionData mission = AppContext.get().missionData.get(AppContext.get().selectedMissionRef);
+        MissionData mission = EspaceChauffeurUi.get().missionData.get(EspaceChauffeurUi.get().selectedMissionRef);
         sendChat("ETA confirmé" + (mission == null || mission.end.isBlank()
                 ? "." : " : arrivée prévue à " + mission.end + "."));
     }

@@ -1,4 +1,4 @@
-package ma.translogix.chauffeur.controller;
+package ma.translogix.controller.chauffeur;
 
 import java.util.function.Consumer;
 
@@ -6,8 +6,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import ma.translogix.chauffeur.model.Notification;
-import ma.translogix.chauffeur.util.Ui;
 
 /** Gabarit d'une ligne de notification (components/NotificationItem.fxml). */
 public class NotificationItemController {
