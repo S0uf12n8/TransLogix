@@ -47,7 +47,7 @@ public class NotificationsController {
                 if (!("all".equals(notifFilter) || n.type.equals(notifFilter))) continue;
                 i++;
                 try {
-                    FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/components/NotificationItem.fxml"));
+                    FXMLLoader l = new FXMLLoader(getClass().getResource("/ma/translogix/fxml/chauffeur/components/NotificationItem.fxml"));
                     Node node = l.load();
                     NotificationItemController c = l.getController();
                     c.setData(n, i == shown, this::openNotification);

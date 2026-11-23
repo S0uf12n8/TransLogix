@@ -90,7 +90,7 @@ public class MissionDetailController {
                     "Véhicule affecté à la mission"}};
         for (int i = 0; i < blocks.length; i++) {
             try {
-                FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/components/InfoBlock.fxml"));
+                FXMLLoader l = new FXMLLoader(getClass().getResource("/ma/translogix/fxml/chauffeur/components/InfoBlock.fxml"));
                 javafx.scene.Node node = l.load();
                 InfoBlockController c = l.getController();
                 c.setData(blocks[i][0], blocks[i][1], blocks[i][2], blocks[i][3]);
@@ -110,7 +110,7 @@ public class MissionDetailController {
             String sub = "done".equals(state) ? "Confirmée" + (m.times[i] != null ? " à " + m.times[i] : "")
                     : ("current".equals(state) ? "Étape en cours · à confirmer" : "À venir");
             try {
-                FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/components/MissionStep.fxml"));
+                FXMLLoader l = new FXMLLoader(getClass().getResource("/ma/translogix/fxml/chauffeur/components/MissionStep.fxml"));
                 javafx.scene.Node node = l.load();
                 MissionStepController c = l.getController();
                 c.setData(AppContext.STEP_LABELS[i], state, sub, i < total - 1, i == total - 1);

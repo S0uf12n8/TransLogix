@@ -43,7 +43,7 @@ public class InspectionController {
         items.clear();
         for (String[] it : ITEMS) {
             try {
-                FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/components/InspectionItem.fxml"));
+                FXMLLoader l = new FXMLLoader(getClass().getResource("/ma/translogix/fxml/chauffeur/components/InspectionItem.fxml"));
                 javafx.scene.Node node = l.load();
                 InspectionItemController c = l.getController();
                 c.setData(it[0], it[1], it[2], this::onInspChange);

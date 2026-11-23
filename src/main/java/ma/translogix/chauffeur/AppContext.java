@@ -93,8 +93,8 @@ public final class AppContext {
     }
 
     static {
-        loadFont("/fonts/fa-solid-900.ttf");
-        loadFont("/fonts/fa-regular-400.ttf");
+        loadFont("/ma/translogix/fonts/fa-solid-900.ttf");
+        loadFont("/ma/translogix/fonts/fa-regular-400.ttf");
     }
 
     // Shared observable state used by the sections.
@@ -313,8 +313,8 @@ public final class AppContext {
         });
     }
 
-    public void openExpenseModal() { openModal("/fxml/modals/ExpenseModal.fxml"); }
-    public void openIncidentModal() { openModal("/fxml/modals/IncidentModal.fxml"); }
+    public void openExpenseModal() { openModal("/ma/translogix/fxml/chauffeur/modals/ExpenseModal.fxml"); }
+    public void openIncidentModal() { openModal("/ma/translogix/fxml/chauffeur/modals/IncidentModal.fxml"); }
 
     private void openModal(String ressource) {
         try {
@@ -323,7 +323,10 @@ public final class AppContext {
             modalStage = new Stage();
             modalStage.initModality(Modality.APPLICATION_MODAL);
             modalStage.setTitle("Espace Chauffeur | TransLogix");
-            modalStage.setScene(new Scene(contenu));
+            Scene scene = new Scene(contenu);
+            // A modal is its own window: it needs the driver stylesheet (the zip shell used to provide it).
+            scene.getStylesheets().add(getClass().getResource("/ma/translogix/css/translogix.css").toExternalForm());
+            modalStage.setScene(scene);
             modalStage.setResizable(false);
             modalStage.show();
         } catch (IOException e) {
