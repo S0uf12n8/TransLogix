@@ -31,6 +31,7 @@ class FactureServiceTest {
     private static final LocalDate AUJOURDHUI = LocalDate.of(2026, 11, 17);
     private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-17T10:00:00Z"), ZoneOffset.UTC);
 
+    private InMemoryClientDao clientDao;
     private InMemoryPaiementDao paiementDao;
     private FactureService service;
     private MissionsDeTest flotte;
@@ -38,7 +39,7 @@ class FactureServiceTest {
 
     @BeforeEach
     void setUp() {
-        InMemoryClientDao clientDao = new InMemoryClientDao();
+        clientDao = new InMemoryClientDao();
         InMemoryFactureDao factureDao = new InMemoryFactureDao();
         paiementDao = new InMemoryPaiementDao();
         flotte = new MissionsDeTest(clientDao, factureDao, HORLOGE);
@@ -271,5 +272,78 @@ class FactureServiceTest {
 
         assertEquals(recente.getId(), service.lister().get(0).getId());
         assertEquals(ancienne.getId(), service.dernieres(5).get(1).getId());
+    }
+
+    @Test
+    void missionInconnueOuClientDisparuSontRefusesSansEffetDeBord() {
+        assertThrows(ValidationException.class, () -> service.creer(999L, BigDecimal.TEN, null));
+        assertTrue(service.lister().isEmpty());
+
+        Mission mission = flotte.livree(client.getId());
+        clientDao.delete(client.getId());
+        assertThrows(ValidationException.class, () -> service.creer(mission.getId(), BigDecimal.TEN, null));
+        assertTrue(service.lister().isEmpty());
+    }
+
+    @Test
+    void delaiDePaiementNegatifEstRefuse() {
+        assertThrows(ValidationException.class, () -> service.creer(livree(), BigDecimal.TEN, -1));
+        assertTrue(service.lister().isEmpty());
+    }
+
+    @Test
+    void paiementALaDateDEcheanceEstAccepteMemeSiLaFactureEstAncienne() {
+        Facture f = service.creer(livree(), BigDecimal.TEN, 30, AUJOURDHUI.minusDays(30));
+
+        assertFalse(service.estEnRetard(f)); // due today, not late
+        service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-ECHEANCE", AUJOURDHUI);
+
+        assertEquals(StatutFacture.PAYEE, service.trouver(f.getId()).getStatut());
+        assertEquals("Payée", service.libelleStatut(service.trouver(f.getId())));
+    }
+
+    @Test
+    void annulerDeuxFoisResteIdempotentEtBloqueLeReglement() {
+        Facture f = facture("1000");
+        service.annuler(f.getId());
+        service.annuler(f.getId());
+
+        assertEquals(StatutFacture.ANNULEE, service.trouver(f.getId()).getStatut());
+        assertEquals(1, service.lister().size());
+        assertTrue(paiementDao.findAll().isEmpty());
+        assertThrows(ValidationException.class,
+                () -> service.enregistrerPaiement(f.getId(), ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI));
+    }
+
+    @Test
+    void trouverUneFactureInconnueDonneUnMessageComprehensible() {
+        ValidationException e = assertThrows(ValidationException.class, () -> service.trouver(999L));
+        assertEquals("Facture introuvable.", e.getMessage());
+        assertThrows(ValidationException.class, () -> service.enregistrerPaiement(999L,
+                ModePaiement.VIREMENT, "VIR-1", AUJOURDHUI));
+        assertThrows(ValidationException.class, () -> service.annuler(999L));
+    }
+
+    @Test
+    void syntheseSansDonneeEstAZero() {
+        FactureService.Synthese s = service.synthese();
+
+        assertEquals(0, s.chiffreAffairesMoisHT().compareTo(BigDecimal.ZERO));
+        assertEquals(0, s.facturesDuMois());
+        assertEquals(0, s.factureMoisTtc().compareTo(BigDecimal.ZERO));
+        assertEquals(0, s.encaissementsMois().compareTo(BigDecimal.ZERO));
+        assertEquals(0, s.creancesEnRetard().compareTo(BigDecimal.ZERO));
+        assertEquals(0, s.facturesEnRetard());
+    }
+
+    @Test
+    void dernieresRespecteLaLimiteDemandee() {
+        facture("10");
+        facture("20");
+        facture("30");
+
+        assertEquals(2, service.dernieres(2).size());
+        assertTrue(service.dernieres(0).isEmpty());
+        assertEquals(3, service.dernieres(100).size());
     }
 }
