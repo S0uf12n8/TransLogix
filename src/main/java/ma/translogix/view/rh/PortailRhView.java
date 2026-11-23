@@ -70,6 +70,8 @@ public class PortailRhView extends StackPane {
     }
 
     private final Map<String, HBox> navById = new LinkedHashMap<>();
+    private DataTable employeeTable;
+    private int nextEmployeeId = 1;
     private final Map<String, Node> sections = new LinkedHashMap<>();
     private final VBox contentArea = new VBox(22);
     private final Label pageKicker = new Label();
@@ -113,7 +115,18 @@ public class PortailRhView extends StackPane {
         VBox titles = new VBox(2,
                 label("Portal RH", "sidebar-brand-title"),
                 label("TRANSLOGIX · MAROC", "sidebar-brand-sub"));
-        brand.getChildren().addAll(label("👥", "brand-logo"), titles);
+        javafx.scene.image.Image logoImage = new javafx.scene.image.Image(
+            getClass().getResourceAsStream(
+                "/ma/translogix/images/translogix-logo.jpeg.jpeg"
+            )
+        );
+
+        javafx.scene.image.ImageView logo = new javafx.scene.image.ImageView(logoImage);
+        logo.setFitWidth(44);
+        logo.setFitHeight(44);
+        logo.setPreserveRatio(true);
+
+        brand.getChildren().addAll(logo, titles);
 
         HBox userCard = new HBox(10);
         userCard.getStyleClass().add("sidebar-user-card");
@@ -336,27 +349,27 @@ public class PortailRhView extends StackPane {
 
         VBox tablePanel = panel();
         TextField search = searchField("Rechercher un salarié...");
-        DataTable t = new DataTable(
+        employeeTable = new DataTable(
                 new String[]{"Matricule & Nom", "CIN & CNSS", "Poste", "Permis / Catégorie", "Embauche", "Statut", "Action"},
                 new double[]{20, 17, 16, 18, 12, 9, 8});
-        search.textProperty().addListener((obs, old, val) -> t.filter(val));
+        search.textProperty().addListener((obs, old, val) -> employeeTable.filter(val));
 
-        t.addRow(twoLine("Mohammed Bennani", "MAT-2021-04"), twoLine("BE-889021", "CNSS: 198273645"),
+        employeeTable.addRow(twoLine("Mohammed Bennani", "MAT-2021-04"),
                 label("Chauffeur Routier", "cell"), permCell("EC", "PRM-883920"), label("15/03/2021", "cell"),
                 status("Actif", "green"), linkButton("Dossier", () -> showToast("Affichage du dossier salarié de M. Bennani.")));
-        t.addRow(twoLine("Abderrahim El Amrani", "MAT-2022-12"), twoLine("A-443219", "CNSS: 209384712"),
+        employeeTable.addRow(twoLine("Abderrahim El Amrani", "MAT-2022-12"), twoLine("A-443219", "CNSS: 209384712"),
                 label("Chauffeur Poids Lourds", "cell"), permCell("C", "PRM-112938"), label("01/06/2022", "cell"),
                 status("Actif", "green"), linkButton("Dossier", () -> showToast("Affichage du dossier salarié de M. El Amrani.")));
-        t.addRow(twoLine("Youssef Amrani", "MAT-2020-02"), twoLine("CD-110293", "CNSS: 102938475"),
+        employeeTable.addRow(twoLine("Youssef Amrani", "MAT-2020-02"), twoLine("CD-110293", "CNSS: 102938475"),
                 label("Chauffeur Super Lourds", "cell"), permCell("EC", "PRM-445201"), label("10/01/2020", "cell"),
                 status("En Congé", "amber"), linkButton("Dossier", () -> showToast("Affichage du dossier salarié de M. Amrani.")));
-        t.addRow(twoLine("Karima Bouazzaoui", "MAT-2023-08"), twoLine("BK-667123", "CNSS: 334928104"),
+        employeeTable.addRow(twoLine("Karima Bouazzaoui", "MAT-2023-08"), twoLine("BK-667123", "CNSS: 334928104"),
                 label("Assistante Exploitation", "cell"), permCell("B", "PRM-992011"), label("01/02/2023", "cell"),
                 status("Actif", "green"), linkButton("Dossier", () -> showToast("Affichage du dossier salarié de Mme. Bouazzaoui.")));
 
         tablePanel.getChildren().addAll(
                 panelHeader("Registre du personnel", "Recherchez un salarié par nom, CIN, N° CNSS ou rôle.", search),
-                t);
+            employeeTable);
         sec.getChildren().add(tablePanel);
         return sec;
     }
@@ -744,7 +757,31 @@ public class PortailRhView extends StackPane {
     private void openEmployeeModal() {
         openModal("Nouveau Salarié",
                 "Saisissez les informations administratives du nouveau collaborateur.",
-                values -> showToast("Salarié " + values.get("fullname") + " créé avec succès."),
+            values -> {
+                String name = values.get("fullname");
+
+                String matricule = String.format(
+                    "MAT-%d-%02d",
+                    LocalDate.now().getYear(),
+                    nextEmployeeId++
+                );
+
+                String dateEmbauche = LocalDate.now().format(
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                );
+
+                employeeTable.addRow(
+                    twoLine(name, matricule),
+                    twoLine(values.get("cin"), "CNSS: " + values.get("cnss")),
+                    label(values.get("role"), "cell"),
+                    label("—", "cell"),
+                    label(dateEmbauche, "cell"),
+                    status("Actif", "green"),
+                    linkButton("Dossier", () -> showToast("Dossier salarié : " + name))
+                );
+
+                showToast("Salarié " + name + " ajouté avec succès.");
+            },
                 new Field("Nom & Prénom", "fullname", "text", null, "Ex: Amine El Idrissi", null),
                 new Field("CIN", "cin", "text", null, "Ex: BE-998822", null),
                 new Field("Numéro CNSS", "cnss", "text", null, "Ex: 198273645", null),
