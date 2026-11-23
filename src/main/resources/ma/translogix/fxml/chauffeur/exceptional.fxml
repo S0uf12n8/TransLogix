@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.ExceptionalController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="IMPOSSIBILITÉ JUSTIFIÉE" />
+                  <Label styleClass="section-sub" text="Signalez une impossibilité justifiée d'exécuter une mission." />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <!-- Avertissement -->
+      <HBox spacing="12.0" styleClass="panel, panel-amber-info, p-4">
+         <children>
+            <Label styleClass="fa, fs-16, c-a600" text="&#xf05a;" HBox.hgrow="NEVER">
+               <padding>
+                  <Insets top="2.0" />
+               </padding>
+            </Label>
+            <TextFlow lineSpacing="4.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <Text style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #334155;" text="Important :" />
+                  <Text style="-fx-font-size: 12px; -fx-fill: #334155;" text=" le chauffeur ne peut pas refuser librement une mission. Cette demande sert uniquement à signaler un motif justifié (panne grave, problème de santé, document obligatoire expiré, etc.). " />
+                  <Text style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #334155;" text="La décision appartient au responsable Dispatching" />
+                  <Text style="-fx-font-size: 12px; -fx-fill: #334155;" text=" (maintien, report ou réaffectation) ; tant qu'elle n'est pas rendue, la mission reste à exécuter." />
+               </children>
+            </TextFlow>
+         </children>
+      </HBox>
+      <!-- Formulaire -->
+      <VBox spacing="16.0" styleClass="panel, p-5">
+         <children>
+            <GridPane hgap="16.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                  <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <VBox spacing="6.0">
+                     <children>
+                        <Label styleClass="field-label" text="Mission concernée" />
+                        <ComboBox fx:id="excMission" maxWidth="Infinity" styleClass="search" />
+                     </children>
+                  </VBox>
+                  <VBox spacing="6.0" GridPane.columnIndex="1">
+                     <children>
+                        <Label styleClass="field-label" text="Motif justifié" />
+                        <ComboBox fx:id="excReason" maxWidth="Infinity" styleClass="search" />
+                     </children>
+                  </VBox>
+               </children>
+            </GridPane>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Justification détaillée" />
+                  <TextArea fx:id="excDetails" prefRowCount="4" promptText="Décrivez précisément la situation et les éléments justificatifs..." styleClass="search" wrapText="true" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Justificatif (optionnel : certificat, photo, document)" />
+                  <HBox fx:id="excFileBox" maxWidth="Infinity" styleClass="search, file-input">
+                     <children>
+                        <Button fx:id="excFileBtn" focusTraversable="false" mnemonicParsing="false" styleClass="file-input-btn" text="Choisir un fichier" />
+                        <Label fx:id="excFileName" styleClass="file-input-name" text="Aucun fichier choisi" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            <HBox alignment="TOP_LEFT" spacing="8.0">
+               <children>
+                  <CheckBox fx:id="excCertify" mnemonicParsing="false" styleClass="accent">
+                     <HBox.margin>
+                        <Insets top="2.0" />
+                     </HBox.margin>
+                  </CheckBox>
+                  <Label onMouseClicked="#toggleCertify" styleClass="fs-12, c-s600" text="Je certifie l'exactitude de ces informations et je comprends que cette demande ne constitue pas un refus de mission : la décision revient au Dispatching." wrapText="true" HBox.hgrow="ALWAYS" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_RIGHT">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#submitExceptional" styleClass="btn-primary" text="Transmettre au Dispatching">
+                     <graphic>
+                        <Label styleClass="fa, fs-12" text="&#xf1d8;" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <!-- Mes demandes -->
+      <VBox styleClass="panel">
+         <children>
+            <VBox styleClass="panel-head">
+               <children>
+                  <Label styleClass="h3" text="Mes demandes" />
+                  <Label styleClass="h3-sub" text="Suivi de la décision du Dispatching." />
+               </children>
+            </VBox>
+            <TableView fx:id="table" styleClass="tbl">
+               <columns>
+                  <TableColumn fx:id="colRef" prefWidth="130.0" sortable="false" text="N° DEMANDE" />
+                  <TableColumn fx:id="colMission" prefWidth="105.0" sortable="false" text="MISSION" />
+                  <TableColumn fx:id="colReason" prefWidth="360.0" sortable="false" text="MOTIF" />
+                  <TableColumn fx:id="colDate" prefWidth="105.0" sortable="false" text="DATE" />
+                  <TableColumn fx:id="colDecision" prefWidth="270.0" sortable="false" text="DÉCISION DISPATCHING" />
+                  <TableColumn fx:id="colDemo" prefWidth="145.0" sortable="false" text="DÉMO" />
+               </columns>
+               <placeholder>
+                  <Label text="Aucune demande transmise pour le moment." />
+               </placeholder>
+            </TableView>
+         </children>
+      </VBox>
+   </children>
+</VBox>

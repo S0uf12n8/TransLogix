@@ -113,19 +113,33 @@ public final class NavigationMenu {
                             ICONE_ALERTE, true),
                     new Entree("Carburant & bons", "dispatcher/carburant.fxml", "Carburant & péages",
                             ICONE_CARBURANT, true));
-            // Driver menu, in chefaire.html order. Only "Mes ordres de transport" is built ([O3]);
-            // the other screens do not exist yet, so the shell shows "pas encore livré".
+            // Driver menu: the 12 screens of the espace-chauffeur integration. Missions, detail, history
+            // and the two administrative pages read the main services; the rest are still demo pages.
             case CHAUFFEUR -> List.of(
-                    new Entree("Tableau de bord", "chauffeur/accueil.fxml", "Cockpit chauffeur",
+                    new Entree("Tableau de bord", "chauffeur/dashboard.fxml", "Cockpit chauffeur",
                             ICONE_TABLEAU, false),
                     new Entree("Mes ordres de transport", "chauffeur/missions.fxml", "Carnet de route",
                             ICONE_CAMION, false),
-                    new Entree("Reçus & carburant", "chauffeur/frais.fxml", "Frais de route & justificatifs",
-                            ICONE_RECU, false),
-                    new Entree("Permis & documents", "chauffeur/documents.fxml", "Dossier administratif",
+                    new Entree("Reçus & carburant", "chauffeur/expenses.fxml", "Frais de route & justificatifs",
+                            ICONE_RECU, true),
+                    new Entree("Permis & documents", "chauffeur/profile.fxml", "Dossier administratif",
                             ICONE_CARTE, false),
                     new Entree("Incidents & support", "chauffeur/incidents.fxml", "Urgence & assistance routière",
-                            ICONE_ALERTE, false));
+                            ICONE_ALERTE, true),
+                    new Entree("Notifications", "chauffeur/notifications.fxml", "Centre de messages",
+                            ICONE_BOUCLIER, true),
+                    new Entree("Détail de mission", "chauffeur/mission-detail.fxml", "Fiche mission",
+                            ICONE_LIVRE, false),
+                    new Entree("Preuve de livraison", "chauffeur/pod.fxml", "Livraison",
+                            ICONE_LIVRE, true),
+                    new Entree("Inspection du camion", "chauffeur/inspection.fxml", "Sécurité véhicule",
+                            ICONE_POSITION, true),
+                    new Entree("Messagerie Dispatching", "chauffeur/chat.fxml", "Communication",
+                            ICONE_EQUIPE, true),
+                    new Entree("Intervention exceptionnelle", "chauffeur/exceptional.fxml", "Impossibilité justifiée",
+                            ICONE_ALERTE, true),
+                    new Entree("Historique des missions", "chauffeur/history.fxml", "Archives",
+                            ICONE_COLONNES, false));
         };
     }
 

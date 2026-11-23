@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="24.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.DashboardController">
+   <children>
+      <!-- En-tête de section -->
+      <HBox alignment="BOTTOM_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="SYNTHÈSE DE SERVICE" />
+                  <Label fx:id="greetingLabel" styleClass="fs-16, fw-b, c-s900" text="Salam, M. Bennani 🚛" />
+                  <Label fx:id="bannerSubLabel" styleClass="section-sub" text="Camion Volvo FH (12345-A-6) · Statut : En route vers Tanger Med." />
+               </children>
+            </VBox>
+            <HBox spacing="8.0">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#updateMissionProgress" styleClass="btn-primary" text="Point de Passage (GPS)">
+                     <graphic>
+                        <Label styleClass="fa, fs-12" text="&#xf04b;" />
+                     </graphic>
+                  </Button>
+                  <Button mnemonicParsing="false" onAction="#openIncident" styleClass="btn-secondary" text="Signalement">
+                     <graphic>
+                        <Label styleClass="fa, fs-12, c-r600" text="&#xf071;" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+
+      <!-- Bannière : ordre actif -->
+      <StackPane fx:id="bannerPane" styleClass="panel-banner">
+         <children>
+            <VBox styleClass="p-6">
+               <children>
+                  <HBox alignment="CENTER_LEFT" styleClass="banner-top">
+                     <children>
+                        <VBox HBox.hgrow="ALWAYS">
+                           <children>
+                              <HBox>
+                                 <children>
+                                    <Label fx:id="activeOrderLabel" styleClass="status, status-banner" text="Ordre Actif · TRJ-9081">
+                                       <graphic>
+                                          <Circle radius="3.0" styleClass="status-dot" />
+                                       </graphic>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <VBox.margin>
+                                    <Insets top="8.0" />
+                                 </VBox.margin>
+                                 <children>
+                                    <Label fx:id="bannerFrom" styleClass="fs-20, fw-b, c-white" text="Casablanca" />
+                                    <Label styleClass="fa, fs-16, c-o400" text="&#xf061;" />
+                                    <Label fx:id="bannerTo" styleClass="fs-20, fw-b, c-white" text="Tanger Med" />
+                                 </children>
+                              </HBox>
+                              <Label fx:id="bannerClient" styleClass="fs-12, c-s400, pt-1" text="Client : LogiMaroc SARL · Produit : Produits Frais Sous Température Dirigée (+4°C)" wrapText="true" />
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER_RIGHT">
+                           <children>
+                              <Label styleClass="fs-12, c-s400" text="Heure de Livraison Estimée (ETA)" />
+                              <HBox alignment="BASELINE_RIGHT" spacing="6.0">
+                                 <VBox.margin>
+                                    <Insets top="4.0" />
+                                 </VBox.margin>
+                                 <children>
+                                    <Label fx:id="bannerEta" styleClass="fs-24, fw-b, c-o400" text="18:30" />
+                                    <Label fx:id="etaDeltaLabel" styleClass="fs-12, c-s300" text="(+25 min)" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <GridPane hgap="16.0">
+                     <VBox.margin>
+                        <Insets top="20.0" />
+                     </VBox.margin>
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <VBox>
+                           <children>
+                              <Label styleClass="banner-eyebrow" text="CARGAISON" />
+                              <Label fx:id="bannerCargo" styleClass="fs-14, fw-b, c-white, pt-1" text="24 Tonnes / 33 Palettes" />
+                           </children>
+                        </VBox>
+                        <VBox GridPane.columnIndex="1">
+                           <children>
+                              <Label styleClass="banner-eyebrow" text="TACHYGRAPHE CONDUITE" />
+                              <Label fx:id="tachyLabel" styleClass="fs-14, fw-b, c-e400, pt-1" text="—" />
+                           </children>
+                        </VBox>
+                        <VBox GridPane.columnIndex="2">
+                           <children>
+                              <Label styleClass="banner-eyebrow" text="DISTANCE RESTANTE" />
+                              <Label fx:id="remainingDistanceLabel" styleClass="fs-14, fw-b, c-white, pt-1" text="—" />
+                           </children>
+                        </VBox>
+                        <VBox GridPane.columnIndex="3">
+                           <children>
+                              <Label styleClass="banner-eyebrow" text="LETTRE DE VOITURE (CMR)" />
+                              <Label fx:id="cmrLabel" graphicTextGap="4.0" styleClass="fs-14, fw-b, c-e400, pt-1" text="—">
+                                 <graphic>
+                                    <Label styleClass="fa, fs-14, c-e400" text="&#xf058;" />
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+                  <VBox>
+                     <VBox.margin>
+                        <Insets top="20.0" />
+                     </VBox.margin>
+                     <children>
+                        <HBox>
+                           <children>
+                              <Label styleClass="fs-12, c-s300" text="Progression du Trajet" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="tripProgressLabel" styleClass="fs-12, c-s300" text="62% effectué" />
+                           </children>
+                           <padding>
+                              <Insets bottom="4.0" />
+                           </padding>
+                        </HBox>
+                        <ProgressBar fx:id="tripProgressBar" maxWidth="Infinity" progress="0.62" styleClass="progress-lg" />
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+            <Circle fx:id="bannerOrb" fill="#f97316" mouseTransparent="true" opacity="0.1" radius="96.0" translateX="40.0" translateY="40.0" StackPane.alignment="BOTTOM_RIGHT">
+               <effect>
+                  <GaussianBlur radius="40.0" />
+               </effect>
+            </Circle>
+         </children>
+      </StackPane>
+
+      <!-- KPI du chauffeur -->
+      <GridPane hgap="16.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <StackPane styleClass="panel, kpi">
+               <children>
+                  <VBox styleClass="p-5">
+                     <children>
+                        <HBox alignment="TOP_LEFT">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label fx:id="kpiMissionsTitle" styleClass="fs-12, fw-6, c-s500" text="Kilomètres ce Mois" />
+                                    <HBox alignment="BASELINE_LEFT" spacing="4.0" styleClass="pt-3">
+                                       <children>
+                                          <Label fx:id="kpiMissions" styleClass="fs-24, fw-b" text="4 200" />
+                                          <Label fx:id="kpiMissionsUnit" styleClass="fs-12, fw-6, c-s400" text="km" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                              <StackPane maxHeight="42.0" maxWidth="42.0" minHeight="42.0" minWidth="42.0" prefHeight="42.0" prefWidth="42.0" styleClass="ib, kpi-icon-orange">
+                                 <children>
+                                    <Label styleClass="fa" text="&#xf625;" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </HBox>
+                        <Label fx:id="kpiMissionsHint" graphicTextGap="4.0" styleClass="fs-11, fw-6, c-e600, pt-4" text="14 voyages accomplis">
+                           <graphic>
+                              <Label styleClass="fa, fs-11, c-e600" text="&#xf018;" />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <Circle fill="#fff1e7" mouseTransparent="true" radius="45.0" translateX="20.0" translateY="-24.0" StackPane.alignment="TOP_RIGHT" />
+               </children>
+            </StackPane>
+            <StackPane styleClass="panel, kpi" GridPane.columnIndex="1">
+               <children>
+                  <VBox styleClass="p-5">
+                     <children>
+                        <HBox alignment="TOP_LEFT">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label fx:id="kpiDoneTitle" styleClass="fs-12, fw-6, c-s500" text="Temps de Conduite (Jour)" />
+                                    <Label fx:id="kpiDone" styleClass="fs-24, fw-b, pt-3" text="5h 30m" />
+                                 </children>
+                              </VBox>
+                              <StackPane maxHeight="42.0" maxWidth="42.0" minHeight="42.0" minWidth="42.0" prefHeight="42.0" prefWidth="42.0" styleClass="ib, kpi-icon-green">
+                                 <children>
+                                    <Label styleClass="fa" text="&#xf017;" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </HBox>
+                        <ProgressBar fx:id="kpiDoneBar" maxWidth="Infinity" progress="0.61">
+                           <VBox.margin>
+                              <Insets top="16.0" />
+                           </VBox.margin>
+                        </ProgressBar>
+                        <Label fx:id="kpiDoneHint" styleClass="fs-11, c-s400" text="3h 30m de repos disponible">
+                           <VBox.margin>
+                              <Insets top="8.0" />
+                           </VBox.margin>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <Circle fill="#dcfce7" mouseTransparent="true" radius="45.0" translateX="20.0" translateY="-24.0" StackPane.alignment="TOP_RIGHT" />
+               </children>
+            </StackPane>
+            <StackPane styleClass="panel, kpi" GridPane.columnIndex="2">
+               <children>
+                  <VBox styleClass="p-5">
+                     <children>
+                        <HBox alignment="TOP_LEFT">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label fx:id="kpiActiveTitle" styleClass="fs-12, fw-6, c-s500" text="Prime Trajet Estimée" />
+                                    <HBox alignment="BASELINE_LEFT" spacing="4.0" styleClass="pt-3">
+                                       <children>
+                                          <Label fx:id="kpiActive" styleClass="fs-24, fw-b" text="3 150" />
+                                          <Label fx:id="kpiActiveUnit" styleClass="fs-12, fw-6, c-s400" text="MAD" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                              <StackPane maxHeight="42.0" maxWidth="42.0" minHeight="42.0" minWidth="42.0" prefHeight="42.0" prefWidth="42.0" styleClass="ib, kpi-icon-sky">
+                                 <children>
+                                    <Label styleClass="fa" text="&#xf4c0;" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </HBox>
+                        <Label fx:id="kpiActiveHint" graphicTextGap="4.0" styleClass="fs-11, fw-6, c-b600, pt-4" text="Calculé selon km parcourus">
+                           <graphic>
+                              <Label styleClass="fa, fs-11, c-b600" text="&#xf05a;" />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <Circle fill="#e0f2fe" mouseTransparent="true" radius="45.0" translateX="20.0" translateY="-24.0" StackPane.alignment="TOP_RIGHT" />
+               </children>
+            </StackPane>
+            <StackPane styleClass="panel, kpi" GridPane.columnIndex="3">
+               <children>
+                  <VBox styleClass="p-5">
+                     <children>
+                        <HBox alignment="TOP_LEFT">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label fx:id="kpiPlannedTitle" styleClass="fs-12, fw-6, c-s500" text="Reçus Gazole Soumis" />
+                                    <HBox alignment="BASELINE_LEFT" spacing="4.0" styleClass="pt-3">
+                                       <children>
+                                          <Label fx:id="kpiPlanned" styleClass="fs-24, fw-b" text="2" />
+                                          <Label fx:id="kpiPlannedUnit" styleClass="fs-12, fw-6, c-s400" text="reçus" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                              <StackPane maxHeight="42.0" maxWidth="42.0" minHeight="42.0" minWidth="42.0" prefHeight="42.0" prefWidth="42.0" styleClass="ib, kpi-icon-amber">
+                                 <children>
+                                    <Label styleClass="fa" text="&#xf543;" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </HBox>
+                        <Label fx:id="kpiPlannedHint" graphicTextGap="4.0" styleClass="fs-11, fw-6, c-e600, pt-4" text="1 850 MAD validés compta">
+                           <graphic>
+                              <Label styleClass="fa, fs-11, c-e600" text="&#xf00c;" />
+                           </graphic>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <Circle fill="#fef3c7" mouseTransparent="true" radius="45.0" translateX="20.0" translateY="-24.0" StackPane.alignment="TOP_RIGHT" />
+               </children>
+            </StackPane>
+         </children>
+      </GridPane>
+
+      <!-- Commandes rapides -->
+      <VBox spacing="16.0" styleClass="panel, p-5">
+         <children>
+            <Label styleClass="h3" text="Commandes Rapides en Conduite" />
+            <GridPane hgap="12.0" vgap="12.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+                  <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+                  <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints vgrow="SOMETIMES" />
+                  <RowConstraints vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#onPause" styleClass="quick-btn, quick-orange">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-orange">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf7b6;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Pause / Pause Rallongée" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Activer mode repos tachygraphe" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#openExpense" styleClass="quick-btn, quick-emerald" GridPane.columnIndex="1">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-emerald">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf52f;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Saisir Reçu Gazole / Péage" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Scanner un bon ou ticket" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#openIncident" styleClass="quick-btn, quick-red" GridPane.columnIndex="2">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-red">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf0f9;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Signaler Panne / Accident" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Notifier le dispatching urgence" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#goInspection" styleClass="quick-btn, quick-orange" GridPane.rowIndex="1">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-orange">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf46c;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Inspection du Camion" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Checklist avant départ" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#goPod" styleClass="quick-btn, quick-emerald" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-emerald">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf573;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Preuve de Livraison" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Photo, signature, quantité" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+                  <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#goChat" styleClass="quick-btn, quick-sky" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                     <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-sky">
+                                 <children>
+                                    <Label styleClass="fa, fw-b" text="&#xf086;" />
+                                 </children>
+                              </StackPane>
+                              <VBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Messagerie Dispatching" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Écrire au dispatching" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </graphic>
+                  </Button>
+               </children>
+            </GridPane>
+         </children>
+      </VBox>
+   </children>
+</VBox>

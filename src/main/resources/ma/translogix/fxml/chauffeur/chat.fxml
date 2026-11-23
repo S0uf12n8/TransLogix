@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.ChatController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="COMMUNICATION" />
+                  <Label styleClass="section-sub" text="Échangez avec le Dispatching (messagerie de démonstration, sans serveur)." />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <VBox maxWidth="768.0" styleClass="panel">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel-head, panel-head-sm">
+               <children>
+                  <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" prefHeight="36.0" prefWidth="36.0" styleClass="ib-circle, ib-sky">
+                     <children>
+                        <Label styleClass="fa, fs-14" text="&#xf590;" />
+                     </children>
+                  </StackPane>
+                  <VBox>
+                     <children>
+                        <Label styleClass="fs-12, fw-b, c-s800" text="Dispatching" />
+                        <Label styleClass="fs-10, fw-6, c-e600" text="● En ligne (démo)" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <ScrollPane fx:id="chatScroll" fitToWidth="true" hbarPolicy="NEVER" maxHeight="380.0" minHeight="380.0" prefHeight="380.0" styleClass="chat-box">
+               <content>
+                  <VBox fx:id="chatMessages" spacing="12.0" styleClass="p-4" />
+               </content>
+            </ScrollPane>
+            <HBox spacing="8.0">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#quickEta" styleClass="btn-secondary" text="ETA confirmé" />
+                  <Button mnemonicParsing="false" onAction="#quickPause" styleClass="btn-secondary" text="Début de pause" />
+                  <Button mnemonicParsing="false" onAction="#quickHelp" styleClass="btn-secondary" text="Besoin d'assistance" />
+               </children>
+               <padding>
+                  <Insets left="16.0" right="16.0" top="12.0" />
+               </padding>
+            </HBox>
+            <HBox spacing="8.0" styleClass="p-4">
+               <children>
+                  <TextField fx:id="chatInput" onAction="#submitChat" promptText="Écrire un message au Dispatching..." styleClass="search" HBox.hgrow="ALWAYS" />
+                  <Button defaultButton="false" mnemonicParsing="false" onAction="#submitChat" styleClass="btn-primary">
+                     <graphic>
+                        <Label styleClass="fa, fs-12" text="&#xf1d8;" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</VBox>

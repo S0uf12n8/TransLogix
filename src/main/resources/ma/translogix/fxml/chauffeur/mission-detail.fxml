@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.MissionDetailController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="FICHE MISSION" />
+                  <Label styleClass="section-sub" text="Informations complètes, instructions et étapes de la mission sélectionnée." />
+               </children>
+            </VBox>
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <ComboBox fx:id="missionSelect" onAction="#onMissionSelected" styleClass="search" />
+                  <Button mnemonicParsing="false" onAction="#backToMissions" styleClass="btn-secondary" text="Mes Ordres">
+                     <graphic>
+                        <Label styleClass="fa, fs-12" text="&#xf060;" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <!-- Résumé -->
+      <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel, p-5">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <HBox>
+                     <children>
+                        <Label fx:id="mdStatusPill" styleClass="status, status-blue" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="8.0">
+                     <children>
+                        <Label fx:id="mdFrom" styleClass="fs-18, fw-b" />
+                        <Label styleClass="fa, fs-16, c-o500" text="&#xf061;" />
+                        <Label fx:id="mdTo" styleClass="fs-18, fw-b" />
+                     </children>
+                     <VBox.margin>
+                        <Insets top="8.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <Label fx:id="mdClient" styleClass="fs-12, c-s400, pt-1" />
+               </children>
+            </VBox>
+            <VBox alignment="CENTER_RIGHT">
+               <children>
+                  <Label styleClass="fs-12, c-s400" text="Horaires prévus" />
+                  <Label fx:id="mdTimes" styleClass="fs-18, fw-b, c-o600" />
+                  <Label fx:id="mdDate" styleClass="fs-11, c-s400" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <GridPane hgap="20.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="66.667" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <VBox spacing="20.0">
+               <children>
+                  <GridPane fx:id="mdInfo" hgap="16.0" vgap="16.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                     </columnConstraints>
+                  </GridPane>
+                  <VBox spacing="12.0" styleClass="panel, p-5">
+                     <children>
+                        <Label graphicTextGap="8.0" styleClass="h3" text="Instructions de mission">
+                           <graphic>
+                              <Label styleClass="fa, fs-14, c-o500" text="&#xf46d;" />
+                           </graphic>
+                        </Label>
+                        <VBox fx:id="mdInstructions" spacing="8.0" />
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+            <VBox spacing="16.0" styleClass="panel, p-5" GridPane.columnIndex="1" GridPane.fillHeight="false" GridPane.valignment="TOP">
+               <children>
+                  <HBox alignment="CENTER_LEFT">
+                     <children>
+                        <Label styleClass="h3" text="Suivi des étapes" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="mdStepCount" styleClass="fs-11, c-s400" />
+                     </children>
+                  </HBox>
+                  <ProgressBar fx:id="mdProgressBar" maxWidth="Infinity" progress="0.0" />
+                  <VBox fx:id="mdSteps">
+                     <padding>
+                        <Insets top="8.0" />
+                     </padding>
+                  </VBox>
+                  <Button fx:id="mdConfirmBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#confirmMissionStep" styleClass="btn-primary" />
+                  <Label styleClass="fs-10, c-s400" text="Simulation : aucune donnée n'est envoyée à un serveur." wrapText="true" />
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
+      <HBox spacing="8.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#goPod" styleClass="btn-secondary" text="Preuve de livraison">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#xf573;" />
+               </graphic>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#goExceptional" styleClass="btn-secondary" text="Intervention exceptionnelle">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#xf1cd;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+   </children>
+</VBox>

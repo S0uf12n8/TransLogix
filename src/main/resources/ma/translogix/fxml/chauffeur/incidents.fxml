@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.IncidentsController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="URGENCE &amp; ASSISTANCE ROUTIÈRE" />
+                  <Label styleClass="section-sub" text="Numéros d'urgence et déclaration d'aléa de transport." />
+               </children>
+            </VBox>
+            <Button mnemonicParsing="false" onAction="#reportProblem" styleClass="btn-primary, btn-danger" text="Signaler un Problème">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#xf071;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <!-- Numéros d'urgence -->
+      <GridPane hgap="16.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel, panel-red, p-5">
+               <children>
+                  <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-red">
+                     <children>
+                        <Label styleClass="fa, fs-18" text="&#xf590;" />
+                     </children>
+                  </StackPane>
+                  <VBox>
+                     <children>
+                        <Label styleClass="fs-12, fw-b, c-s800" text="Dispatching Urgence 24/7" />
+                        <Label styleClass="fs-14, fw-b, c-r600, pt-05" text="0522-XX-XX-00" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel, panel-amber, p-5" GridPane.columnIndex="1">
+               <children>
+                  <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-amber">
+                     <children>
+                        <Label styleClass="fa, fs-18" text="&#xf0ad;" />
+                     </children>
+                  </StackPane>
+                  <VBox>
+                     <children>
+                        <Label styleClass="fs-12, fw-b, c-s800" text="Assistance Dépannage Flotte" />
+                        <Label styleClass="fs-14, fw-b, c-a700, pt-05" text="0800-XX-XX-88" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel, panel-sky, p-5" GridPane.columnIndex="2">
+               <children>
+                  <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-sky">
+                     <children>
+                        <Label styleClass="fa, fs-18" text="&#xf3ed;" />
+                     </children>
+                  </StackPane>
+                  <VBox>
+                     <children>
+                        <Label styleClass="fs-12, fw-b, c-s800" text="Autoroutes du Maroc (ADM)" />
+                        <Label styleClass="fs-14, fw-b, c-sky700, pt-05" text="Dépanneur 5050" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </GridPane>
+      <!-- Mes signalements -->
+      <VBox styleClass="panel">
+         <children>
+            <VBox styleClass="panel-head">
+               <children>
+                  <Label styleClass="h3" text="Mes Signalements" />
+                  <Label styleClass="h3-sub" text="Pannes, accidents, menaces, vols et dangers déclarés pendant cette session (démo)." />
+               </children>
+            </VBox>
+            <TableView fx:id="table" styleClass="tbl">
+               <columns>
+                  <TableColumn fx:id="colRef" prefWidth="150.0" sortable="false" text="N° SIGNALEMENT" />
+                  <TableColumn fx:id="colMission" prefWidth="105.0" sortable="false" text="MISSION" />
+                  <TableColumn fx:id="colType" prefWidth="270.0" sortable="false" text="TYPE" />
+                  <TableColumn fx:id="colSeverity" prefWidth="100.0" sortable="false" text="GRAVITÉ" />
+                  <TableColumn fx:id="colLocation" prefWidth="230.0" sortable="false" text="LOCALISATION" />
+                  <TableColumn fx:id="colAttachment" prefWidth="130.0" sortable="false" text="PIÈCE JOINTE" />
+                  <TableColumn fx:id="colStatus" prefWidth="100.0" sortable="false" text="STATUT" />
+               </columns>
+               <placeholder>
+                  <Label text="Aucun signalement transmis pour le moment." />
+               </placeholder>
+            </TableView>
+         </children>
+      </VBox>
+      <!-- Consignes de sécurité -->
+      <VBox spacing="16.0" styleClass="panel, p-5">
+         <children>
+            <Label styleClass="h3" text="Consignes de Sécurité en cas d'Arrêt d'Urgence" />
+            <VBox spacing="8.0">
+               <children>
+                  <HBox>
+                     <children>
+                        <Label alignment="TOP_LEFT" minWidth="16.0" prefWidth="16.0" styleClass="fs-12, c-s600" text="  •" />
+                        <Label styleClass="fs-12, c-s600" text="Mettre les feux de détresse et revêtir le gilet haute visibilité avant de descendre du véhicule." wrapText="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <Label alignment="TOP_LEFT" minWidth="16.0" prefWidth="16.0" styleClass="fs-12, c-s600" text="  •" />
+                        <Label styleClass="fs-12, c-s600" text="Placer le triangle de présignalisation à au moins 30 mètres en amont sur bande d'arrêt d'urgence." wrapText="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <Label alignment="TOP_LEFT" minWidth="16.0" prefWidth="16.0" styleClass="fs-12, c-s600" text="  •" />
+                        <Label styleClass="fs-12, c-s600" text="Conserver la marchandise réfrigérée sous température contrôlée (+4°C) et ne pas couper le groupe froid." wrapText="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <Label alignment="TOP_LEFT" minWidth="16.0" prefWidth="16.0" styleClass="fs-12, c-s600" text="  •" />
+                        <Label styleClass="fs-12, c-s600" text="Prendre des photos nettes de tout choc ou dégât mécanique pour le dossier d'assurance." wrapText="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <HBox>
+                     <children>
+                        <Label alignment="TOP_LEFT" minWidth="16.0" prefWidth="16.0" styleClass="fs-12, c-s600" text="  •" />
+                        <Label styleClass="fs-12, c-s600" text="En cas de menace, d'agression, de vol ou d'accident corporel, contactez d'abord les secours : Police 19 · Gendarmerie Royale 177 · Protection civile 15, puis le Dispatching." wrapText="true" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </children>
+</VBox>

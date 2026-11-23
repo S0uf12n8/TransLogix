@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.ProfileController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="DOSSIER ADMINISTRATIF" />
+                  <Label styleClass="section-sub" text="Vérification de la validité de vos pièces et attestations professionnelles." />
+               </children>
+            </VBox>
+            <Button mnemonicParsing="false" onAction="#requestAttestation" styleClass="btn-secondary" text="Demander Attestation RH">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#xf56c;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <GridPane hgap="20.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="66.667" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <VBox spacing="16.0" styleClass="panel, p-5" GridPane.valignment="TOP">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <children>
+                        <StackPane maxHeight="56.0" maxWidth="56.0" minHeight="56.0" minWidth="56.0" prefHeight="56.0" prefWidth="56.0" styleClass="ib-2xl, ib-avatar-lg">
+                           <children>
+                              <Label fx:id="avatarInitials" text="MB" />
+                           </children>
+                        </StackPane>
+                        <VBox>
+                           <children>
+                              <Label fx:id="driverNameLabel" styleClass="fs-16, fw-b, c-s900" text="Mohammed Bennani" />
+                              <Label fx:id="cinLabel" styleClass="fs-12, c-s500" text="CIN : BE-889021" />
+                              <Label fx:id="cnssLabel" styleClass="fs-12, c-s500" text="CNSS : 198273645" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <VBox spacing="8.0" styleClass="divider-top">
+                     <children>
+                        <TextFlow>
+                           <children>
+                              <Text style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #172033;" text="Date d'embauche :" />
+                              <Text fx:id="hireDateText" style="-fx-font-size: 12px; -fx-fill: #172033;" text=" 15/03/2021" />
+                           </children>
+                        </TextFlow>
+                        <TextFlow>
+                           <children>
+                              <Text style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #172033;" text="Type de contrat :" />
+                              <Text fx:id="contractText" style="-fx-font-size: 12px; -fx-fill: #172033;" text=" CDI Temps Plein" />
+                           </children>
+                        </TextFlow>
+                        <TextFlow>
+                           <children>
+                              <Text style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #172033;" text="Dépôt de rattachement :" />
+                              <Text fx:id="depotText" style="-fx-font-size: 12px; -fx-fill: #172033;" text=" —" />
+                           </children>
+                        </TextFlow>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+            <VBox spacing="16.0" styleClass="panel, p-5" GridPane.columnIndex="1" GridPane.valignment="TOP">
+               <children>
+                  <Label styleClass="h3" text="Cartes &amp; Permis Obligatoires" />
+                  <VBox fx:id="docsBox" spacing="12.0">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" styleClass="doc-ok">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Permis de Conduire Catégorie EC (Poids Lourds)" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="N° PRM-883920 · Expiration : 12/10/2028" />
+                                 </children>
+                              </VBox>
+                              <Label styleClass="status, status-green" text="Valide">
+                                 <graphic>
+                                    <Circle radius="3.0" styleClass="status-dot" />
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" styleClass="doc-ok">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Carte FIMC / FCO (Formation Continue Conducteur)" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="N° FIMC-2024-99 · Expiration : 15/08/2028" />
+                                 </children>
+                              </VBox>
+                              <Label styleClass="status, status-green" text="Valide">
+                                 <graphic>
+                                    <Circle radius="3.0" styleClass="status-dot" />
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" styleClass="doc-ok">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Visite Médicale d'Aptitude à la Conduite" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="Dernier examen : 11/2025 · Prochaine visite : 11/2027" />
+                                 </children>
+                              </VBox>
+                              <Label styleClass="status, status-green" text="Conforme">
+                                 <graphic>
+                                    <Circle radius="3.0" styleClass="status-dot" />
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" styleClass="doc-warn">
+                           <children>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="fs-12, fw-b, c-s800" text="Carte Conducteur Tachygraphe Numérique" />
+                                    <Label styleClass="fs-11, c-s500, pt-05" text="N° TACHO-110293 · Renouvellement recommandé sous 60 jours" />
+                                 </children>
+                              </VBox>
+                              <Label styleClass="status, status-amber" text="À renouveler">
+                                 <graphic>
+                                    <Circle radius="3.0" styleClass="status-dot" />
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
+   </children>
+</VBox>

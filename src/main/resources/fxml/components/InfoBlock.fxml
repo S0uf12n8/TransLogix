@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox fx:id="root" spacing="12.0" styleClass="panel, p-4" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.InfoBlockController">
+   <children>
+      <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-orange" HBox.hgrow="NEVER">
+         <children>
+            <Label fx:id="iconLabel" styleClass="fa" />
+         </children>
+      </StackPane>
+      <VBox minWidth="0.0" HBox.hgrow="ALWAYS">
+         <children>
+            <Label fx:id="titleLabel" styleClass="eyebrow" />
+            <Label fx:id="mainLabel" styleClass="fs-14, fw-b, c-s800, pt-1" wrapText="true" />
+            <Label fx:id="subLabel" styleClass="fs-11, c-s500, pt-05" wrapText="true" />
+         </children>
+      </VBox>
+   </children>
+</HBox>

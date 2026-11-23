@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.HistoryController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="ARCHIVES" />
+                  <Label styleClass="section-sub" text="Missions précédentes et leur statut, issues du service TransLogix." />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <GridPane hgap="16.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <VBox styleClass="panel, p-4">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="Missions terminées" />
+                  <Label fx:id="historyDone" styleClass="fs-24, fw-b, c-e600, pt-2" text="0" />
+               </children>
+            </VBox>
+            <VBox styleClass="panel, p-4" GridPane.columnIndex="1">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="Terminées avec retard" />
+                  <Label fx:id="historyLate" styleClass="fs-24, fw-b, c-a600, pt-2" text="0" />
+               </children>
+            </VBox>
+            <VBox styleClass="panel, p-4" GridPane.columnIndex="2">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="Annulées / Réaffectées" />
+                  <Label fx:id="historyCancelled" styleClass="fs-24, fw-b, c-s900, pt-2" text="0" />
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
+      <VBox styleClass="panel">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel-head">
+               <children>
+                  <VBox HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label styleClass="h3" text="Missions précédentes" />
+                        <Label styleClass="h3-sub" text="Recherchez par référence, ville ou client." />
+                     </children>
+                  </VBox>
+                  <HBox spacing="8.0">
+                     <children>
+                        <ComboBox fx:id="histStatus" onAction="#applyHistoryFilters" styleClass="search" />
+                        <TextField fx:id="histSearch" maxWidth="320.0" prefWidth="320.0" promptText="Rechercher mission..." styleClass="search" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+            <TableView fx:id="table" styleClass="tbl">
+               <columns>
+                  <TableColumn fx:id="colRef" prefWidth="100.0" sortable="false" text="RÉF. ORDRE" />
+                  <TableColumn fx:id="colRoute" prefWidth="215.0" sortable="false" text="ITINÉRAIRE" />
+                  <TableColumn fx:id="colClient" prefWidth="175.0" sortable="false" text="CLIENT" />
+                  <TableColumn fx:id="colDate" prefWidth="105.0" sortable="false" text="DATE" />
+                  <TableColumn fx:id="colProof" prefWidth="150.0" sortable="false" text="PREUVE DE LIVRAISON" />
+                  <TableColumn fx:id="colStatus" prefWidth="165.0" sortable="false" text="STATUT" />
+                  <TableColumn fx:id="colAction" prefWidth="95.0" sortable="false" text="ACTION" />
+               </columns>
+               <placeholder>
+                  <Label />
+               </placeholder>
+            </TableView>
+         </children>
+      </VBox>
+   </children>
+</VBox>

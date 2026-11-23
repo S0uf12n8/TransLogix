@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox fx:id="root" spacing="12.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.MissionStepController">
+   <children>
+      <StackPane alignment="TOP_CENTER" maxWidth="32.0" minWidth="32.0" prefWidth="32.0">
+         <children>
+            <Region fx:id="line" maxHeight="Infinity" maxWidth="1.0" minWidth="1.0" prefWidth="1.0" styleClass="step-line">
+               <StackPane.margin>
+                  <Insets top="32.0" />
+               </StackPane.margin>
+            </Region>
+            <StackPane fx:id="circle" maxHeight="32.0" maxWidth="32.0" minHeight="32.0" minWidth="32.0" prefHeight="32.0" prefWidth="32.0" styleClass="step-circle, step-pending" StackPane.alignment="TOP_CENTER">
+               <children>
+                  <Label fx:id="iconLabel" styleClass="fa" />
+               </children>
+            </StackPane>
+         </children>
+      </StackPane>
+      <VBox fx:id="textBox" minWidth="0.0" HBox.hgrow="ALWAYS">
+         <padding>
+            <Insets bottom="20.0" />
+         </padding>
+         <children>
+            <Label fx:id="labelText" styleClass="fs-12, fw-b, c-s800" wrapText="true" />
+            <Label fx:id="subText" styleClass="fs-11, c-s400" wrapText="true" />
+         </children>
+      </VBox>
+   </children>
+</HBox>

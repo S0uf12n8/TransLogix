@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.chauffeur.controller.InspectionController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="SÉCURITÉ VÉHICULE" />
+                   <Label fx:id="inspSubLabel" styleClass="section-sub" text="Contrôle visuel avant départ." />
+               </children>
+            </VBox>
+            <Label fx:id="inspStatus" styleClass="status, status-gray" text="Non effectuée">
+               <graphic>
+                  <Circle radius="3.0" styleClass="status-dot" />
+               </graphic>
+            </Label>
+         </children>
+      </HBox>
+      <VBox spacing="16.0" styleClass="panel, p-5">
+         <children>
+            <VBox>
+               <children>
+                  <HBox>
+                     <children>
+                        <Label styleClass="fs-12, c-s500" text="Points contrôlés" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="inspCount" styleClass="fs-12, c-s500" text="0 / 6" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" />
+                     </padding>
+                  </HBox>
+                  <ProgressBar fx:id="inspProgress" maxWidth="Infinity" progress="0.0" />
+               </children>
+            </VBox>
+            <VBox fx:id="inspList" spacing="12.0" />
+            <HBox alignment="CENTER_RIGHT" spacing="8.0">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#resetInspection" styleClass="btn-secondary" text="Réinitialiser" />
+                  <Button mnemonicParsing="false" onAction="#submitInspection" styleClass="btn-primary" text="Valider l'inspection">
+                     <graphic>
+                        <Label styleClass="fa, fs-12" text="&#xf1d8;" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</VBox>
