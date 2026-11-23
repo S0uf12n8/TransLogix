@@ -68,6 +68,23 @@ A clean build must report `[INFO] BUILD SUCCESS` with zero test failures.
 
 ---
 
+## Security
+
+| Control | Where | What it does |
+|---|---|---|
+| Password hashing | `util/PasswordHasher` | PBKDF2-HMAC-SHA512, 210 000 iterations, 16-byte random salt per password (OWASP Password Storage Cheat Sheet). JDK only, no extra library. Old SHA-256 hashes are replaced transparently at the next successful login. |
+| No account enumeration | `service/AuthService` | Same message for an unknown email, a wrong password or a deactivated account; an unknown email takes the same time as a wrong password. |
+| Brute-force lockout | `service/AuthService` | 5 failures in a row on an email block it for 15 minutes, even with the right password. Unknown emails are blocked the same way. |
+| Audit of logins | `service/AuditService` | Every login success, failure and block is written to the audit journal (module "Connexion"), never the password. |
+| Role-based access | `controller/common/NavigationMenu.autorise` + `ShellController` | Each role opens only its own module's pages (the Gérant: every module except the driver space). A refused page is audited (module "Sécurité"). |
+| SQL injection | `dao/jdbc` | Parameterized `PreparedStatement` only; database errors are shown as French messages, never as stack traces. |
+
+Known limit: the lockout counters live in memory, so they restart at zero with the application.
+
+The tests hash with 1 000 iterations (`translogix.hash.iterations` in the surefire configuration of `pom.xml`) to stay fast; the application always uses 210 000.
+
+---
+
 ## 4. Architecture & Team Structure
 
 To prevent integration bottlenecks across our team of 6, we use a **Vertical Slice (Feature-First)** architectural model instead of generic horizontal layers:
