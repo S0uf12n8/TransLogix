@@ -5,21 +5,18 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.print.PageLayout;
-import javafx.print.PrinterJob;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.SVGPath;
-import javafx.scene.transform.Scale;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.Navigator;
@@ -48,6 +45,8 @@ public class ShellController implements Navigator.Hote {
     private final Map<String, Button> boutons = new HashMap<>();
     private Role role;
     private Button boutonActif;
+    /** Controller of the page shown in contenu: asked for its printed version by imprimer(). */
+    private Object controleurPage;
 
     @FXML
     private void initialize() {
@@ -91,8 +90,10 @@ public class ShellController implements Navigator.Hote {
     public void afficher(String fxml) {
         URL vue = getClass().getResource(Navigator.RACINE + fxml);
         try {
-            Parent page = FXMLLoader.load(vue);
+            FXMLLoader loader = new FXMLLoader(vue);
+            Parent page = loader.load();
             contenu.getChildren().setAll(page);
+            controleurPage = loader.getController();
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
             Dialogues.erreur("Impossible d'ouvrir " + fxml + "\n" + e.getMessage());
@@ -120,40 +121,31 @@ public class ShellController implements Navigator.Hote {
 
     // ------------------------------------------------------------- top bar & sidebar actions
 
-    /** Prints the current page only (as the mockup's print CSS hides sidebar and top bar). */
+    /**
+     * Prints a real report of the current page, not a screenshot of it: the page's own document when its
+     * controller is Imprimable, otherwise its first table (rows as filtered on screen). Pages flagged demo
+     * in the menu say so on every printed page.
+     */
     @FXML
     private void imprimer() {
         if (contenu.getChildren().isEmpty()) {
             Dialogues.info("Imprimer", "Aucune page à imprimer.");
             return;
         }
-        Node page = contenu.getChildren().get(0);
-        PrinterJob job = PrinterJob.createPrinterJob();
-        if (job == null) {
-            Dialogues.erreur("Aucune imprimante n'est disponible sur ce poste.");
+        Optional<ImpressionRapport.Document> document;
+        if (controleurPage instanceof Imprimable imprimable) {
+            document = Optional.of(imprimable.documentAImprimer());
+        } else {
+            boolean demo = metaDemo.isVisible();
+            document = RapportDepuisTable.depuisPage(contenu.getChildren().get(0), titrePage.getText())
+                    .map(r -> new ImpressionRapport.Document(r, List.of(), demo));
+        }
+        if (document.isEmpty()) {
+            Dialogues.info("Imprimer", "Cette page n'a pas de tableau à imprimer.\n"
+                    + "Les rapports détaillés sont dans « Rapports & analytics ».");
             return;
         }
-        if (!job.showPrintDialog(contenu.getScene().getWindow())) {
-            return; // cancelled by the user
-        }
-        // Whole page on one sheet: shrink to fit, never enlarge.
-        PageLayout format = job.getJobSettings().getPageLayout();
-        double largeur = page.getLayoutBounds().getWidth();
-        double hauteur = page.getLayoutBounds().getHeight();
-        double echelle = Math.min(1.0, Math.min(format.getPrintableWidth() / largeur,
-                format.getPrintableHeight() / hauteur));
-        Scale reduction = new Scale(echelle, echelle);
-        page.getTransforms().add(reduction);
-        try {
-            if (job.printPage(format, page)) {
-                job.endJob();
-            } else {
-                job.cancelJob();
-                Dialogues.erreur("L'impression a échoué.");
-            }
-        } finally {
-            page.getTransforms().remove(reduction);
-        }
+        ImpressionRapport.imprimer(document.get(), contenu.getScene().getWindow());
     }
 
     @FXML

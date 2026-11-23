@@ -60,7 +60,7 @@ public final class NavigationMenu {
             // Gerant menu, from admine.html. Entries pointing to other modules open
             // automatically when their owners add the FXML file.
             case GERANT -> List.of(
-                    new Entree("Tableau de bord", "admin/dashboard.fxml", "Vue générale", ICONE_TABLEAU, true),
+                    new Entree("Tableau de bord", "admin/dashboard.fxml", "Vue générale", ICONE_TABLEAU, false),
                     new Entree("Utilisateurs", "admin/utilisateurs.fxml", "Administration", ICONE_UTILISATEUR, false),
                     new Entree("Ressources humaines", "rh/employes.fxml", "Équipe & conformité", ICONE_EQUIPE, false),
                     new Entree("Comptabilité & finance", "comptable/factures.fxml", "Suivi financier",
@@ -162,7 +162,7 @@ public final class NavigationMenu {
 
     public static String sousTitre(Role role) {
         return switch (role) {
-            case GERANT -> "ERP LOGISTIQUE · MAROC";
+            case GERANT -> "PILOTAGE TRANSPORT · MAROC";
             case RH -> "PORTAIL RH";
             case COMPTABLE -> "COMPTA & FINANCE";
             case DISPATCHER -> "EXPLOITATION LOGISTIQUE";

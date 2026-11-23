@@ -1,8 +1,10 @@
 package ma.translogix.service;
 
 import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.List;
 import ma.translogix.model.EvenementAudit;
+import ma.translogix.model.StatutMission;
 
 /**
  * Figures of the Gérant (CEO) dashboard: money, fleet, risk.
@@ -26,9 +28,11 @@ public interface DashboardService {
     record Alerte(String titre, String detail, Niveau niveau, String cibleFxml) {
     }
 
-    /** Mission statuses, in lifecycle order (business rule 2). */
-    List<String> STATUTS_MISSION = List.of(
-            "Créée", "Planifiée", "En cours", "Suspendue", "Livrée", "Facturée", "Annulée");
+    /**
+     * Mission statuses, in lifecycle order (business rule 2): the labels of StatutMission, in declaration order,
+     * so the pie always matches the statuses missions can really have.
+     */
+    List<String> STATUTS_MISSION = Arrays.stream(StatutMission.values()).map(StatutMission::getLibelle).toList();
 
     /** True when the figures are sample values; the screen then labels them "Données de démonstration". */
     boolean estDemo();
@@ -42,7 +46,7 @@ public interface DashboardService {
     /**
      * Number of missions per status.
      * CONTRACT: one Part per status, exactly in the order of STATUTS_MISSION, zero counts included.
-     * The pie chart colours (app.css .default-color0..6) follow this order, so changing it changes the colours.
+     * The pie chart colours (app.css .default-color0..4) follow this order, so changing it changes the colours.
      */
     List<Part> missionsParStatut();
 
@@ -54,4 +58,28 @@ public interface DashboardService {
 
     /** The n most recent audit events, newest first (fewer if the log is shorter). */
     List<EvenementAudit> derniersEvenementsAudit(int n);
+
+    /**
+     * The four KPI cards.
+     * @param chiffreMoisMad          revenue HT of the current month
+     * @param variationPourcent       vs the previous month, rounded; null when last month had no revenue
+     * @param flotteOperationnelle    vehicles in service (on a mission or available)
+     * @param flotteTotale            every vehicle, out of service included
+     * @param conformitePourcent      active employees without an expired or expiring document, in percent
+     */
+    record Indicateurs(long chiffreMoisMad, Integer variationPourcent,
+                       int flotteOperationnelle, int flotteTotale, int enMaintenance,
+                       long creancesMad, int facturesEnRetard,
+                       int conformitePourcent, int documentsExpires, int documentsARenouveler) {
+    }
+
+    /** One row of "Trajets récents". montantFacture is the invoice amount HT, or null when not invoiced yet. */
+    record Trajet(String reference, String chauffeur, String camion, String depart, String arrivee,
+                  String statut, String montantFacture) {
+    }
+
+    Indicateurs indicateurs();
+
+    /** The n missions with the latest start, latest first. */
+    List<Trajet> trajetsRecents(int n);
 }
