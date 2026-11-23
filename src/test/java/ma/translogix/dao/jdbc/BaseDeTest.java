@@ -39,6 +39,9 @@ final class BaseDeTest {
                 }
                 schemaApplique = true;
             }
+            st.execute("DELETE FROM paiements");
+            st.execute("DELETE FROM factures");
+            st.execute("DELETE FROM clients");
             st.execute("DELETE FROM audit_evenements");
             st.execute("DELETE FROM utilisateurs");
         } catch (SQLException e) {
