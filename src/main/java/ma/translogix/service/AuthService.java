@@ -28,11 +28,27 @@ public class AuthService {
         if (email == null || email.isBlank() || motDePasse == null || motDePasse.isEmpty()) {
             throw new ValidationException(ECHEC);
         }
-        Utilisateur utilisateur = dao.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new ValidationException(ECHEC));
+        Utilisateur utilisateur = dao.findByEmail(email.trim().toLowerCase()).orElse(null);
+        if (utilisateur == null) {
+            // Same work as a wrong password: the response time does not reveal that the email is unknown.
+            PasswordHasher.verifierFactice(motDePasse);
+            throw new ValidationException(ECHEC);
+        }
         if (!PasswordHasher.verifier(motDePasse, utilisateur.getMotDePasseHash()) || !utilisateur.isActif()) {
             throw new ValidationException(ECHEC);
         }
+        mettreAJourLeHash(utilisateur, motDePasse);
         return utilisateur;
+    }
+
+    /**
+     * An old hash (iteration 2, SHA-256) or one with fewer iterations than today is replaced right after a
+     * successful login: the only moment the clear password is known. Accounts migrate without any reset.
+     */
+    private void mettreAJourLeHash(Utilisateur utilisateur, String motDePasse) {
+        if (PasswordHasher.aMettreAJour(utilisateur.getMotDePasseHash())) {
+            utilisateur.setMotDePasseHash(PasswordHasher.hash(motDePasse));
+            dao.update(utilisateur);
+        }
     }
 }
