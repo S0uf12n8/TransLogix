@@ -30,7 +30,6 @@ import javafx.util.Duration;
 import ma.translogix.chauffeur.controller.ChatController;
 import ma.translogix.chauffeur.controller.ExpensesController;
 import ma.translogix.chauffeur.controller.IncidentsController;
-import ma.translogix.chauffeur.controller.MainController;
 import ma.translogix.chauffeur.controller.MissionDetailController;
 import ma.translogix.chauffeur.model.MissionData;
 import ma.translogix.chauffeur.model.Notification;
@@ -51,6 +50,7 @@ import ma.translogix.util.Session;
 
 /**
  * Bridge between the 12 driver FXML sections and the main TransLogix application.
+ * They run inside the main shell only (the standalone "zip" window was removed).
  *
  * The zip version kept every value here as hardcoded demo data. This version keeps the
  * same public API but reads and writes through the main service layer
@@ -112,8 +112,7 @@ public final class AppContext {
     private Long loadedForUserId;
     private int notifSeq = 1000;
 
-    // Registered controllers, used by the standalone zip shell; harmless in the main shell.
-    private MainController main;
+    // Registered page controllers (the shell loads each page once per visit).
     private ExpensesController expenses;
     private IncidentsController incidents;
     private MissionDetailController missionDetail;
@@ -250,7 +249,6 @@ public final class AppContext {
 
     // ------------------------------------------------------------------ navigation / UI
 
-    public void register(MainController m) { this.main = m; }
     public void register(ExpensesController c) { this.expenses = c; }
     public void register(IncidentsController c) { this.incidents = c; }
     public void register(MissionDetailController c) { this.missionDetail = c; }
@@ -284,18 +282,10 @@ public final class AppContext {
         if (page == null) {
             return;
         }
-        if (main != null) {              // standalone zip shell
-            main.switchTab(tabId);
-        } else {
-            Navigator.ouvrir(page);      // main shell
-        }
+        Navigator.ouvrir(page);
     }
 
     public void toast(String message) {
-        if (main != null) {
-            main.showToast(message);
-            return;
-        }
         Platform.runLater(() -> {
             try {
                 Label label = new Label(message);
@@ -323,18 +313,10 @@ public final class AppContext {
         });
     }
 
-    public void openExpenseModal() { openModal("/fxml/modals/ExpenseModal.fxml", true); }
-    public void openIncidentModal() { openModal("/fxml/modals/IncidentModal.fxml", false); }
+    public void openExpenseModal() { openModal("/fxml/modals/ExpenseModal.fxml"); }
+    public void openIncidentModal() { openModal("/fxml/modals/IncidentModal.fxml"); }
 
-    private void openModal(String ressource, boolean expense) {
-        if (main != null) {
-            if (expense) {
-                main.openExpenseModal();
-            } else {
-                main.openIncidentModal();
-            }
-            return;
-        }
+    private void openModal(String ressource) {
         try {
             closeModal();
             Parent contenu = FXMLLoader.load(getClass().getResource(ressource));
@@ -350,9 +332,6 @@ public final class AppContext {
     }
 
     public void closeModal() {
-        if (main != null) {
-            main.closeModal();
-        }
         if (modalStage != null) {
             modalStage.close();
             modalStage = null;
@@ -384,10 +363,9 @@ public final class AppContext {
                 actionLabel, ref, tab));
     }
 
+    /** The shell has no unread badge for the driver menu yet: nothing to update. */
     public void updateNotifBadges(int unread) {
-        if (main != null) {
-            main.setUnread(unread);
-        }
+        // kept so NotificationsController needs no change
     }
 
     private void rebuildNotifications(List<Mission> missions) {
