@@ -10,18 +10,26 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Facture;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.FactureService;
 import ma.translogix.util.Formats;
 import ma.translogix.util.Recherche;
+import ma.translogix.util.ValidationException;
 
 /** "Facturation clients": searchable invoice register; new invoice and payment in dialogs. No rules here. */
 public class FacturesController {
@@ -65,23 +73,34 @@ public class FacturesController {
         colActions.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         colActions.setCellFactory(col -> new TableCell<>() {
             private final Button regler = new Button("Régler");
+            private final Button annuler = new Button("Annuler");
+            private final HBox boutons = new HBox(6, regler, annuler);
 
             {
                 regler.getStyleClass().add("link-orange");
-                regler.setMinWidth(Region.USE_PREF_SIZE); // never "Ré..."
+                annuler.getStyleClass().add("link-red");
+                for (Button b : new Button[] {regler, annuler}) {
+                    b.setMinWidth(Region.USE_PREF_SIZE); // never "Ré..." or "Ann..."
+                }
                 regler.setOnAction(e -> regler(getItem()));
+                annuler.setOnAction(e -> annuler(getItem()));
             }
 
             @Override
             protected void updateItem(Facture f, boolean empty) {
                 super.updateItem(f, empty);
                 setText(null);
-                // Only unpaid invoices can be paid; the Gérant's view is read-only.
-                boolean reglable = !empty && f != null && f.getStatut() == StatutFacture.EN_ATTENTE
+                // Only an unpaid invoice can be paid or cancelled; the Gérant's view is read-only.
+                boolean modifiable = !empty && f != null && f.getStatut() == StatutFacture.EN_ATTENTE
                         && !ComptableUi.lectureSeule();
-                setGraphic(reglable ? regler : null);
+                regler.setVisible(modifiable);
+                regler.setManaged(modifiable);
+                annuler.setVisible(modifiable);
+                annuler.setManaged(modifiable);
+                setGraphic(!empty && modifiable ? boutons : null);
             }
         });
+        table.setRowFactory(tv -> ligneAvecMenu());
 
         FilteredList<Facture> filtres = new FilteredList<>(donnees);
         recherche.textProperty().addListener((obs, ancien, requete) ->
@@ -98,17 +117,103 @@ public class FacturesController {
         rafraichir();
     }
 
-    @FXML
-    private void nouvelle() {
-        if (ComptableUi.<FactureFormulaireController>ouvrirFormulaire(table, FactureFormulaireController.FXML,
-                FactureFormulaireController::preparer)) {
+    /**
+     * One context menu per row, built once. The actions are recomputed when the menu opens because the invoice
+     * status may have changed since the row was created. Double-click shows the full invoice detail.
+     */
+    private TableRow<Facture> ligneAvecMenu() {
+        TableRow<Facture> ligne = new TableRow<>();
+        MenuItem details = new MenuItem("Voir détails");
+        MenuItem regler = new MenuItem("Enregistrer un règlement…");
+        MenuItem annuler = new MenuItem("Annuler la facture…");
+        annuler.getStyleClass().add("menu-danger");
+        details.setOnAction(e -> voirDetails(ligne.getItem()));
+        regler.setOnAction(e -> regler(ligne.getItem()));
+        annuler.setOnAction(e -> annuler(ligne.getItem()));
+        ContextMenu menu = new ContextMenu(details, regler, new SeparatorMenuItem(), annuler);
+
+        menu.setOnShowing(e -> {
+            Facture f = ligne.getItem();
+            boolean modifiable = f != null && f.getStatut() == StatutFacture.EN_ATTENTE
+                    && !ComptableUi.lectureSeule();
+            regler.setVisible(modifiable);
+            annuler.setVisible(modifiable);
+            menu.getItems().get(2).setVisible(modifiable); // separator before "Annuler"
+        });
+        ligne.emptyProperty().addListener((obs, avant, vide) -> ligne.setContextMenu(vide ? null : menu));
+        ligne.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2 && !ligne.isEmpty()) {
+                voirDetails(ligne.getItem());
+            }
+        });
+        return ligne;
+    }
+
+    /** Full invoice information, including its recorded payments (read-only). */
+    private void voirDetails(Facture f) {
+        if (f == null) {
+            return;
+        }
+        StringBuilder texte = new StringBuilder()
+                .append("Facture ").append(f.getNumero()).append('\n')
+                .append("Client : ").append(client(f)).append('\n')
+                .append("Mission : ").append(f.getReferenceTrajet() == null ? "—" : f.getReferenceTrajet()).append('\n')
+                .append("Émission : ").append(Formats.date(f.getDateEmission())).append('\n')
+                .append("Échéance : ").append(Formats.date(f.getDateEcheance())).append('\n')
+                .append("Montant HT : ").append(Formats.mad(f.getMontantHT())).append('\n')
+                .append("TVA : ").append(Formats.mad(f.getMontantTva())).append('\n')
+                .append("Montant TTC : ").append(Formats.mad(f.getMontantTtc())).append('\n')
+                .append("Statut : ").append(factures.libelleStatut(f));
+        var paiements = factures.paiementsDe(f.getId());
+        texte.append("\n\nRèglements enregistrés : ");
+        if (paiements.isEmpty()) {
+            texte.append("aucun");
+        } else {
+            paiements.forEach(p -> texte.append("\n• ").append(Formats.date(p.getDate()))
+                    .append(" · ").append(p.getMode().getLibelle())
+                    .append(" · ").append(p.getReference()));
+        }
+        Dialogues.info("Détail de la facture " + f.getNumero(), texte.toString());
+    }
+
+    /** Asks for confirmation before the irreversible payment recording, then opens the payment dialog. */
+    private void regler(Facture facture) {
+        if (facture == null || ComptableUi.lectureSeule()) {
+            return;
+        }
+        if (!Dialogues.confirmer("Enregistrer un règlement",
+                "Vous allez enregistrer le règlement de la facture " + facture.getNumero() + " ("
+                        + Formats.mad(facture.getMontantTtc()) + ").\nCette opération est définitive. Continuer ?")) {
+            return;
+        }
+        if (ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(table,
+                PaiementFormulaireController.FXML, f -> f.preparer(facture, client(facture)))) {
             rafraichir();
         }
     }
 
-    private void regler(Facture facture) {
-        if (facture != null && ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(table,
-                PaiementFormulaireController.FXML, f -> f.preparer(facture, client(facture)))) {
+    /** Cancels an unpaid invoice after explicit confirmation; the invoice stays in the history. */
+    private void annuler(Facture facture) {
+        if (facture == null || ComptableUi.lectureSeule()) {
+            return;
+        }
+        if (!Dialogues.confirmer("Annuler la facture",
+                "Annuler la facture " + facture.getNumero() + " ?\n"
+                        + "Elle sera conservée dans l'historique mais ne pourra plus être réglée.")) {
+            return;
+        }
+        try {
+            factures.annuler(facture.getId());
+            rafraichir();
+        } catch (ValidationException e) {
+            Dialogues.erreur(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void nouvelle() {
+        if (ComptableUi.<FactureFormulaireController>ouvrirFormulaire(table, FactureFormulaireController.FXML,
+                FactureFormulaireController::preparer)) {
             rafraichir();
         }
     }
