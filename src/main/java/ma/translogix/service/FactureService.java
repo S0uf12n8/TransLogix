@@ -222,6 +222,14 @@ public class FactureService {
         return paiementDao.findByFacture(factureId);
     }
 
+    /** All recorded payments (newest first), for reports. Read-only: a payment is never edited or deleted. */
+    public List<Paiement> paiements() {
+        return paiementDao.findAll().stream()
+                .sorted(Comparator.comparing(Paiement::getDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(Paiement::getId, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+    }
+
     /** Unpaid and past its due date. Computed every time, never stored. */
     public boolean estEnRetard(Facture facture) {
         return facture.getStatut() == StatutFacture.EN_ATTENTE && facture.getDateEcheance().isBefore(aujourdhui());

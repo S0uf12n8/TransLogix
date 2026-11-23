@@ -3,6 +3,7 @@ package ma.translogix.service;
 /** The reports of the "Rapports & analytics" page, and which filters each one uses. */
 public enum TypeRapport {
     FACTURATION("Facturation", true, true),
+    PAIEMENTS("Règlements clients", true, true),
     MISSIONS("Missions", true, true),
     CONFORMITE("Conformité RH (documents à traiter)", true, false),
     COMPTES("Comptes utilisateurs", false, false);
