@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -102,6 +103,8 @@ public final class EspaceChauffeurUi {
 
     private final Map<String, int[]> progression = new LinkedHashMap<>();
     private final Map<String, Mission> missionsByRef = new LinkedHashMap<>();
+    private final Map<Long, Client> clientsParId = new HashMap<>();
+    private final Map<Long, Vehicule> vehiculesParId = new HashMap<>();
     private Long loadedForUserId;
     private int notifSeq = 1000;
 
@@ -158,16 +161,14 @@ public final class EspaceChauffeurUi {
         return Optional.ofNullable(missionsByRef.get(ref));
     }
 
+    /** From the clients read by the last reload() (one list per reload, not one per mission). */
     public Optional<Client> client(Long id) {
-        return id == null ? Optional.empty()
-                : ma.translogix.AppContext.clientService().lister().stream()
-                        .filter(c -> id.equals(c.getId())).findFirst();
+        return id == null ? Optional.empty() : Optional.ofNullable(clientsParId.get(id));
     }
 
+    /** From the vehicles read by the last reload(). */
     public Optional<Vehicule> vehicule(Long id) {
-        return id == null ? Optional.empty()
-                : ma.translogix.AppContext.vehiculeService().lister().stream()
-                        .filter(v -> id.equals(v.getId())).findFirst();
+        return id == null ? Optional.empty() : Optional.ofNullable(vehiculesParId.get(id));
     }
 
     public String clientName(Mission m) {
@@ -178,6 +179,11 @@ public final class EspaceChauffeurUi {
     public void reload() {
         loadedForUserId = currentUserId();
         List<Mission> missions = fetchMissions();
+        // Clients and vehicles are read once here, then looked up by id: no query per mission (no N+1).
+        clientsParId.clear();
+        ma.translogix.AppContext.clientService().lister().forEach(c -> clientsParId.put(c.getId(), c));
+        vehiculesParId.clear();
+        ma.translogix.AppContext.vehiculeService().lister().forEach(v -> vehiculesParId.put(v.getId(), v));
         Map<String, MissionData> nouveau = new LinkedHashMap<>();
         missionsByRef.clear();
         for (Mission m : missions) {
