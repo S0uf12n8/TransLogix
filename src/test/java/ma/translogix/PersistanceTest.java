@@ -44,6 +44,33 @@ class PersistanceTest {
     }
 
     @Test
+    void leModeSecoursDitPourquoiEtQueRienNEstEnregistre() {
+        Persistance.Etat etat = new Persistance.Etat(Persistance.Mode.MEMOIRE_SECOURS, null,
+                "Impossible de joindre la base de données.");
+
+        assertEquals("MySQL indisponible · non enregistré", etat.libelle());
+        assertTrue(etat.detail().startsWith("Impossible de joindre la base de données."), etat.detail());
+        assertTrue(etat.detail().contains("ne seront pas enregistrées"), etat.detail());
+    }
+
+    @Test
+    void leModeMySqlNommeCeQuiEstVraimentEnBase() {
+        Persistance.Etat etat = new Persistance.Etat(Persistance.Mode.MYSQL, null, null);
+
+        assertEquals("Base MySQL connectée", etat.libelle());
+        assertTrue(etat.detail().contains("comptes utilisateurs, journal d'audit"), etat.detail());
+        assertTrue(etat.detail().contains("restent en mémoire"), "ne pas laisser croire que tout est enregistré");
+    }
+
+    @Test
+    void leModeMemoireDitQueToutRepartAuDemarrage() {
+        Persistance.Etat etat = Persistance.choisir(Optional.empty());
+
+        assertEquals("Mode démonstration · non enregistré", etat.libelle());
+        assertTrue(etat.detail().contains("DB_URL"), etat.detail());
+    }
+
+    @Test
     @EnabledIfEnvironmentVariable(named = "DB_URL", matches = ".+")
     void avecMySqlLeSchemaEstAppliqueEtLesComptesDemoNeSontCreesQuUneFois() throws Exception {
         Persistance.Etat etat = Persistance.choisir(ConnexionBase.depuisEnvironnement());

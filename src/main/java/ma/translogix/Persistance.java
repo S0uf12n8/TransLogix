@@ -1,5 +1,6 @@
 package ma.translogix;
 
+import java.util.List;
 import java.util.Optional;
 import ma.translogix.dao.DonneesException;
 import ma.translogix.dao.jdbc.ConnexionBase;
@@ -36,7 +37,32 @@ public final class Persistance {
         public boolean enregistre() {
             return mode == Mode.MYSQL;
         }
+
+        /** Short French label for the shell sidebar. */
+        public String libelle() {
+            return switch (mode) {
+                case MYSQL -> "Base MySQL connectée";
+                case MEMOIRE -> "Mode démonstration · non enregistré";
+                case MEMOIRE_SECOURS -> "MySQL indisponible · non enregistré";
+            };
+        }
+
+        /** What is (not) saved, in French, for the sidebar tooltip. */
+        public String detail() {
+            return switch (mode) {
+                case MYSQL -> "Enregistrés dans MySQL : " + String.join(", ", MODULES_EN_BASE) + ". Les autres "
+                        + "données restent en mémoire jusqu'à la livraison de leur stockage MySQL.";
+                case MEMOIRE -> "DB_URL n'est pas défini : toutes les données sont en mémoire et repartent des "
+                        + "données de démonstration au prochain démarrage.";
+                case MEMOIRE_SECOURS -> probleme + " L'application fonctionne en mode démonstration : les "
+                        + "modifications ne seront pas enregistrées. Démarrez MySQL puis relancez l'application.";
+            };
+        }
     }
+
+    /** What AppContext keeps in MySQL today; add a module here when it switches its DAOs to JDBC. */
+    static final List<String> MODULES_EN_BASE = List.of("comptes utilisateurs",
+            "journal d'audit");
 
     private static Etat etat;
 
