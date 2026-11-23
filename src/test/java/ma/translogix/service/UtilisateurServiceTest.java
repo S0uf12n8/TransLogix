@@ -1,6 +1,7 @@
 package ma.translogix.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -213,5 +214,118 @@ class UtilisateurServiceTest {
                 () -> service.creer("Bennani", "Ali", "pas-un-email", "motdepasse2", Role.RH));
 
         assertTrue(audit.lister().isEmpty());
+    }
+
+    // ------------------------------------------------------------------ multi-criteria search
+
+    private void troisComptes() {
+        service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+        Utilisateur ali = service.creer("Bennani", "Ali", "ali@translogix.ma", "motdepasse1", Role.DISPATCHER);
+        service.modifier(ali.getId(), "Bennani", "Ali", "ali@translogix.ma", Role.DISPATCHER, false);
+        service.creer("Élhadi", "Nora", "nora@translogix.ma", "motdepasse1", Role.RH);
+    }
+
+    private List<String> emails(UtilisateurService.CritereUtilisateur critere) {
+        return service.filtrer(critere).stream().map(Utilisateur::getEmail).sorted().toList();
+    }
+
+    @Test
+    void criteresSeCombinentEnEt() {
+        troisComptes();
+
+        assertEquals(List.of("ali@translogix.ma", "sara@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur(null, Role.DISPATCHER, null)));
+        assertEquals(List.of("sara@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur(null, Role.DISPATCHER, true)));
+        assertEquals(List.of("ali@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur("benn", Role.DISPATCHER, false)));
+        assertEquals(List.of(), emails(new UtilisateurService.CritereUtilisateur("sara", Role.RH, null)));
+    }
+
+    @Test
+    void texteCherche_dansNomPrenomEmail_sansAccents() {
+        troisComptes();
+
+        assertEquals(List.of("nora@translogix.ma"),
+                emails(new UtilisateurService.CritereUtilisateur("ELHADI", null, null)));
+        assertEquals(List.of("ali@translogix.ma"), emails(new UtilisateurService.CritereUtilisateur("ali@", null, null)));
+    }
+
+    @Test
+    void sansCritereToutEstRenvoye() {
+        troisComptes();
+
+        assertEquals(3, service.filtrer(UtilisateurService.CritereUtilisateur.AUCUN).size());
+        assertEquals(3, service.filtrer(null).size());
+        assertEquals(3, service.filtrer(new UtilisateurService.CritereUtilisateur("  ", null, null)).size());
+    }
+
+    // ------------------------------------------------------------------ right-click actions
+
+    private Utilisateur relu(Long id) {
+        return service.lister().stream().filter(u -> u.getId().equals(id)).findFirst().orElseThrow();
+    }
+
+    private List<String> actionsAudit() {
+        return audit.lister().stream().map(EvenementAudit::getAction).toList();
+    }
+
+    @Test
+    void changerStatutDesactiveEtReactiveAvecAudit() {
+        Utilisateur sara = service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+
+        service.changerStatut(sara.getId(), false);
+        assertFalse(relu(sara.getId()).isActif());
+        service.changerStatut(sara.getId(), true);
+        assertTrue(relu(sara.getId()).isActif());
+
+        assertEquals("Activation du compte sara@translogix.ma", actionsAudit().get(0));
+        assertEquals("Désactivation du compte sara@translogix.ma", actionsAudit().get(1));
+    }
+
+    @Test
+    void changerStatutSansChangementNeJournaliseRien() {
+        Utilisateur sara = service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+        int avant = audit.lister().size();
+
+        service.changerStatut(sara.getId(), true);
+
+        assertEquals(avant, audit.lister().size());
+    }
+
+    @Test
+    void gerantNePeutPasEtreDesactiveParLeMenu() {
+        Utilisateur gerant = service.creer("Chef", "Karim", "chef@translogix.ma", "motdepasse1", Role.GERANT);
+
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> service.changerStatut(gerant.getId(), false));
+
+        assertEquals("Le compte Gérant ne peut pas être désactivé.", ex.getMessage());
+        assertTrue(relu(gerant.getId()).isActif());
+        assertEquals(ResultatAudit.REFUSE, audit.lister().get(0).getResultat());
+    }
+
+    @Test
+    void reinitialiserMotDePasseRemplaceLeHashSansLeJournaliser() {
+        Utilisateur sara = service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+
+        service.reinitialiserMotDePasse(sara.getId(), "nouveauSecret9", "nouveauSecret9");
+
+        String hash = relu(sara.getId()).getMotDePasseHash();
+        assertTrue(PasswordHasher.verifier("nouveauSecret9", hash));
+        assertFalse(PasswordHasher.verifier("motdepasse1", hash));
+        assertEquals("Réinitialisation du mot de passe de sara@translogix.ma", actionsAudit().get(0));
+        assertTrue(actionsAudit().stream().noneMatch(a -> a.contains("nouveauSecret9")));
+    }
+
+    @Test
+    void reinitialiserMotDePasseRefuseTropCourtOuDifferent() {
+        Utilisateur sara = service.creer("Alami", "Sara", "sara@translogix.ma", "motdepasse1", Role.DISPATCHER);
+
+        assertEquals("Le mot de passe doit contenir au moins 8 caractères.", assertThrows(ValidationException.class,
+                () -> service.reinitialiserMotDePasse(sara.getId(), "court", "court")).getMessage());
+        assertEquals("Les deux mots de passe ne sont pas identiques.", assertThrows(ValidationException.class,
+                () -> service.reinitialiserMotDePasse(sara.getId(), "motdepasse2", "motdepasse3")).getMessage());
+        assertTrue(PasswordHasher.verifier("motdepasse1", relu(sara.getId()).getMotDePasseHash()));
     }
 }

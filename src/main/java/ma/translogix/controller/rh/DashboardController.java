@@ -1,5 +1,6 @@
 package ma.translogix.controller.rh;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,12 +18,18 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.ExportRapport;
+import ma.translogix.controller.common.ImpressionRapport;
+import ma.translogix.controller.common.Imprimable;
 import ma.translogix.model.DocumentConformite;
 import ma.translogix.model.Employe;
 import ma.translogix.model.StatutConformite;
 import ma.translogix.model.TypeDocument;
 import ma.translogix.service.ConformiteService;
 import ma.translogix.service.EmployeService;
+import ma.translogix.service.FiltreRapport;
+import ma.translogix.service.Rapport;
+import ma.translogix.service.TypeRapport;
 import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
@@ -30,7 +37,7 @@ import ma.translogix.util.Session;
  * "Tableau de bord RH". KPI 1-3 and "Statut rapide" come from EmployeService / ConformiteService
  * (real, in memory); "Congés en attente" is a static DÉMO card (Iteration 3).
  */
-public class DashboardController {
+public class DashboardController implements Imprimable {
 
     @FXML private Label salutation;
     @FXML private StackPane kpiEffectif;
@@ -82,9 +89,28 @@ public class DashboardController {
         rafraichir();
     }
 
+    /** "Exporter Rapport RH": print / PDF or CSV of the compliance documents to handle. */
     @FXML
     private void exporter() {
-        RhUi.pasEncoreLivre();
+        ExportRapport.proposer(documentAImprimer(), tableChauffeurs.getScene().getWindow());
+    }
+
+    /**
+     * RH report: expired documents and documents expiring within 30 days, most urgent first, with the headcount
+     * (real data, through RapportService and EmployeService). Also used by the top-bar "Imprimer".
+     */
+    @Override
+    public ImpressionRapport.Document documentAImprimer() {
+        Rapport documents = AppContext.rapportService().generer(TypeRapport.CONFORMITE, FiltreRapport.TOUT);
+        EmployeService.Effectifs effectifs = employes.effectifs();
+        Rapport rapport = new Rapport("Rapport RH — conformité des documents",
+                "rapport-rh-conformite-" + LocalDate.now() + ".csv", documents.entetes(), documents.lignes(),
+                documents.resume());
+        return new ImpressionRapport.Document(rapport, List.of(
+                "Effectif actif : " + effectifs.actifs() + " dont " + effectifs.chauffeursActifs() + " chauffeur(s).",
+                "Documents expirés ou expirant dans les "
+                        + ConformiteService.SEUIL_RENOUVELLEMENT_JOURS + " prochains jours, du plus urgent au moins urgent."),
+                false);
     }
 
     @FXML

@@ -607,19 +607,17 @@
 .dashboard-chart .chart-bar.flotte-maintenance { -fx-bar-fill: #f59e0b; }
 
 /* Pie: one colour per mission status, in DashboardService.STATUTS_MISSION order
-   (Créée, Planifiée, En cours, Suspendue, Livrée, Facturée, Annulée). Also colours the legend symbols. */
+   (Planifiée, En cours, Livrée, Facturée, Annulée = StatutMission). Also colours the legend symbols. */
 .dashboard-chart .chart-pie {
     -fx-background-color: -fx-pie-color;
     -fx-border-color: white;
     -fx-border-width: 1.5;
 }
-.dashboard-chart .default-color0.chart-pie { -fx-pie-color: #cbd5e1; }
-.dashboard-chart .default-color1.chart-pie { -fx-pie-color: #f59e0b; }
-.dashboard-chart .default-color2.chart-pie { -fx-pie-color: #0284c7; }
-.dashboard-chart .default-color3.chart-pie { -fx-pie-color: #f97316; }
-.dashboard-chart .default-color4.chart-pie { -fx-pie-color: #16a34a; }
-.dashboard-chart .default-color5.chart-pie { -fx-pie-color: #172033; }
-.dashboard-chart .default-color6.chart-pie { -fx-pie-color: #dc2626; }
+.dashboard-chart .default-color0.chart-pie { -fx-pie-color: #f59e0b; }
+.dashboard-chart .default-color1.chart-pie { -fx-pie-color: #0284c7; }
+.dashboard-chart .default-color2.chart-pie { -fx-pie-color: #16a34a; }
+.dashboard-chart .default-color3.chart-pie { -fx-pie-color: #172033; }
+.dashboard-chart .default-color4.chart-pie { -fx-pie-color: #dc2626; }
 
 .chart-total {
     -fx-font-size: 12px;
@@ -828,4 +826,34 @@
 .login-footer {
     -fx-font-size: 11px;
     -fx-text-fill: #64748b;
+}
+
+/* Inline validation message on a light page (e.g. an impossible period on the reports page). */
+.form-error {
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Right-click menus of the tables (users, audit, reports). Destructive entries in red. */
+.context-menu {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+}
+.context-menu .menu-item {
+    -fx-background-radius: 6;
+    -fx-padding: 7 14;
+}
+.context-menu .menu-item .label {
+    -fx-text-fill: #172033;
+    -fx-font-size: 13px;
+}
+.context-menu .menu-item:focused {
+    -fx-background-color: #fff7ed;
+}
+.context-menu .menu-item.menu-danger .label {
+    -fx-text-fill: #dc2626;
 }

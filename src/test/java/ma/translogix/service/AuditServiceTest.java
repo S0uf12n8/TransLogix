@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -113,5 +114,61 @@ class AuditServiceTest {
 
         assertEquals(2, service.rechercher("").size());
         assertEquals(2, service.rechercher(null).size());
+    }
+
+    // ------------------------------------------------------------------ multi-criteria search
+
+    /** 15/11 09:30 user created, 15/11 10:30 refusal, 16/11 09:30 invoice paid. */
+    private void troisEvenements() {
+        service.enregistrer("Utilisateurs", "Création du compte sara@translogix.ma", ResultatAudit.REUSSI);
+        horloge.avancerMinutes(60);
+        service.enregistrer("Utilisateurs", "Suppression refusée : compte Gérant", ResultatAudit.REFUSE);
+        horloge.avancerMinutes(23 * 60);
+        service.enregistrer("Factures", "Paiement de FACT-2026-001", ResultatAudit.REUSSI);
+    }
+
+    private List<String> actions(AuditService.CritereAudit critere) {
+        return service.filtrer(critere).stream().map(EvenementAudit::getAction).toList();
+    }
+
+    @Test
+    void criteresAuditSeCombinentEnEt() {
+        troisEvenements();
+
+        assertEquals(List.of("Suppression refusée : compte Gérant", "Création du compte sara@translogix.ma"),
+                actions(new AuditService.CritereAudit(null, "Utilisateurs", null, null, null)));
+        assertEquals(List.of("Suppression refusée : compte Gérant"),
+                actions(new AuditService.CritereAudit(null, "Utilisateurs", ResultatAudit.REFUSE, null, null)));
+        assertEquals(List.of("Création du compte sara@translogix.ma"),
+                actions(new AuditService.CritereAudit("sara@", null, ResultatAudit.REUSSI, null, null)));
+        assertEquals(List.of(), actions(new AuditService.CritereAudit("sara@", "Factures", null, null, null)));
+    }
+
+    @Test
+    void periodeAuditBornesIncluses() {
+        troisEvenements();
+        LocalDate le15 = LocalDate.of(2026, 11, 15);
+        LocalDate le16 = LocalDate.of(2026, 11, 16);
+
+        assertEquals(2, actions(new AuditService.CritereAudit(null, null, null, le15, le15)).size());
+        assertEquals(List.of("Paiement de FACT-2026-001"),
+                actions(new AuditService.CritereAudit(null, null, null, le16, null)));
+        assertEquals(3, actions(new AuditService.CritereAudit(null, null, null, null, le16)).size());
+    }
+
+    @Test
+    void periodeAuditInverseeEstRefusee() {
+        AuditService.CritereAudit inverse = new AuditService.CritereAudit(null, null, null,
+                LocalDate.of(2026, 11, 16), LocalDate.of(2026, 11, 15));
+
+        assertThrows(ValidationException.class, () -> service.filtrer(inverse));
+    }
+
+    @Test
+    void modulesDistinctsParOrdreAlphabetique() {
+        troisEvenements();
+
+        assertEquals(List.of("Factures", "Utilisateurs"), service.modules());
+        assertEquals(3, service.filtrer(null).size());
     }
 }
