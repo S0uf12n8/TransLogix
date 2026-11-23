@@ -79,7 +79,7 @@
             <Button mnemonicParsing="false" onAction="#submit" styleClass="btn-primary" text="Transmettre" />
          </children>
       </HBox>
-      <Label styleClass="modal-note" text="Simulation ERP : Données traitées uniquement pour la démo." />
+      <Label styleClass="modal-note" text="Enregistré pour cette session uniquement : les frais et incidents n'ont pas encore de service côté serveur." />
    </children>
    <padding>
       <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
