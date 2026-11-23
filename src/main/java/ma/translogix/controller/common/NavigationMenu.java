@@ -146,6 +146,25 @@ public final class NavigationMenu {
         return entrees.stream().filter(e -> dossier(e.fxml()).equals(dossier)).findFirst();
     }
 
+    /**
+     * Which pages a role may open (checked by the shell before loading any page, whatever the button or link):
+     * its own module folder only; the Gérant oversees every module except the driver's personal space.
+     * The menu hides the other modules, this check makes sure they also cannot be reached another way.
+     */
+    public static boolean autorise(Role role, String fxml) {
+        if (role == null || fxml == null) {
+            return false;
+        }
+        String dossier = dossier(fxml.trim());
+        return switch (role) {
+            case GERANT -> List.of("admin", "rh", "comptable", "dispatcher").contains(dossier);
+            case RH -> dossier.equals("rh");
+            case COMPTABLE -> dossier.equals("comptable");
+            case DISPATCHER -> dossier.equals("dispatcher");
+            case CHAUFFEUR -> dossier.equals("chauffeur");
+        };
+    }
+
     public static String sousTitre(Role role) {
         return switch (role) {
             case GERANT -> "PILOTAGE TRANSPORT · MAROC";

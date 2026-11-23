@@ -183,4 +183,50 @@ class NavigationMenuTest {
     void ecranDeConnexionExiste() {
         assertNotNull(getClass().getResource(NavigationMenu.RACINE + "auth/login.fxml"));
     }
+
+    // ------------------------------------------------------------------ access control
+
+    @Test
+    void chaqueRoleAAccesATousLesEcransDeSonMenu() {
+        for (Role role : Role.values()) {
+            for (NavigationMenu.Entree entree : NavigationMenu.pour(role)) {
+                assertTrue(NavigationMenu.autorise(role, entree.fxml()), role + " -> " + entree.fxml());
+            }
+        }
+    }
+
+    @Test
+    void leGerantSuitLesLiensDeSonTableauDeBord() {
+        for (String page : List.of("dispatcher/flotte.fxml", "rh/conformite.fxml", "comptable/factures.fxml",
+                "admin/audit.fxml", "dispatcher/missions.fxml")) {
+            assertTrue(NavigationMenu.autorise(Role.GERANT, page), page);
+        }
+    }
+
+    @Test
+    void personneHormisLeGerantNOuvreLesPagesAdmin() {
+        for (Role role : List.of(Role.RH, Role.COMPTABLE, Role.DISPATCHER, Role.CHAUFFEUR)) {
+            assertFalse(NavigationMenu.autorise(role, "admin/utilisateurs.fxml"), role.name());
+            assertFalse(NavigationMenu.autorise(role, "admin/audit.fxml"), role.name());
+        }
+    }
+
+    @Test
+    void unRoleNOuvrePasLesPagesDUnAutreModule() {
+        assertFalse(NavigationMenu.autorise(Role.CHAUFFEUR, "comptable/factures.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.COMPTABLE, "rh/employes.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.RH, "dispatcher/missions.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.DISPATCHER, "comptable/factures.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.GERANT, "chauffeur/missions.fxml"),
+                "l'espace chauffeur est personnel au chauffeur connecté");
+    }
+
+    @Test
+    void lesCheminsInvalidesSontRefuses() {
+        assertFalse(NavigationMenu.autorise(Role.GERANT, null));
+        assertFalse(NavigationMenu.autorise(null, "admin/audit.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.GERANT, "audit.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.RH, "rh/../admin/utilisateurs.fxml"));
+        assertFalse(NavigationMenu.autorise(Role.RH, "rhx/employes.fxml"));
+    }
 }
