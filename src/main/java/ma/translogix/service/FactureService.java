@@ -217,6 +217,11 @@ public class FactureService {
         dao.update(facture);
     }
 
+    /** Payments recorded for one invoice, oldest first. Read-only: a payment is never edited or deleted. */
+    public List<Paiement> paiementsDe(Long factureId) {
+        return paiementDao.findByFacture(factureId);
+    }
+
     /** Unpaid and past its due date. Computed every time, never stored. */
     public boolean estEnRetard(Facture facture) {
         return facture.getStatut() == StatutFacture.EN_ATTENTE && facture.getDateEcheance().isBefore(aujourdhui());

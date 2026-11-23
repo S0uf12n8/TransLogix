@@ -36,6 +36,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.FillRule;
 import javafx.scene.shape.SVGPath;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Facture;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.service.ClientService;
@@ -155,7 +156,15 @@ public class DashboardController {
     }
 
     private void regler(Facture facture) {
-        if (facture != null && ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(tableFactures,
+        if (facture == null || ComptableUi.lectureSeule()) {
+            return;
+        }
+        if (!Dialogues.confirmer("Enregistrer un règlement",
+                "Vous allez enregistrer le règlement de la facture " + facture.getNumero() + " ("
+                        + Formats.mad(facture.getMontantTtc()) + ").\nCette opération est définitive. Continuer ?")) {
+            return;
+        }
+        if (ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(tableFactures,
                 PaiementFormulaireController.FXML,
                 f -> f.preparer(facture, nomsClients.getOrDefault(facture.getClientId(), "—")))) {
             rafraichir();
