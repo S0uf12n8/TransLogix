@@ -5,12 +5,14 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ma.translogix.dao.ClientDao;
+import ma.translogix.dao.CritereFacture;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.PaiementDao;
 import ma.translogix.model.Client;
@@ -20,6 +22,7 @@ import ma.translogix.model.ModePaiement;
 import ma.translogix.model.Paiement;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.model.StatutMission;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -75,6 +78,30 @@ public class FactureService {
     /** All invoices, newest first. */
     public List<Facture> lister() {
         return dao.findAll().stream().sorted(RECENTES_D_ABORD).toList();
+    }
+
+    /**
+     * Invoices matching every supplied criterion, newest first. "En retard" is a displayed status,
+     * not a stored one, so the last check uses {@link #libelleStatut(Facture)}; the DAO receives only
+     * the stored statuses it can express in SQL.
+     */
+    public List<Facture> rechercher(CritereFacture critere) {
+        CritereFacture c = critere == null ? CritereFacture.TOUT : critere;
+        List<Long> idsClients = new ArrayList<>();
+        if (c.motCle() != null && !c.motCle().isBlank()) {
+            for (Client client : clientDao.findAll()) {
+                if (Recherche.correspond(c.motCle(), client.getNom(), client.getIce(), client.getTelephone())) {
+                    idsClients.add(client.getId());
+                }
+            }
+        }
+        String statutStocke = "En retard".equals(c.statut()) ? null : c.statut();
+        CritereFacture pourDao = new CritereFacture(c.motCle(), idsClients, c.clientId(), statutStocke,
+                c.du(), c.au(), c.montantMin(), c.montantMax());
+        return dao.search(pourDao).stream()
+                .filter(f -> c.statut() == null || c.statut().equals(libelleStatut(f)))
+                .sorted(RECENTES_D_ABORD)
+                .toList();
     }
 
     public List<Facture> dernieres(int n) {
