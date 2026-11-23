@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -163,6 +168,45 @@
                 <Label text="Urgent" styleClass="chip-orange" minWidth="-Infinity"/>
             </HBox>
             <VBox fx:id="listeActions" spacing="12"/>
+        </VBox>
+    </GridPane>
+
+    <!-- Financial charts: both fed by FactureService with the same invoices as the KPI cards. -->
+    <GridPane hgap="20" vgap="16">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="67"/>
+            <ColumnConstraints percentWidth="33"/>
+        </columnConstraints>
+
+        <VBox styleClass="panel" GridPane.columnIndex="0">
+            <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3">
+                    <Label text="Chiffre d'affaires mensuel" styleClass="panel-title"/>
+                    <Label fx:id="sousTitreCa" text="6 derniers mois, en MAD HT" styleClass="panel-sub"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="periodeCa" prefWidth="150"/>
+                <Label fx:id="totalCa" styleClass="chart-total" minWidth="-Infinity"/>
+            </HBox>
+            <BarChart fx:id="graphiqueCa" styleClass="dashboard-chart" prefHeight="280" legendVisible="false"
+                      animated="false">
+                <xAxis>
+                    <CategoryAxis label="Mois"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis fx:id="axeCa" label="MAD HT"/>
+                </yAxis>
+            </BarChart>
+        </VBox>
+
+        <VBox styleClass="panel" GridPane.columnIndex="1">
+            <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3">
+                    <Label text="Factures par statut" styleClass="panel-title"/>
+                    <Label fx:id="sousTitreStatuts" text="Répartition du portefeuille" styleClass="panel-sub"/>
+                </VBox>
+            </HBox>
+            <PieChart fx:id="graphiqueStatuts" styleClass="dashboard-chart" prefHeight="280" animated="false"/>
         </VBox>
     </GridPane>
 </VBox>

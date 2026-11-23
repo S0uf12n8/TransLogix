@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,6 +17,8 @@ import ma.translogix.model.DocumentConformite;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Facture;
 import ma.translogix.model.Mission;
+import ma.translogix.model.ModePaiement;
+import ma.translogix.model.Paiement;
 import ma.translogix.model.StatutConformite;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.model.StatutMission;
@@ -70,6 +73,7 @@ public class RapportService {
         return switch (type) {
             case FACTURATION -> List.of(StatutFacture.EN_ATTENTE.getLibelle(), EN_RETARD,
                     StatutFacture.PAYEE.getLibelle(), StatutFacture.ANNULEE.getLibelle());
+            case PAIEMENTS -> Arrays.stream(ModePaiement.values()).map(ModePaiement::getLibelle).toList();
             case MISSIONS -> Arrays.stream(StatutMission.values()).map(StatutMission::getLibelle).toList();
             case CONFORMITE -> List.of(StatutConformite.EXPIRE.getLibelle(), StatutConformite.A_RENOUVELER.getLibelle());
             case COMPTES -> List.of(ACTIF, INACTIF);
@@ -89,6 +93,7 @@ public class RapportService {
                 type.utiliseClient() ? f.clientId() : null, f.statut());
         return switch (type) {
             case FACTURATION -> facturation(f);
+            case PAIEMENTS -> paiements(f);
             case MISSIONS -> missions(f);
             case CONFORMITE -> conformite(f);
             case COMPTES -> comptes(f);
@@ -125,6 +130,51 @@ public class RapportService {
         return new Rapport("Facturation", nomFichier("facturation"),
                 List.of("N° facture", "Date d'émission", "Client", "Mission", "Montant HT (MAD)", "TVA (MAD)",
                         "Montant TTC (MAD)", "Statut"),
+                lignes, resume);
+    }
+
+    // ------------------------------------------------------------------ payments
+
+    /**
+     * Amounts received, one row per payment with its month first so a CSV sorted by month is enough for a
+     * "encaissements par mois" analysis. The client comes from the paid invoice; the status filter of this
+     * report holds the payment mode (the generic "Statut" combo of the report screen).
+     */
+    private Rapport paiements(FiltreRapport f) {
+        Map<Long, Facture> facturesParId = factures.lister().stream()
+                .collect(Collectors.toMap(Facture::getId, Function.identity(), (a, b) -> a));
+        Map<Long, String> nomsClients = parId(clients.lister(), Client::getId, Client::getNom);
+        List<Paiement> retenus = factures.paiements().stream()
+                .filter(p -> p.getDate() != null && f.dansLaPeriode(p.getDate()))
+                .filter(p -> {
+                    Facture facture = facturesParId.get(p.getFactureId());
+                    return facture != null && f.pourLeClient(facture.getClientId());
+                })
+                .filter(p -> f.avecLeStatut(p.getMode() == null ? "" : p.getMode().getLibelle()))
+                .sorted(Comparator.comparing(Paiement::getDate)
+                        .thenComparing(p -> texte(p.getReference())))
+                .toList();
+        List<List<String>> lignes = retenus.stream().map(p -> {
+            Facture facture = facturesParId.get(p.getFactureId());
+            return List.of(
+                    YearMonth.from(p.getDate()).toString(),
+                    Formats.date(p.getDate()),
+                    facture.getNumero(),
+                    nomsClients.getOrDefault(facture.getClientId(), ""),
+                    p.getMode() == null ? "" : p.getMode().getLibelle(),
+                    texte(p.getReference()),
+                    montant(facture.getMontantTtc()));
+        }).toList();
+        BigDecimal total = retenus.stream()
+                .map(p -> facturesParId.get(p.getFactureId()).getMontantTtc())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long nbMois = retenus.stream().map(p -> YearMonth.from(p.getDate())).distinct().count();
+        String resume = pluriel(retenus.size(), "règlement", "règlements")
+                + " · Total encaissé " + Formats.mad(total)
+                + (nbMois > 0 ? " · " + nbMois + " mois" : "");
+        return new Rapport("Règlements clients", nomFichier("reglements"),
+                List.of("Mois", "Date d'encaissement", "N° facture", "Client", "Mode de règlement", "Référence",
+                        "Montant encaissé (MAD)"),
                 lignes, resume);
     }
 

@@ -1,7 +1,11 @@
 package ma.translogix.controller.comptable;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -10,24 +14,47 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.util.StringConverter;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.Dialogues;
+import ma.translogix.dao.CritereFacture;
+import ma.translogix.model.Client;
 import ma.translogix.model.Facture;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.FactureService;
 import ma.translogix.util.Formats;
-import ma.translogix.util.Recherche;
+import ma.translogix.util.ValidationException;
 
 /** "Facturation clients": searchable invoice register; new invoice and payment in dialogs. No rules here. */
 public class FacturesController {
 
+    /** First option of the status filter: no restriction. */
+    private static final String TOUS_LES_STATUTS = "Tous les statuts";
+    private static final String TOUS_LES_CLIENTS = "Tous les clients";
+
     @FXML private Button boutonNouvelle;
     @FXML private TextField recherche;
+    @FXML private ComboBox<String> filtreStatut;
+    @FXML private ComboBox<Client> filtreClient;
+    @FXML private DatePicker filtreDu;
+    @FXML private DatePicker filtreAu;
+    @FXML private TextField filtreMontantMin;
+    @FXML private TextField filtreMontantMax;
+    @FXML private Button boutonReset;
     @FXML private TableView<Facture> table;
     @FXML private TableColumn<Facture, String> colNumero;
     @FXML private TableColumn<Facture, String> colClient;
@@ -43,6 +70,7 @@ public class FacturesController {
     private final ClientService clients = AppContext.clientService();
     private final ObservableList<Facture> donnees = FXCollections.observableArrayList();
     private final Map<Long, String> nomsClients = new HashMap<>();
+    private FilteredList<Facture> filtres;
 
     @FXML
     private void initialize() {
@@ -65,37 +93,229 @@ public class FacturesController {
         colActions.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         colActions.setCellFactory(col -> new TableCell<>() {
             private final Button regler = new Button("Régler");
+            private final Button annuler = new Button("Annuler");
+            private final HBox boutons = new HBox(6, regler, annuler);
 
             {
                 regler.getStyleClass().add("link-orange");
-                regler.setMinWidth(Region.USE_PREF_SIZE); // never "Ré..."
+                annuler.getStyleClass().add("link-red");
+                for (Button b : new Button[] {regler, annuler}) {
+                    b.setMinWidth(Region.USE_PREF_SIZE); // never "Ré..." or "Ann..."
+                }
                 regler.setOnAction(e -> regler(getItem()));
+                annuler.setOnAction(e -> annuler(getItem()));
             }
 
             @Override
             protected void updateItem(Facture f, boolean empty) {
                 super.updateItem(f, empty);
                 setText(null);
-                // Only unpaid invoices can be paid; the Gérant's view is read-only.
-                boolean reglable = !empty && f != null && f.getStatut() == StatutFacture.EN_ATTENTE
+                // Only an unpaid invoice can be paid or cancelled; the Gérant's view is read-only.
+                boolean modifiable = !empty && f != null && f.getStatut() == StatutFacture.EN_ATTENTE
                         && !ComptableUi.lectureSeule();
-                setGraphic(reglable ? regler : null);
+                regler.setVisible(modifiable);
+                regler.setManaged(modifiable);
+                annuler.setVisible(modifiable);
+                annuler.setManaged(modifiable);
+                setGraphic(!empty && modifiable ? boutons : null);
             }
         });
+        table.setRowFactory(tv -> ligneAvecMenu());
 
-        FilteredList<Facture> filtres = new FilteredList<>(donnees);
-        recherche.textProperty().addListener((obs, ancien, requete) ->
-                filtres.setPredicate(f -> Recherche.correspond(requete, f.getNumero(), client(f),
-                        f.getReferenceTrajet(), Formats.montant(f.getMontantHT()),
-                        Formats.montant(f.getMontantTtc()), factures.libelleStatut(f))));
+        filtres = new FilteredList<>(donnees);
         SortedList<Facture> tries = new SortedList<>(filtres);
         tries.comparatorProperty().bind(table.comparatorProperty());
         table.setItems(tries);
 
+        preparerFiltres();
         if (ComptableUi.lectureSeule()) {
             ComptableUi.masquer(boutonNouvelle);
         }
         rafraichir();
+    }
+
+    // ------------------------------------------------------------------ SEARCH
+
+    /** Populates the filter controls; every change recomputes the displayed rows. */
+    private void preparerFiltres() {
+        filtreStatut.setItems(FXCollections.observableArrayList(TOUS_LES_STATUTS, "En attente", "En retard",
+                StatutFacture.PAYEE.getLibelle(), StatutFacture.ANNULEE.getLibelle()));
+        filtreStatut.setValue(TOUS_LES_STATUTS);
+
+        filtreClient.setItems(FXCollections.observableArrayList(clients.lister()));
+        filtreClient.setValue(null);
+        filtreClient.setPromptText(TOUS_LES_CLIENTS); // Client.toString() is the company name
+
+        for (DatePicker date : new DatePicker[] {filtreDu, filtreAu}) {
+            date.setConverter(dateConverter());
+        }
+
+        recherche.textProperty().addListener((obs, ancien, requete) -> appliquerFiltres());
+        filtreStatut.valueProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+        filtreClient.valueProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+        filtreDu.valueProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+        filtreAu.valueProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+        filtreMontantMin.textProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+        filtreMontantMax.textProperty().addListener((obs, ancien, valeur) -> appliquerFiltres());
+    }
+
+    /** Clears every criterion at once (the table comes back sorted, newest first). */
+    @FXML
+    private void reinitialiser() {
+        recherche.clear();
+        filtreStatut.setValue(TOUS_LES_STATUTS);
+        filtreClient.setValue(null);
+        filtreDu.setValue(null);
+        filtreAu.setValue(null);
+        filtreMontantMin.clear();
+        filtreMontantMax.clear();
+        appliquerFiltres();
+    }
+
+    /**
+     * Asks the service/DAO for the matching ids, then keeps only those rows in the table. The table keeps its
+     * live observable list (so a payment still refreshes it), while the real filtering logic stays in the service
+     * and can move to a JDBC query without changing this screen.
+     */
+    private void appliquerFiltres() {
+        Set<Long> correspondants = factures.rechercher(critere()).stream()
+                .map(Facture::getId)
+                .collect(Collectors.toSet());
+        filtres.setPredicate(f -> correspondants.contains(f.getId()));
+    }
+
+    private CritereFacture critere() {
+        return new CritereFacture(recherche.getText(), clientFiltre(), statutFiltre(), filtreDu.getValue(),
+                filtreAu.getValue(), montant(filtreMontantMin.getText()), montant(filtreMontantMax.getText()));
+    }
+
+    private Long clientFiltre() {
+        Client c = filtreClient.getValue();
+        return c == null ? null : c.getId();
+    }
+
+    private String statutFiltre() {
+        String valeur = filtreStatut.getValue();
+        return valeur == null || valeur.equals(TOUS_LES_STATUTS) ? null : valeur;
+    }
+
+    /** Invalid amount text is ignored rather than hiding every row; the same parser as the invoice dialog. */
+    private static BigDecimal montant(String texte) {
+        BigDecimal valeur = FactureFormulaireController.lireMontant(texte);
+        return valeur != null && valeur.signum() >= 0 ? valeur : null;
+    }
+
+    private static StringConverter<LocalDate> dateConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(LocalDate date) {
+                return Formats.date(date);
+            }
+
+            @Override
+            public LocalDate fromString(String texte) {
+                try {
+                    return texte == null || texte.isBlank() ? null : Formats.lireDate(texte);
+                } catch (ValidationException e) {
+                    return null;
+                }
+            }
+        };
+    }
+
+    // ------------------------------------------------------------------ CONTEXT MENU & DIALOGS
+
+    /**
+     * One context menu per row, built once. The actions are recomputed when the menu opens because the invoice
+     * status may have changed since the row was created. Double-click shows the full invoice detail.
+     */
+    private TableRow<Facture> ligneAvecMenu() {
+        TableRow<Facture> ligne = new TableRow<>();
+        MenuItem details = new MenuItem("Voir détails");
+        MenuItem regler = new MenuItem("Enregistrer un règlement…");
+        MenuItem annuler = new MenuItem("Annuler la facture…");
+        annuler.getStyleClass().add("menu-danger");
+        details.setOnAction(e -> voirDetails(ligne.getItem()));
+        regler.setOnAction(e -> regler(ligne.getItem()));
+        annuler.setOnAction(e -> annuler(ligne.getItem()));
+        ContextMenu menu = new ContextMenu(details, regler, new SeparatorMenuItem(), annuler);
+
+        menu.setOnShowing(e -> {
+            Facture f = ligne.getItem();
+            boolean modifiable = f != null && f.getStatut() == StatutFacture.EN_ATTENTE
+                    && !ComptableUi.lectureSeule();
+            regler.setVisible(modifiable);
+            annuler.setVisible(modifiable);
+            menu.getItems().get(2).setVisible(modifiable); // separator before "Annuler"
+        });
+        ligne.emptyProperty().addListener((obs, avant, vide) -> ligne.setContextMenu(vide ? null : menu));
+        ligne.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2 && !ligne.isEmpty()) {
+                voirDetails(ligne.getItem());
+            }
+        });
+        return ligne;
+    }
+
+    /** Full invoice information, including its recorded payments (read-only). */
+    private void voirDetails(Facture f) {
+        if (f == null) {
+            return;
+        }
+        StringBuilder texte = new StringBuilder()
+                .append("Facture ").append(f.getNumero()).append('\n')
+                .append("Client : ").append(client(f)).append('\n')
+                .append("Mission : ").append(f.getReferenceTrajet() == null ? "—" : f.getReferenceTrajet()).append('\n')
+                .append("Émission : ").append(Formats.date(f.getDateEmission())).append('\n')
+                .append("Échéance : ").append(Formats.date(f.getDateEcheance())).append('\n')
+                .append("Montant HT : ").append(Formats.mad(f.getMontantHT())).append('\n')
+                .append("TVA : ").append(Formats.mad(f.getMontantTva())).append('\n')
+                .append("Montant TTC : ").append(Formats.mad(f.getMontantTtc())).append('\n')
+                .append("Statut : ").append(factures.libelleStatut(f));
+        var paiements = factures.paiementsDe(f.getId());
+        texte.append("\n\nRèglements enregistrés : ");
+        if (paiements.isEmpty()) {
+            texte.append("aucun");
+        } else {
+            paiements.forEach(p -> texte.append("\n• ").append(Formats.date(p.getDate()))
+                    .append(" · ").append(p.getMode().getLibelle())
+                    .append(" · ").append(p.getReference()));
+        }
+        Dialogues.info("Détail de la facture " + f.getNumero(), texte.toString());
+    }
+
+    /** Asks for confirmation before the irreversible payment recording, then opens the payment dialog. */
+    private void regler(Facture facture) {
+        if (facture == null || ComptableUi.lectureSeule()) {
+            return;
+        }
+        if (!Dialogues.confirmer("Enregistrer un règlement",
+                "Vous allez enregistrer le règlement de la facture " + facture.getNumero() + " ("
+                        + Formats.mad(facture.getMontantTtc()) + ").\nCette opération est définitive. Continuer ?")) {
+            return;
+        }
+        if (ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(table,
+                PaiementFormulaireController.FXML, f -> f.preparer(facture, client(facture)))) {
+            rafraichir();
+        }
+    }
+
+    /** Cancels an unpaid invoice after explicit confirmation; the invoice stays in the history. */
+    private void annuler(Facture facture) {
+        if (facture == null || ComptableUi.lectureSeule()) {
+            return;
+        }
+        if (!Dialogues.confirmer("Annuler la facture",
+                "Annuler la facture " + facture.getNumero() + " ?\n"
+                        + "Elle sera conservée dans l'historique mais ne pourra plus être réglée.")) {
+            return;
+        }
+        try {
+            factures.annuler(facture.getId());
+            rafraichir();
+        } catch (ValidationException e) {
+            Dialogues.erreur(e.getMessage());
+        }
     }
 
     @FXML
@@ -106,17 +326,11 @@ public class FacturesController {
         }
     }
 
-    private void regler(Facture facture) {
-        if (facture != null && ComptableUi.<PaiementFormulaireController>ouvrirFormulaire(table,
-                PaiementFormulaireController.FXML, f -> f.preparer(facture, client(facture)))) {
-            rafraichir();
-        }
-    }
-
     private void rafraichir() {
         nomsClients.clear();
         clients.lister().forEach(c -> nomsClients.put(c.getId(), c.getNom()));
         donnees.setAll(factures.lister());
+        appliquerFiltres();
     }
 
     private String client(Facture f) {
