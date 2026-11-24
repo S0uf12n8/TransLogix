@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- "Déclarer un incident" dialog. Eligible missions come from IncidentService; buttons are added by DispatcherUi. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.dispatcher.IncidentFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="560" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="GESTION DES ALÉAS" styleClass="eyebrow"/>
+            <Label text="Déclarer un incident" styleClass="dialog-title"/>
+            <Label text="Signalez une panne, un accident ou un blocage sur une mission active."
+                   wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <GridPane hgap="12" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0">
+                    <Label text="Mission" styleClass="form-label"/>
+                    <ComboBox fx:id="champMission" promptText="Choisir une mission" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Type d'incident" styleClass="form-label"/>
+                    <ComboBox fx:id="champType" promptText="Choisir un type" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="Gravité" styleClass="form-label"/>
+                    <ComboBox fx:id="champGravite" promptText="Choisir une gravité" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                    <Label text="Localisation" styleClass="form-label"/>
+                    <TextField fx:id="champLocalisation" promptText="Ex : A1, KM 42 près de Bouznika" styleClass="search-field"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3">
+                    <Label text="Description" styleClass="form-label"/>
+                    <TextArea fx:id="champDescription" promptText="Décrivez l'incident et les mesures prises"
+                              prefRowCount="3" wrapText="true" styleClass="search-field"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="4">
+                    <Label text="Date et heure du signalement" styleClass="form-label"/>
+                    <HBox spacing="8">
+                        <DatePicker fx:id="champDate" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="form-combo"/>
+                        <TextField fx:id="champHeure" promptText="14:30" prefWidth="70" minWidth="70" styleClass="search-field"/>
+                    </HBox>
+                </VBox>
+            </GridPane>
+            <Label text="La référence INC-xxxx est attribuée automatiquement. L'incident est ouvert dès l'enregistrement."
+                   wrapText="true" styleClass="form-note"/>
+        </VBox>
+    </content>
+</DialogPane>

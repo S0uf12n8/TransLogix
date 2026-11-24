@@ -218,12 +218,23 @@ public class MissionService {
         changerStatut(id, StatutMission.FACTUREE);
     }
 
+    /** Allowed next statuses, read from the service rule (never hardcoded in a dialog). */
+    public List<StatutMission> statutsSuivants(Long id) {
+        Mission m = trouver(id);
+        Set<StatutMission> possibles = m.getStatut() == null ? null : TRANSITIONS.get(m.getStatut());
+        return possibles == null ? List.of() : possibles.stream().toList();
+    }
+
     /** PLANIFIEE -> EN_COURS -> LIVREE -> FACTUREE, and PLANIFIEE / EN_COURS -> ANNULEE. */
     public void changerStatut(Long id, StatutMission nouveau) {
         Mission m = trouver(id);
-        if (nouveau == null || !TRANSITIONS.get(m.getStatut()).contains(nouveau)) {
+        Set<StatutMission> possibles = m.getStatut() == null ? null : TRANSITIONS.get(m.getStatut());
+        if (nouveau == null || possibles == null || !possibles.contains(nouveau)) {
+            String autorises = possibles == null || possibles.isEmpty() ? "aucun"
+                    : String.join(", ", possibles.stream().map(StatutMission::getLibelle).toList());
             throw new ValidationException("Changement de statut impossible pour " + m.getReference() + " : « "
-                    + m.getStatut().getLibelle() + " » → « " + (nouveau == null ? "?" : nouveau.getLibelle()) + " ».");
+                    + (m.getStatut() == null ? "?" : m.getStatut().getLibelle()) + " » → « "
+                    + (nouveau == null ? "?" : nouveau.getLibelle()) + " ». Autorisé(s) : " + autorises + ".");
         }
         m.setStatut(nouveau);
         dao.update(m);

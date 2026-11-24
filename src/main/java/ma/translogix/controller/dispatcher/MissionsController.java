@@ -15,6 +15,7 @@ import javafx.scene.chart.BarChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
@@ -147,10 +148,33 @@ public class MissionsController implements Imprimable {
         if (m.getStatut() == StatutMission.EN_COURS) {
             liens.add(new DispatcherUi.Lien("Livrée", "link-green", () -> changer(() -> service.livrer(m.getId()))));
         }
+        liens.add(new DispatcherUi.Lien("Modifier statut", "link-blue", () -> modifierStatut(m)));
         if (m.getStatut() == StatutMission.PLANIFIEE || m.getStatut() == StatutMission.EN_COURS) {
             liens.add(new DispatcherUi.Lien("Annuler", "link-red", () -> annuler(m)));
         }
         return liens;
+    }
+
+    /** Modal status change: the service alone decides which transitions are allowed. */
+    private void modifierStatut(Mission m) {
+        List<StatutMission> suivants = service.statutsSuivants(m.getId());
+        if (suivants.isEmpty()) {
+            Dialogues.info("Modifier le statut", "Aucune transition n'est possible depuis « "
+                    + m.getStatut().getLibelle() + " » pour " + m.getReference() + ".");
+            return;
+        }
+        ChoiceDialog<StatutMission> dialogue = new ChoiceDialog<>(suivants.get(0), suivants);
+        dialogue.setTitle("Modifier le statut");
+        dialogue.setHeaderText(m.getReference() + " · " + m.getItineraire());
+        dialogue.setContentText("Nouveau statut :");
+        if (table.getScene() != null) {
+            dialogue.initOwner(table.getScene().getWindow());
+        }
+        dialogue.showAndWait().ifPresent(nouveau -> {
+            if (DispatcherUi.executer(() -> service.changerStatut(m.getId(), nouveau))) {
+                rafraichir();
+            }
+        });
     }
 
     private void annuler(Mission m) {
