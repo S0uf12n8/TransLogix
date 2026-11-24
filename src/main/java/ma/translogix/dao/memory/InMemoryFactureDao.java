@@ -5,8 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import ma.translogix.dao.CritereFacture;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.model.Facture;
+import ma.translogix.util.Recherche;
 
 /** Keeps invoices in a map. Used by tests and by the UI until the JDBC DAO exists ([C5]). */
 public class InMemoryFactureDao implements FactureDao {
@@ -31,6 +33,28 @@ public class InMemoryFactureDao implements FactureDao {
     @Override
     public Optional<Facture> findByMission(Long missionId) {
         return donnees.values().stream().filter(f -> missionId.equals(f.getMissionId())).findFirst();
+    }
+
+    @Override
+    public List<Facture> search(CritereFacture c) {
+        CritereFacture critere = c == null ? CritereFacture.TOUT : c;
+        String motCle = critere.motCle();
+        boolean sansMotCle = motCle == null || motCle.isBlank();
+        List<Long> idsClients = critere.idsClientsMotes() == null ? List.of() : critere.idsClientsMotes();
+        return donnees.values().stream()
+                .filter(f -> sansMotCle || Recherche.correspond(motCle, f.getNumero(), f.getReferenceTrajet())
+                        || idsClients.contains(f.getClientId()))
+                .filter(f -> critere.clientId() == null || critere.clientId().equals(f.getClientId()))
+                .filter(f -> critere.statut() == null || critere.statut().equals(f.getStatut().getLibelle()))
+                .filter(f -> critere.du() == null
+                        || (f.getDateEmission() != null && !f.getDateEmission().isBefore(critere.du())))
+                .filter(f -> critere.au() == null
+                        || (f.getDateEmission() != null && !f.getDateEmission().isAfter(critere.au())))
+                .filter(f -> critere.montantMin() == null
+                        || (f.getMontantTtc() != null && f.getMontantTtc().compareTo(critere.montantMin()) >= 0))
+                .filter(f -> critere.montantMax() == null
+                        || (f.getMontantTtc() != null && f.getMontantTtc().compareTo(critere.montantMax()) <= 0))
+                .toList();
     }
 
     @Override

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -34,11 +36,31 @@
         <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
             <VBox spacing="3">
                 <Label text="Registre des factures" styleClass="panel-title"/>
-                <Label text="Recherchez par N&#176; de facture, client ou montant." styleClass="panel-sub"/>
+                <Label text="Recherchez par N&#176; de facture, client ou montant. Clic droit sur une ligne pour plus d'actions." styleClass="panel-sub"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <TextField fx:id="recherche" promptText="Rechercher une facture..." prefWidth="280" styleClass="search-field"/>
         </HBox>
+
+        <!-- Combined filters: all criteria are ANDed, the free-text field is ORed across number/client/traffic. -->
+        <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 12 0;">
+            <Label text="Statut" styleClass="muted"/>
+            <ComboBox fx:id="filtreStatut" prefWidth="130"/>
+            <Label text="Client" styleClass="muted"/>
+            <ComboBox fx:id="filtreClient" prefWidth="180"/>
+            <Label text="Du" styleClass="muted"/>
+            <DatePicker fx:id="filtreDu" prefWidth="130" promptText="Date début"/>
+            <Label text="Au" styleClass="muted"/>
+            <DatePicker fx:id="filtreAu" prefWidth="130" promptText="Date fin"/>
+            <Label text="TTC min" styleClass="muted"/>
+            <TextField fx:id="filtreMontantMin" promptText="0,00" prefWidth="85"/>
+            <Label text="TTC max" styleClass="muted"/>
+            <TextField fx:id="filtreMontantMax" promptText="—" prefWidth="85"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="boutonReset" text="Réinitialiser les filtres" onAction="#reinitialiser"
+                    styleClass="btn-secondary" minWidth="-Infinity"/>
+        </HBox>
+
         <TableView fx:id="table" fixedCellSize="52" prefHeight="440" styleClass="flat-table">
             <columnResizePolicy>
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
@@ -55,7 +77,7 @@
                 <TableColumn fx:id="colTva" text="TVA (14%)" prefWidth="100" minWidth="90"/>
                 <TableColumn fx:id="colTtc" text="MONTANT TTC" prefWidth="120" minWidth="105"/>
                 <TableColumn fx:id="colStatut" text="STATUT" prefWidth="105" minWidth="95"/>
-                <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="80" minWidth="70" sortable="false"/>
+                <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="135" minWidth="120" sortable="false"/>
             </columns>
         </TableView>
     </VBox>

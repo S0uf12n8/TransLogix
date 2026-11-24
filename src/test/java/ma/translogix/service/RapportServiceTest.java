@@ -126,6 +126,60 @@ class RapportServiceTest {
         assertTrue(csv.contains(";12345,60;"), csv);
     }
 
+    // ------------------------------------------------------------------ payments
+
+    @Test
+    void reglementsSontGroupesParMoisAvecLeMontantTtcDeLaFactureReglee() {
+        Facture octobre = facture(alpha, "1000.00", LocalDate.of(2026, 10, 20));
+        factures.enregistrerPaiement(octobre.getId(), ModePaiement.VIREMENT, "VIR-A", LocalDate.of(2026, 11, 2));
+        Facture novembre = facture(beta, "2000.00", LocalDate.of(2026, 11, 1));
+        factures.enregistrerPaiement(novembre.getId(), ModePaiement.CHEQUE, "CHQ-B", LocalDate.of(2026, 11, 15));
+
+        Rapport r = service.generer(TypeRapport.PAIEMENTS, FiltreRapport.TOUT);
+
+        assertEquals(List.of("Mois", "Date d'encaissement", "N° facture", "Client", "Mode de règlement",
+                "Référence", "Montant encaissé (MAD)"), r.entetes());
+        assertEquals(List.of("2026-11", "2026-11"), colonne(r, 0));
+        assertEquals(List.of("Alpha Transport SARL", "Beta Logistique"), colonne(r, 3));
+        assertEquals(List.of("Virement bancaire", "Chèque bancaire"), colonne(r, 4));
+        assertEquals(List.of("1140,00", "2280,00"), colonne(r, 6));
+        assertEquals("2 règlements · Total encaissé 3 420,00 MAD · 1 mois", r.resume());
+        assertEquals("rapport-reglements-2026-11-17.csv", r.nomFichier());
+    }
+
+    @Test
+    void reglementsFiltresParPeriodeClientEtModeDeReglement() {
+        Facture a = facture(alpha, "1000.00", LocalDate.of(2026, 10, 20));
+        factures.enregistrerPaiement(a.getId(), ModePaiement.VIREMENT, "VIR-A", LocalDate.of(2026, 10, 25));
+        Facture b = facture(beta, "2000.00", LocalDate.of(2026, 11, 1));
+        factures.enregistrerPaiement(b.getId(), ModePaiement.CHEQUE, "CHQ-B", LocalDate.of(2026, 11, 15));
+
+        Rapport novembre = service.generer(TypeRapport.PAIEMENTS,
+                new FiltreRapport(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30), null, null));
+        Rapport alphaOnly = service.generer(TypeRapport.PAIEMENTS, new FiltreRapport(null, null, alpha.getId(), null));
+        Rapport virements = service.generer(TypeRapport.PAIEMENTS,
+                new FiltreRapport(null, null, null, ModePaiement.VIREMENT.getLibelle()));
+
+        assertEquals(List.of("CHQ-B"), colonne(novembre, 5));
+        assertEquals(List.of("VIR-A"), colonne(alphaOnly, 5));
+        assertEquals(List.of("VIR-A"), colonne(virements, 5));
+        assertTrue(service.generer(TypeRapport.PAIEMENTS,
+                new FiltreRapport(LocalDate.of(2026, 12, 1), null, null, null)).lignes().isEmpty());
+    }
+
+    @Test
+    void rapportDesReglementsEstExportableEnCsvExcel() {
+        Facture f = facture(alpha, "12345.60", AUJOURDHUI);
+        factures.enregistrerPaiement(f.getId(), ModePaiement.EFFET_DE_COMMERCE, "EFF-1", AUJOURDHUI);
+
+        Rapport r = service.generer(TypeRapport.PAIEMENTS, FiltreRapport.TOUT);
+        String csv = CsvExporter.versTexte(r.entetes(), r.lignes());
+
+        assertTrue(csv.startsWith(CsvExporter.BOM));
+        assertTrue(csv.contains(";14073,98\r\n"), csv); // 12345,60 HT + 14 % TVA
+        assertTrue(csv.contains("EFF-1"), csv);
+    }
+
     // ------------------------------------------------------------------ missions
 
     @Test
@@ -208,6 +262,8 @@ class RapportServiceTest {
     @Test
     void chaqueRapportProposeSesStatutsEtDesLignesCompletes() {
         assertEquals(List.of("En attente", "En retard", "Payée", "Annulée"), service.statuts(TypeRapport.FACTURATION));
+        assertEquals(List.of("Virement bancaire", "Chèque bancaire", "Effet de commerce"),
+                service.statuts(TypeRapport.PAIEMENTS));
         assertEquals(DashboardService.STATUTS_MISSION, service.statuts(TypeRapport.MISSIONS));
         assertEquals(List.of("Expiré", "À renouveler"), service.statuts(TypeRapport.CONFORMITE));
         assertEquals(List.of("Actif", "Inactif"), service.statuts(TypeRapport.COMPTES));

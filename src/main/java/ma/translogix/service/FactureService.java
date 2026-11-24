@@ -5,12 +5,17 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ma.translogix.dao.ClientDao;
+import ma.translogix.dao.CritereFacture;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.PaiementDao;
 import ma.translogix.model.Client;
@@ -20,6 +25,7 @@ import ma.translogix.model.ModePaiement;
 import ma.translogix.model.Paiement;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.model.StatutMission;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -45,6 +51,14 @@ public class FactureService {
     /** Figures of the comptable dashboard, all computed from the stored invoices and payments. */
     public record Synthese(BigDecimal chiffreAffairesMoisHT, int facturesDuMois, BigDecimal factureMoisTtc,
                            BigDecimal encaissementsMois, BigDecimal creancesEnRetard, int facturesEnRetard) {
+    }
+
+    /** One slice of the status pie chart, or one row of a status report. */
+    public record Part(String libelle, long nombre) {
+    }
+
+    /** Monthly revenue, HT excluding cancelled invoices (same rule as {@link Synthese}). */
+    public record ChiffreMensuel(YearMonth mois, BigDecimal montantHt) {
     }
 
     private final FactureDao dao;
@@ -75,6 +89,30 @@ public class FactureService {
     /** All invoices, newest first. */
     public List<Facture> lister() {
         return dao.findAll().stream().sorted(RECENTES_D_ABORD).toList();
+    }
+
+    /**
+     * Invoices matching every supplied criterion, newest first. "En retard" is a displayed status,
+     * not a stored one, so the last check uses {@link #libelleStatut(Facture)}; the DAO receives only
+     * the stored statuses it can express in SQL.
+     */
+    public List<Facture> rechercher(CritereFacture critere) {
+        CritereFacture c = critere == null ? CritereFacture.TOUT : critere;
+        List<Long> idsClients = new ArrayList<>();
+        if (c.motCle() != null && !c.motCle().isBlank()) {
+            for (Client client : clientDao.findAll()) {
+                if (Recherche.correspond(c.motCle(), client.getNom(), client.getIce(), client.getTelephone())) {
+                    idsClients.add(client.getId());
+                }
+            }
+        }
+        String statutStocke = "En retard".equals(c.statut()) ? null : c.statut();
+        CritereFacture pourDao = new CritereFacture(c.motCle(), idsClients, c.clientId(), statutStocke,
+                c.du(), c.au(), c.montantMin(), c.montantMax());
+        return dao.search(pourDao).stream()
+                .filter(f -> c.statut() == null || c.statut().equals(libelleStatut(f)))
+                .sorted(RECENTES_D_ABORD)
+                .toList();
     }
 
     public List<Facture> dernieres(int n) {
@@ -179,6 +217,19 @@ public class FactureService {
         dao.update(facture);
     }
 
+    /** Payments recorded for one invoice, oldest first. Read-only: a payment is never edited or deleted. */
+    public List<Paiement> paiementsDe(Long factureId) {
+        return paiementDao.findByFacture(factureId);
+    }
+
+    /** All recorded payments (newest first), for reports. Read-only: a payment is never edited or deleted. */
+    public List<Paiement> paiements() {
+        return paiementDao.findAll().stream()
+                .sorted(Comparator.comparing(Paiement::getDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(Paiement::getId, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+    }
+
     /** Unpaid and past its due date. Computed every time, never stored. */
     public boolean estEnRetard(Facture facture) {
         return facture.getStatut() == StatutFacture.EN_ATTENTE && facture.getDateEcheance().isBefore(aujourdhui());
@@ -204,6 +255,48 @@ public class FactureService {
         return new Synthese(
                 somme(duMois, Facture::getMontantHT), duMois.size(), somme(duMois, Facture::getMontantTtc),
                 encaisse, somme(enRetard, Facture::getMontantTtc), enRetard.size());
+    }
+
+    /**
+     * Invoice counts for the status pie chart. "En retard" is a displayed status computed from the due date,
+     * so it is counted here even though the enum has no such value. The order is the chart legend order.
+     */
+    public List<Part> facturesParStatut() {
+        Map<String, Long> comptes = new LinkedHashMap<>();
+        comptes.put(StatutFacture.PAYEE.getLibelle(), 0L);
+        comptes.put(StatutFacture.EN_ATTENTE.getLibelle(), 0L);
+        comptes.put("En retard", 0L);
+        comptes.put(StatutFacture.ANNULEE.getLibelle(), 0L);
+        for (Facture facture : dao.findAll()) {
+            comptes.merge(libelleStatut(facture), 1L, Long::sum);
+        }
+        return comptes.entrySet().stream().map(e -> new Part(e.getKey(), e.getValue())).toList();
+    }
+
+    /**
+     * Monthly revenue over the last {@code nombreMois} months (current month included), in chronological order.
+     * Months without invoices are returned with zero so the bar chart keeps a regular time axis. Cancelled
+     * invoices never count; a paid invoice is not added twice (payments are not revenue).
+     */
+    public List<ChiffreMensuel> chiffreAffairesParMois(int nombreMois) {
+        int nb = Math.max(1, Math.min(nombreMois, 24));
+        YearMonth courant = YearMonth.from(aujourdhui());
+        YearMonth debut = courant.minusMonths(nb - 1L);
+        Map<YearMonth, BigDecimal> totaux = new TreeMap<>();
+        for (int i = 0; i < nb; i++) {
+            totaux.put(debut.plusMonths(i), BigDecimal.ZERO.setScale(2));
+        }
+        for (Facture facture : dao.findAll()) {
+            if (facture.getStatut() == StatutFacture.ANNULEE || facture.getDateEmission() == null
+                    || facture.getMontantHT() == null) {
+                continue;
+            }
+            YearMonth mois = YearMonth.from(facture.getDateEmission());
+            if (!mois.isBefore(debut) && !mois.isAfter(courant)) {
+                totaux.merge(mois, facture.getMontantHT(), BigDecimal::add);
+            }
+        }
+        return totaux.entrySet().stream().map(e -> new ChiffreMensuel(e.getKey(), e.getValue())).toList();
     }
 
     /** FACT-YYYY-NNN: highest number of that year + 1. */
