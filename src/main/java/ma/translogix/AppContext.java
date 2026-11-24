@@ -5,10 +5,15 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import ma.translogix.dao.DocumentConformiteDao;
 import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
+import ma.translogix.dao.jdbc.ConnexionBase;
+import ma.translogix.dao.jdbc.JdbcDocumentConformiteDao;
+import ma.translogix.dao.jdbc.JdbcEmployeDao;
 import ma.translogix.dao.memory.InMemoryAuditDao;
 import ma.translogix.dao.memory.InMemoryClientDao;
 import ma.translogix.dao.memory.InMemoryCongeDao;
@@ -59,11 +64,17 @@ public final class AppContext {
             new UtilisateurService(UTILISATEUR_DAO, AUDIT_SERVICE);
     private static final AuthService AUTH_SERVICE = new AuthService(UTILISATEUR_DAO);
 
-    // RH module ([M2], [M4]): in memory until the JDBC DAOs of [M6] exist.
-    private static final EmployeDao EMPLOYE_DAO = new InMemoryEmployeDao();
+    // RH module ([M2], [M4]): MySQL when DB_URL is set, otherwise in memory (same services either way).
+    private static final Optional<ConnexionBase> BASE_RH = ConnexionBase.depuisEnvironnement();
+    private static final EmployeDao EMPLOYE_DAO = BASE_RH
+            .map(base -> (EmployeDao) new JdbcEmployeDao(base))
+            .orElseGet(InMemoryEmployeDao::new);
+    private static final DocumentConformiteDao DOCUMENT_CONFORMITE_DAO = BASE_RH
+            .map(base -> (DocumentConformiteDao) new JdbcDocumentConformiteDao(base))
+            .orElseGet(InMemoryDocumentConformiteDao::new);
     private static final EmployeService EMPLOYE_SERVICE = new EmployeService(EMPLOYE_DAO, Clock.systemDefaultZone());
     private static final ConformiteService CONFORMITE_SERVICE =
-            new ConformiteService(new InMemoryDocumentConformiteDao(), EMPLOYE_DAO, Clock.systemDefaultZone());
+            new ConformiteService(DOCUMENT_CONFORMITE_DAO, EMPLOYE_DAO, Clock.systemDefaultZone());
     private static final CongeService CONGE_SERVICE =
             new CongeService(new InMemoryCongeDao(), EMPLOYE_SERVICE, Clock.systemDefaultZone());
     // Comptable module ([C2], [C3]): in memory until the JDBC DAOs of [C5] exist.
@@ -154,13 +165,13 @@ public final class AppContext {
      * Mohammed Bennani is linked to a demo driver account for the future "Mes ordres de transport" page ([O3]).
      */
     private static void semerRh(LocalDate aujourdhui) {
-        Employe bennani = EMPLOYE_SERVICE.creer("Bennani", "Mohammed", "ZZ-000101", "900000101", Poste.CHAUFFEUR,
+        Employe bennani = employeOuCree("Bennani", "Mohammed", "ZZ-000101", "900000101", Poste.CHAUFFEUR,
                 TypeContrat.CDI, LocalDate.of(2021, 3, 15));
-        Employe elAmrani = EMPLOYE_SERVICE.creer("El Amrani", "Abderrahim", "ZZ-000102", "900000102",
+        Employe elAmrani = employeOuCree("El Amrani", "Abderrahim", "ZZ-000102", "900000102",
                 Poste.CHAUFFEUR, TypeContrat.CDI, LocalDate.of(2022, 6, 1));
-        Employe amrani = EMPLOYE_SERVICE.creer("Amrani", "Youssef", "ZZ-000103", "900000103", Poste.CHAUFFEUR,
+        Employe amrani = employeOuCree("Amrani", "Youssef", "ZZ-000103", "900000103", Poste.CHAUFFEUR,
                 TypeContrat.CDD, LocalDate.of(2020, 1, 10));
-        Employe bouazzaoui = EMPLOYE_SERVICE.creer("Bouazzaoui", "Karima", "ZZ-000104", "900000104",
+        Employe bouazzaoui = employeOuCree("Bouazzaoui", "Karima", "ZZ-000104", "900000104",
                 Poste.ADMINISTRATIF, TypeContrat.CDI, LocalDate.of(2023, 2, 1));
 
         CONFORMITE_SERVICE.renouveler(bennani.getId(), TypeDocument.PERMIS, "PRM-883920", "EC", aujourdhui.plusYears(2));
@@ -180,6 +191,15 @@ public final class AppContext {
         Utilisateur compteChauffeur = UTILISATEUR_SERVICE.creer("Bennani", "Mohammed", "m.bennani@translogix.ma",
                 "chauffeur123", Role.CHAUFFEUR);
         EMPLOYE_SERVICE.lierCompte(bennani.getId(), compteChauffeur.getId());
+    }
+
+    /** The RH seed is replayed on every start: with MySQL, the employees may already exist from a previous run. */
+    private static Employe employeOuCree(String nom, String prenom, String cin, String cnss, Poste poste,
+                                         TypeContrat typeContrat, LocalDate dateEmbauche) {
+        return EMPLOYE_SERVICE.lister().stream()
+                .filter(e -> cin.equals(e.getCin()))
+                .findFirst()
+                .orElseGet(() -> EMPLOYE_SERVICE.creer(nom, prenom, cin, cnss, poste, typeContrat, dateEmbauche));
     }
 
     public static VehiculeService vehiculeService() {
