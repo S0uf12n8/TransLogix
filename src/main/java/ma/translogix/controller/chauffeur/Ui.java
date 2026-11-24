@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Circle;
@@ -120,6 +121,16 @@ public final class Ui {
 
     /** Premier mot d'une chaîne (split(' ')[0]). */
     public static String firstToken(String s) { return s == null ? "" : s.split(" ")[0]; }
+
+    /** Échap vide le filtre (raccourci clavier des champs de recherche). */
+    public static void echap(TextField champ) {
+        champ.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE && champ.getText() != null && !champ.getText().isEmpty()) {
+                champ.clear();
+                e.consume();
+            }
+        });
+    }
 
     public static void setVisibleManaged(Node n, boolean v) { n.setVisible(v); n.setManaged(v); }
 }
