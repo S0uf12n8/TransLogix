@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -16,10 +18,13 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import ma.translogix.AppContext;
@@ -96,6 +101,7 @@ public class MissionsController implements Imprimable {
         colActions.setCellFactory(col -> DispatcherUi.liens(this::actions));
 
         table.setItems(donnees);
+        installerMenuContextuel();
         recherche.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
         filtreChauffeur.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
         filtreVille.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
@@ -193,6 +199,61 @@ public class MissionsController implements Imprimable {
     private void ouvrirFormulaire(Mission mission) {
         if (DispatcherUi.<MissionFormulaireController>ouvrirFormulaire(table, MissionFormulaireController.FXML,
                 f -> f.preparer(mission, null))) {
+            rafraichir();
+        }
+    }
+
+    /**
+     * Right-click menu on a mission row. The controller only selects the row and opens the existing dialogs:
+     * every rule (allowed transitions, assignment overlaps, eligible missions) stays in the services.
+     */
+    private void installerMenuContextuel() {
+        table.setRowFactory(vue -> {
+            TableRow<Ligne> ligne = new TableRow<>();
+            MenuItem modifier = new MenuItem("Modifier statut");
+            MenuItem assigner = new MenuItem("Assigner chauffeur");
+            MenuItem declarer = new MenuItem("Déclarer incident");
+            if (DispatcherUi.lectureSeule()) {
+                modifier.setDisable(true);
+                assigner.setDisable(true);
+                declarer.setDisable(true);
+            }
+            modifier.setOnAction(e -> actionSurLigne(ligne, this::modifierStatut));
+            assigner.setOnAction(e -> actionSurLigne(ligne, this::assignerChauffeur));
+            declarer.setOnAction(e -> actionSurLigne(ligne, this::declarerIncident));
+            ContextMenu menu = new ContextMenu(modifier, assigner, declarer);
+            // A right-click on an unselected row must still act on the row under the cursor.
+            ligne.setOnContextMenuRequested(e -> {
+                if (!ligne.isEmpty() && !ligne.isSelected() && ligne.getIndex() >= 0) {
+                    vue.getSelectionModel().select(ligne.getIndex());
+                }
+            });
+            // No menu on the empty area below the last mission.
+            ligne.contextMenuProperty().bind(
+                    Bindings.when(ligne.emptyProperty()).then((ContextMenu) null).otherwise(menu));
+            return ligne;
+        });
+    }
+
+    private void actionSurLigne(TableRow<Ligne> ligne, Consumer<Mission> action) {
+        Ligne selection = ligne.getItem();
+        if (selection != null) {
+            action.accept(selection.mission());
+        }
+    }
+
+    /** Same assignment dialog as Planning Chauffeurs, limited to the mission of the row. */
+    private void assignerChauffeur(Mission mission) {
+        if (DispatcherUi.<MissionFormulaireController>ouvrirFormulaire(table, MissionFormulaireController.FXML,
+                f -> f.preparerAffectation(mission, null))) {
+            rafraichir();
+        }
+    }
+
+    /** Same incident dialog as Incidents & Alertes, with the mission of the row pre-selected. */
+    private void declarerIncident(Mission mission) {
+        if (DispatcherUi.<IncidentFormulaireController>ouvrirFormulaire(table, IncidentFormulaireController.FXML,
+                f -> f.preparer(mission))) {
             rafraichir();
         }
     }
