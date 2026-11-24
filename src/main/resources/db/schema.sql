@@ -91,3 +91,28 @@ CREATE TABLE IF NOT EXISTS paiements (
     INDEX idx_paiements_facture_id (facture_id),
     INDEX idx_paiements_date (date)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- Comptable: driver expenses awaiting approval. The mission and employee tables are owned by
+-- other modules and are not in this schema yet, so the ids are stored without a FOREIGN KEY for now;
+-- the service still checks both ids against the real services before inserting.
+CREATE TABLE IF NOT EXISTS depenses (
+    id           BIGINT        NOT NULL AUTO_INCREMENT,
+    mission_id   BIGINT        NOT NULL,
+    chauffeur_id BIGINT        NOT NULL,
+    type         VARCHAR(20)   NOT NULL,
+    station      VARCHAR(120)  NOT NULL,
+    montant      DECIMAL(12,2) NOT NULL,
+    litres       DECIMAL(10,2) NULL,
+    date         DATE          NOT NULL,
+    statut       VARCHAR(15)   NOT NULL DEFAULT 'EN_ATTENTE',
+    motif_refus  VARCHAR(500)  NULL,
+    CONSTRAINT pk_depenses PRIMARY KEY (id),
+    CONSTRAINT ck_depenses_type CHECK (type IN ('CARBURANT', 'PEAGE', 'REPAS', 'HEBERGEMENT', 'AUTRE')),
+    CONSTRAINT ck_depenses_statut CHECK (statut IN ('EN_ATTENTE', 'VALIDEE', 'REFUSEE')),
+    CONSTRAINT ck_depenses_montant CHECK (montant > 0),
+    CONSTRAINT ck_depenses_litres CHECK (litres IS NULL OR litres >= 0),
+    INDEX idx_depenses_statut (statut),
+    INDEX idx_depenses_date (date),
+    INDEX idx_depenses_mission_id (mission_id),
+    INDEX idx_depenses_chauffeur_id (chauffeur_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;

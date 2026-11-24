@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.comptable.PaiePaiementFormulaireController"
+            stylesheets="@../../css/app.css" prefWidth="460" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="PAIEMENT DES EMPLOYÉS" styleClass="eyebrow"/>
+            <Label fx:id="titre" text="Enregistrer le paiement du salaire" styleClass="dialog-title"/>
+            <Label text="Le mode, la référence et la date sont conservés avec la fiche de paie."
+                   wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <Label fx:id="resumeFiche" text="—" styleClass="form-note" wrapText="true"/>
+            <VBox spacing="6">
+                <Label text="Mode de paiement" styleClass="form-label"/>
+                <ComboBox fx:id="champMode" maxWidth="Infinity" styleClass="form-combo"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="Référence du paiement" styleClass="form-label"/>
+                <TextField fx:id="champReference" promptText="Ex : VIR-PAIE-202611-001" styleClass="search-field"/>
+            </VBox>
+            <VBox spacing="6">
+                <Label text="Date du paiement" styleClass="form-label"/>
+                <DatePicker fx:id="champDate" maxWidth="Infinity"/>
+            </VBox>
+        </VBox>
+    </content>
+</DialogPane>

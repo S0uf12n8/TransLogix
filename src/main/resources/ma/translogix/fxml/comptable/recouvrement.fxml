@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- Créances & recouvrement: real figures from FactureService.recouvrement(). No demo data. -->
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ma.translogix.controller.comptable.RecouvrementController"
+      stylesheets="@../../css/app.css"
+      spacing="20" styleClass="page">
+
+    <HBox alignment="BOTTOM_LEFT" spacing="12">
+        <VBox spacing="6">
+            <Label text="SUIVI DES CRÉANCES" styleClass="eyebrow"/>
+            <Label text="Créances &amp; recouvrement" styleClass="section-heading"/>
+            <Label text="Balance âgée et relances clients, calculées sur les factures impayées." styleClass="muted"/>
+        </VBox>
+    </HBox>
+
+    <!-- KPI cards: all three values come from the same service computation. -->
+    <GridPane hgap="16">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="33.33"/>
+            <ColumnConstraints percentWidth="33.33"/>
+            <ColumnConstraints percentWidth="33.34"/>
+        </columnConstraints>
+
+        <StackPane fx:id="kpiTotal" styleClass="kpi-card" GridPane.columnIndex="0">
+            <Circle radius="45" styleClass="kpi-decor-red" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Créances échues" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurTotal" text="0" styleClass="kpi-value"/>
+                            <Label text="MAD" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-red">
+                        <SVGPath content="M5 2h10l5 5v15H5z M8 10h9v2H8z M8 14h9v2H8z M8 18h6v1.5H8z"
+                                 fillRule="EVEN_ODD" styleClass="svg"/>
+                    </StackPane>
+                </HBox>
+                <Label fx:id="piedTotal" styleClass="foot-red"/>
+            </VBox>
+        </StackPane>
+
+        <StackPane fx:id="kpiClients" styleClass="kpi-card" GridPane.columnIndex="1">
+            <Circle radius="45" styleClass="kpi-decor-red" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Clients à relancer" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurClients" text="0" styleClass="kpi-value"/>
+                            <Label text="clients" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-red">
+                        <SVGPath content="M8 3a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M1 21c0-4 3-7 7-7s7 3 7 7z M17 5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7z M16.5 14c4 0 6.5 3 6.5 7h-6c0-2.6-1-4.8-2.8-6.4z"
+                                 fillRule="EVEN_ODD" styleClass="svg"/>
+                    </StackPane>
+                </HBox>
+                <Label fx:id="piedClients" styleClass="foot-red"/>
+            </VBox>
+        </StackPane>
+
+        <StackPane fx:id="kpiAncien" styleClass="kpi-card" GridPane.columnIndex="2">
+            <Circle radius="45" styleClass="kpi-decor-orange" StackPane.alignment="TOP_RIGHT" translateX="40" translateY="-44"/>
+            <VBox spacing="14">
+                <HBox>
+                    <VBox spacing="10">
+                        <Label text="Retard le plus ancien" styleClass="kpi-title"/>
+                        <HBox alignment="BASELINE_LEFT" spacing="5">
+                            <Label fx:id="valeurAncien" text="—" styleClass="kpi-value"/>
+                            <Label text="jours" styleClass="kpi-unit"/>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="icon-orange">
+                        <SVGPath content="M12 2a10 10 0 1 1 0 20a10 10 0 1 1 0-20z M11 6h2v6l4 2l-1 1.7l-5-2.7z"
+                                 fillRule="EVEN_ODD" styleClass="svg"/>
+                    </StackPane>
+                </HBox>
+                <Label fx:id="piedAncien" text="depuis l'échéance la plus ancienne" styleClass="foot-amber"/>
+            </VBox>
+        </StackPane>
+    </GridPane>
+
+    <VBox styleClass="panel">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="Balance âgée des créances" styleClass="panel-title"/>
+                <Label fx:id="sousTitreBalance" text="Montants TTC des factures impayées" styleClass="panel-sub"/>
+            </VBox>
+        </HBox>
+        <BarChart fx:id="graphiqueTranches" styleClass="comptable-recouvrement-bar" prefHeight="250"
+                  legendVisible="false" animated="false">
+            <xAxis>
+                <CategoryAxis label="Ancienneté du retard"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="axeTranches" label="MAD TTC"/>
+            </yAxis>
+        </BarChart>
+    </VBox>
+
+    <VBox styleClass="panel" VBox.vgrow="ALWAYS">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="Clients à relancer" styleClass="panel-title"/>
+                <Label text="Triés par retard le plus ancien. Clic droit pour agir." styleClass="panel-sub"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="recherche" promptText="Rechercher un client..." prefWidth="280" styleClass="search-field"/>
+        </HBox>
+
+        <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 12 20 0 20;">
+            <Label text="Tranche du retard" styleClass="muted"/>
+            <ComboBox fx:id="filtreTranche" prefWidth="150"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="boutonReset" text="Réinitialiser" onAction="#reinitialiser"
+                    styleClass="btn-secondary" minWidth="-Infinity"/>
+        </HBox>
+
+        <TableView fx:id="table" fixedCellSize="52" prefHeight="340" VBox.vgrow="ALWAYS" styleClass="flat-table">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+            </columnResizePolicy>
+            <placeholder>
+                <Label text="Aucun client à relancer." styleClass="empty-placeholder"/>
+            </placeholder>
+            <columns>
+                <TableColumn fx:id="colClient" text="CLIENT" prefWidth="180" minWidth="150"/>
+                <TableColumn fx:id="colIce" text="ICE" prefWidth="140" minWidth="130"/>
+                <TableColumn fx:id="colFactures" text="FACTURES EN RETARD" prefWidth="140" minWidth="115"/>
+                <TableColumn fx:id="colMontant" text="MONTANT DÛ TTC" prefWidth="145" minWidth="125"/>
+                <TableColumn fx:id="colEcheance" text="ÉCHÉANCE LA PLUS ANCIENNE" prefWidth="180" minWidth="150"/>
+                <TableColumn fx:id="colRetard" text="RETARD" prefWidth="110" minWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

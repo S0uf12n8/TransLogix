@@ -5,8 +5,11 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +62,78 @@ public class FactureService {
 
     /** Monthly revenue, HT excluding cancelled invoices (same rule as {@link Synthese}). */
     public record ChiffreMensuel(YearMonth mois, BigDecimal montantHt) {
+    }
+
+    /** Aging bracket of an unpaid invoice, measured in calendar days past its due date. */
+    public enum TrancheAge {
+        NON_ECHUE("Non échues"),
+        J1_A_30("1–30 j"),
+        J31_A_60("31–60 j"),
+        J61_A_90("61–90 j"),
+        PLUS_DE_90("+90 j");
+
+        private final String libelle;
+
+        TrancheAge(String libelle) {
+            this.libelle = libelle;
+        }
+
+        public String getLibelle() {
+            return libelle;
+        }
+
+        /** Same limits as the aging computation; used by the page's bracket filter. */
+        public static TrancheAge pourJours(long jours) {
+            if (jours <= 0) {
+                return NON_ECHUE;
+            }
+            if (jours <= 30) {
+                return J1_A_30;
+            }
+            if (jours <= 60) {
+                return J31_A_60;
+            }
+            if (jours <= 90) {
+                return J61_A_90;
+            }
+            return PLUS_DE_90;
+        }
+    }
+
+    /** One bar of the aging chart: invoice count and total TTC in that bracket. */
+    public record TrancheAgee(TrancheAge tranche, int nombreFactures, BigDecimal montantTtc) {
+    }
+
+    /** One row of the "clients to chase" table, sorted most urgent first by the service. */
+    public record ClientARelancer(Long clientId, String nomClient, String ice, int nombreFacturesEnRetard,
+                                  BigDecimal totalDuTtc, LocalDate echeanceLaPlusAncienne, long joursDeRetard) {
+    }
+
+    /** All real figures of the "Créances & recouvrement" page, computed in one pass. */
+    public record Recouvrement(List<TrancheAgee> tranches, List<ClientARelancer> clientsARelancer,
+                               BigDecimal totalEnRetard, int nombreClientsARelancer, Long plusAncienDelaiJours) {
+    }
+
+    /** Mutable accumulator for the overdue invoices of one client. */
+    private static final class SuiviClient {
+        private final Client client;
+        private int nombre;
+        private BigDecimal total = BigDecimal.ZERO.setScale(2);
+        private LocalDate echeanceLaPlusAncienne;
+
+        private SuiviClient(Client client) {
+            this.client = client;
+        }
+
+        private void ajouter(Facture facture) {
+            nombre++;
+            total = total.add(montantTtc(facture));
+            LocalDate echeance = facture.getDateEcheance();
+            if (echeance != null
+                    && (echeanceLaPlusAncienne == null || echeance.isBefore(echeanceLaPlusAncienne))) {
+                echeanceLaPlusAncienne = echeance;
+            }
+        }
     }
 
     private final FactureDao dao;
@@ -258,6 +333,73 @@ public class FactureService {
     }
 
     /**
+     * Balance âgée des factures impayées et liste des clients à relancer. Les factures et les clients ne sont lus
+     * qu'une seule fois. Seules les factures EN_ATTENTE comptent : une facture réglée ou annulée n'est plus une créance.
+     */
+    public Recouvrement recouvrement() {
+        LocalDate aujourdHui = aujourdhui();
+        Map<Long, Client> clientsParId = new HashMap<>();
+        for (Client client : clientDao.findAll()) {
+            clientsParId.put(client.getId(), client);
+        }
+
+        Map<TrancheAge, Integer> comptes = new EnumMap<>(TrancheAge.class);
+        Map<TrancheAge, BigDecimal> montants = new EnumMap<>(TrancheAge.class);
+        for (TrancheAge tranche : TrancheAge.values()) {
+            comptes.put(tranche, 0);
+            montants.put(tranche, BigDecimal.ZERO.setScale(2));
+        }
+
+        Map<Long, SuiviClient> suivis = new HashMap<>();
+        for (Facture facture : dao.findAll()) {
+            if (facture.getStatut() != StatutFacture.EN_ATTENTE) {
+                continue;
+            }
+            long jours = joursDeRetard(facture, aujourdHui);
+            TrancheAge tranche = TrancheAge.pourJours(jours);
+            comptes.merge(tranche, 1, Integer::sum);
+            montants.merge(tranche, montantTtc(facture), BigDecimal::add);
+            if (jours > 0 && facture.getClientId() != null) {
+                Long clientId = facture.getClientId();
+                Client client = clientsParId.get(clientId);
+                suivis.computeIfAbsent(clientId, id -> new SuiviClient(client)).ajouter(facture);
+            }
+        }
+
+        List<TrancheAgee> tranches = new ArrayList<>();
+        for (TrancheAge tranche : TrancheAge.values()) {
+            tranches.add(new TrancheAgee(tranche, comptes.get(tranche), arrondir(montants.get(tranche))));
+        }
+
+        List<ClientARelancer> clients = new ArrayList<>();
+        BigDecimal totalEnRetard = BigDecimal.ZERO.setScale(2);
+        Long plusAncienDelai = null;
+        for (SuiviClient suivi : suivis.values()) {
+            long jours = ChronoUnit.DAYS.between(suivi.echeanceLaPlusAncienne, aujourdHui);
+            Client client = suivi.client;
+            clients.add(new ClientARelancer(
+                    client == null ? null : client.getId(),
+                    client == null ? "Client inconnu" : client.getNom(),
+                    client == null ? null : client.getIce(),
+                    suivi.nombre,
+                    arrondir(suivi.total),
+                    suivi.echeanceLaPlusAncienne,
+                    jours));
+            totalEnRetard = totalEnRetard.add(suivi.total);
+            if (plusAncienDelai == null || jours > plusAncienDelai) {
+                plusAncienDelai = jours;
+            }
+        }
+        clients.sort(Comparator
+                .comparingLong(ClientARelancer::joursDeRetard).reversed()
+                .thenComparing((a, b) -> b.totalDuTtc().compareTo(a.totalDuTtc()))
+                .thenComparing(c -> c.nomClient() == null ? "" : c.nomClient(), String.CASE_INSENSITIVE_ORDER));
+
+        return new Recouvrement(List.copyOf(tranches), List.copyOf(clients), arrondir(totalEnRetard),
+                clients.size(), plusAncienDelai);
+    }
+
+    /**
      * Invoice counts for the status pie chart. "En retard" is a displayed status computed from the due date,
      * so it is counted here even though the enum has no such value. The order is the chart legend order.
      */
@@ -313,6 +455,18 @@ public class FactureService {
 
     private LocalDate aujourdhui() {
         return LocalDate.now(horloge);
+    }
+
+    /** Negative or zero: the due date is today or later, so the invoice is not overdue yet. */
+    private static long joursDeRetard(Facture facture, LocalDate aujourdHui) {
+        if (facture.getDateEcheance() == null) {
+            return 0;
+        }
+        return ChronoUnit.DAYS.between(facture.getDateEcheance(), aujourdHui);
+    }
+
+    private static BigDecimal montantTtc(Facture facture) {
+        return facture.getMontantTtc() == null ? BigDecimal.ZERO.setScale(2) : facture.getMontantTtc();
     }
 
     private static BigDecimal arrondir(BigDecimal montant) {

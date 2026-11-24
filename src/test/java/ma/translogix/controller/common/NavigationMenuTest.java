@@ -114,7 +114,7 @@ class NavigationMenuTest {
     @Test
     void lesEcransLivresDuComptableExistent() {
         for (String page : List.of("dashboard", "factures", "facture-dialog", "paiement-dialog", "clients",
-                "client-dialog")) {
+                "client-dialog", "depenses", "depense-dialog", "depense-refus-dialog")) {
             assertNotNull(getClass().getResource(NavigationMenu.RACINE + "comptable/" + page + ".fxml"), page);
         }
     }

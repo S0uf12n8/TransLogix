@@ -42,15 +42,16 @@ class ConnexionBaseTest {
     }
 
     @Test
-    void schemaDecoupeEnCinqTablesSansCommentaire() {
+    void schemaDecoupeEnSixTablesSansCommentaire() {
         List<String> instructions = BaseDeTest.instructions();
 
-        assertEquals(5, instructions.size());
+        assertEquals(6, instructions.size());
         assertTrue(instructions.get(0).startsWith("CREATE TABLE IF NOT EXISTS utilisateurs"));
         assertTrue(instructions.get(1).startsWith("CREATE TABLE IF NOT EXISTS audit_evenements"));
         assertTrue(instructions.get(2).startsWith("CREATE TABLE IF NOT EXISTS clients"));
         assertTrue(instructions.get(3).startsWith("CREATE TABLE IF NOT EXISTS factures"));
         assertTrue(instructions.get(4).startsWith("CREATE TABLE IF NOT EXISTS paiements"));
+        assertTrue(instructions.get(5).startsWith("CREATE TABLE IF NOT EXISTS depenses"));
         assertTrue(instructions.stream().noneMatch(s -> s.contains("--")));
     }
 }

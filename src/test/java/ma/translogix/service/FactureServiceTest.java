@@ -2,6 +2,7 @@ package ma.translogix.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,6 +21,10 @@ import ma.translogix.model.Mission;
 import ma.translogix.model.ModePaiement;
 import ma.translogix.model.StatutFacture;
 import ma.translogix.model.StatutMission;
+import ma.translogix.service.FactureService.ClientARelancer;
+import ma.translogix.service.FactureService.Recouvrement;
+import ma.translogix.service.FactureService.TrancheAge;
+import ma.translogix.service.FactureService.TrancheAgee;
 import ma.translogix.util.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +37,7 @@ class FactureServiceTest {
     private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-17T10:00:00Z"), ZoneOffset.UTC);
 
     private InMemoryClientDao clientDao;
+    private InMemoryFactureDao factureDao;
     private InMemoryPaiementDao paiementDao;
     private FactureService service;
     private MissionsDeTest flotte;
@@ -40,7 +46,7 @@ class FactureServiceTest {
     @BeforeEach
     void setUp() {
         clientDao = new InMemoryClientDao();
-        InMemoryFactureDao factureDao = new InMemoryFactureDao();
+        factureDao = new InMemoryFactureDao();
         paiementDao = new InMemoryPaiementDao();
         flotte = new MissionsDeTest(clientDao, factureDao, HORLOGE);
         service = new FactureService(factureDao, clientDao, paiementDao, flotte.missions, HORLOGE);
@@ -54,6 +60,23 @@ class FactureServiceTest {
 
     private Facture facture(String ht) {
         return service.creer(livree(), new BigDecimal(ht), null);
+    }
+
+    /** Invoice of the default client whose due date is exactly {@code jours} days before "today". */
+    private Facture factureEcheue(String ht, int jours) {
+        return factureEcheue(client, ht, jours);
+    }
+
+    private Facture factureEcheue(Client destinataire, String ht, int jours) {
+        return service.creer(flotte.livree(destinataire.getId()).getId(), new BigDecimal(ht), 0,
+                AUJOURDHUI.minusDays(jours));
+    }
+
+    private static TrancheAgee tranche(Recouvrement recouvrement, TrancheAge age) {
+        return recouvrement.tranches().stream()
+                .filter(t -> t.tranche() == age)
+                .findFirst()
+                .orElseThrow();
     }
 
     @Test
@@ -345,5 +368,134 @@ class FactureServiceTest {
         assertEquals(2, service.dernieres(2).size());
         assertTrue(service.dernieres(0).isEmpty());
         assertEquals(3, service.dernieres(100).size());
+    }
+
+    @ParameterizedTest(name = "échéance à J-{0} -> {1}")
+    @CsvSource({
+            "0, NON_ECHUE",
+            "1, J1_A_30",
+            "30, J1_A_30",
+            "31, J31_A_60",
+            "60, J31_A_60",
+            "61, J61_A_90",
+            "90, J61_A_90",
+            "91, PLUS_DE_90"
+    })
+    void uneFactureVaDansLaTrancheExacteSelonLesJoursDeRetard(int jours, TrancheAge attendue) {
+        factureEcheue("1000", jours);
+
+        TrancheAge obtenue = service.recouvrement().tranches().stream()
+                .filter(t -> t.nombreFactures() > 0)
+                .map(TrancheAgee::tranche)
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(attendue, obtenue);
+    }
+
+    @Test
+    void balanceAgeeCompteEtSommeLesFacturesParTranche() {
+        for (int jours : new int[] {0, 1, 30, 31, 60, 61, 90, 91}) {
+            factureEcheue("1000", jours);
+        }
+
+        Recouvrement r = service.recouvrement();
+
+        assertEquals(1, tranche(r, TrancheAge.NON_ECHUE).nombreFactures());
+        assertEquals(new BigDecimal("1140.00"), tranche(r, TrancheAge.NON_ECHUE).montantTtc());
+        assertEquals(2, tranche(r, TrancheAge.J1_A_30).nombreFactures());
+        assertEquals(new BigDecimal("2280.00"), tranche(r, TrancheAge.J1_A_30).montantTtc());
+        assertEquals(2, tranche(r, TrancheAge.J31_A_60).nombreFactures());
+        assertEquals(new BigDecimal("2280.00"), tranche(r, TrancheAge.J31_A_60).montantTtc());
+        assertEquals(2, tranche(r, TrancheAge.J61_A_90).nombreFactures());
+        assertEquals(new BigDecimal("2280.00"), tranche(r, TrancheAge.J61_A_90).montantTtc());
+        assertEquals(1, tranche(r, TrancheAge.PLUS_DE_90).nombreFactures());
+        assertEquals(new BigDecimal("1140.00"), tranche(r, TrancheAge.PLUS_DE_90).montantTtc());
+        assertEquals(new BigDecimal("7980.00"), r.totalEnRetard());
+        assertEquals(1, r.nombreClientsARelancer());
+        assertEquals(Long.valueOf(91), r.plusAncienDelaiJours());
+    }
+
+    @Test
+    void facturesRegleesEtAnnuleesSontExcluesDuRecouvrement() {
+        Facture payee = factureEcheue("1000", 45);
+        Facture annulee = factureEcheue("1000", 45);
+        service.enregistrerPaiement(payee.getId(), ModePaiement.VIREMENT, "VIR-REC-1", AUJOURDHUI);
+        service.annuler(annulee.getId());
+
+        Recouvrement r = service.recouvrement();
+
+        assertEquals(0, r.totalEnRetard().compareTo(BigDecimal.ZERO));
+        assertTrue(r.clientsARelancer().isEmpty());
+        assertNull(r.plusAncienDelaiJours());
+        assertEquals(0, tranche(r, TrancheAge.J31_A_60).nombreFactures());
+    }
+
+    @Test
+    void clientsARelancerSontGroupesEtTriesDuPlusUrgentAuMoinsUrgent() {
+        Client urgent = clientDao.save(new Client(null, "Atlas Prime", "ICE-REC-1", null, null, null, 30));
+        Client recent = clientDao.save(new Client(null, "Souss Express", "ICE-REC-2", null, null, null, 30));
+        factureEcheue(urgent, "2000", 95);
+        factureEcheue(urgent, "1000", 30);
+        factureEcheue(recent, "3000", 5);
+
+        Recouvrement r = service.recouvrement();
+
+        assertEquals(2, r.nombreClientsARelancer());
+        assertEquals(Long.valueOf(95), r.plusAncienDelaiJours());
+        assertEquals(new BigDecimal("6840.00"), r.totalEnRetard());
+        assertEquals(List.of("Atlas Prime", "Souss Express"),
+                r.clientsARelancer().stream().map(ClientARelancer::nomClient).toList());
+
+        ClientARelancer premier = r.clientsARelancer().get(0);
+        assertEquals(urgent.getId(), premier.clientId());
+        assertEquals("ICE-REC-1", premier.ice());
+        assertEquals(2, premier.nombreFacturesEnRetard());
+        assertEquals(new BigDecimal("3420.00"), premier.totalDuTtc());
+        assertEquals(AUJOURDHUI.minusDays(95), premier.echeanceLaPlusAncienne());
+        assertEquals(95L, premier.joursDeRetard());
+    }
+
+    @Test
+    void aEgalRetardLeMontantDuLePlusElevePasseAvant() {
+        Client petit = clientDao.save(new Client(null, "Petit Client", "ICE-REC-3", null, null, null, 30));
+        Client gros = clientDao.save(new Client(null, "Gros Client", "ICE-REC-4", null, null, null, 30));
+        factureEcheue(petit, "1000", 20);
+        factureEcheue(gros, "5000", 20);
+
+        List<String> noms = service.recouvrement().clientsARelancer().stream()
+                .map(ClientARelancer::nomClient)
+                .toList();
+
+        assertEquals(List.of("Gros Client", "Petit Client"), noms);
+    }
+
+    @Test
+    void factureSansEcheanceCompteCommeNonEchue() {
+        Facture sansEcheance = new Facture();
+        sansEcheance.setNumero("FACT-2026-900");
+        sansEcheance.setClientId(client.getId());
+        sansEcheance.setMontantTtc(new BigDecimal("1140.00"));
+        sansEcheance.setStatut(StatutFacture.EN_ATTENTE);
+        factureDao.save(sansEcheance);
+
+        Recouvrement r = service.recouvrement();
+
+        assertEquals(1, tranche(r, TrancheAge.NON_ECHUE).nombreFactures());
+        assertEquals(new BigDecimal("1140.00"), tranche(r, TrancheAge.NON_ECHUE).montantTtc());
+        assertTrue(r.clientsARelancer().isEmpty());
+        assertNull(r.plusAncienDelaiJours());
+    }
+
+    @Test
+    void recouvrementSansFactureEstAZero() {
+        Recouvrement r = service.recouvrement();
+
+        assertEquals(5, r.tranches().size());
+        assertTrue(r.tranches().stream().allMatch(t -> t.nombreFactures() == 0));
+        assertTrue(r.clientsARelancer().isEmpty());
+        assertEquals(0, r.totalEnRetard().compareTo(BigDecimal.ZERO));
+        assertEquals(0, r.nombreClientsARelancer());
+        assertNull(r.plusAncienDelaiJours());
     }
 }

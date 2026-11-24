@@ -39,6 +39,7 @@ final class BaseDeTest {
                 }
                 schemaApplique = true;
             }
+            st.execute("DELETE FROM depenses");
             st.execute("DELETE FROM paiements");
             st.execute("DELETE FROM factures");
             st.execute("DELETE FROM clients");
