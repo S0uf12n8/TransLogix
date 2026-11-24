@@ -3,6 +3,7 @@ package ma.translogix.controller.dispatcher;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import javafx.beans.property.SimpleObjectProperty;
@@ -10,9 +11,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import ma.translogix.AppContext;
+import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.DocumentConformite;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Mission;
@@ -85,12 +88,46 @@ public class PlanningController {
         assigner(null);
     }
 
-    /** Opens the mission dialog, with the driver already chosen when called from a row. */
+    /** Assigns driver + truck to an existing planned mission, with the driver preselected from a row. */
     private void assigner(Employe chauffeur) {
+        Mission mission = choisirMission(chauffeur);
+        if (mission == null) {
+            return;
+        }
         if (DispatcherUi.<MissionFormulaireController>ouvrirFormulaire(table, MissionFormulaireController.FXML,
-                f -> f.preparer(null, chauffeur))) {
+                f -> f.preparerAffectation(mission, chauffeur))) {
             rafraichir();
         }
+    }
+
+    /** Picks the mission to assign from the service (no hardcoded mission). */
+    private Mission choisirMission(Employe chauffeur) {
+        List<Mission> planifiees = missions.lister().stream()
+                .filter(m -> m.getStatut() == StatutMission.PLANIFIEE)
+                .sorted(Comparator.comparing(Mission::getDateDebut,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        if (planifiees.isEmpty()) {
+            Dialogues.info("Assigner chauffeur / camion", "Aucune mission planifiée n'est à assigner.");
+            return null;
+        }
+        // The choice box shows a readable label; the record keeps the mission itself (no hardcoded mission).
+        record Option(Mission mission) {
+            @Override
+            public String toString() {
+                return mission.getReference() + " · " + mission.getItineraire() + " · "
+                        + (mission.getDateDebut() == null ? "" : DispatcherUi.momentRelatif(
+                                mission.getDateDebut(), LocalDate.now()));
+            }
+        }
+        List<Option> options = planifiees.stream().map(Option::new).toList();
+        ChoiceDialog<Option> choix = new ChoiceDialog<>(options.get(0), options);
+        choix.setTitle("Assigner chauffeur / camion");
+        choix.setHeaderText(chauffeur == null ? "Choisissez la mission à assigner."
+                : "Choisissez la mission à assigner à " + chauffeur.getNomComplet() + ".");
+        choix.setContentText("Mission planifiée :");
+        Option selection = choix.showAndWait().orElse(null);
+        return selection == null ? null : selection.mission();
     }
 
     private void rafraichir() {

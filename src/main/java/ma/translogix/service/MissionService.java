@@ -129,6 +129,27 @@ public class MissionService {
         changerStatut(id, StatutMission.LIVREE);
     }
 
+    /**
+     * Assigns an existing planned mission to a driver and a vehicle. The dates of the mission do not change:
+     * only its two resources do. The overlap check stays HERE, in the service, and reads every mission of the
+     * driver and of the vehicle through the DAO, so a resource already busy on the same period is refused.
+     * The mission being assigned is excluded from the comparison (it can keep its own resources).
+     */
+    public Mission assigner(Long missionId, Long vehiculeId, Long chauffeurId) {
+        Mission m = trouver(missionId);
+        if (m.getStatut() != StatutMission.PLANIFIEE) {
+            throw new ValidationException("Seule une mission planifiée peut être assignée ("
+                    + m.getReference() + " est « " + m.getStatut().getLibelle() + " »).");
+        }
+        Vehicule vehicule = vehiculeAffectable(vehiculeId);
+        Employe chauffeur = chauffeurAffectable(chauffeurId);
+        verifierChevauchement(m, vehicule, chauffeur);
+        m.setVehiculeId(vehicule.getId());
+        m.setChauffeurId(chauffeur.getId());
+        dao.update(m);
+        return m;
+    }
+
     public void annuler(Long id) {
         changerStatut(id, StatutMission.ANNULEE);
     }
@@ -225,6 +246,8 @@ public class MissionService {
     private static boolean chevauche(Mission a, Mission b) {
         return !Objects.equals(a.getId(), b.getId())
                 && b.getStatut() != StatutMission.ANNULEE
+                && a.getDateDebut() != null && a.getDateFin() != null
+                && b.getDateDebut() != null && b.getDateFin() != null
                 && a.getDateDebut().isBefore(b.getDateFin())
                 && b.getDateDebut().isBefore(a.getDateFin());
     }
