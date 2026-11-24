@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox fx:id="root" spacing="12.0" styleClass="notif-item" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.NotificationItemController">
+   <children>
+      <StackPane fx:id="iconBox" maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-blue">
+         <children>
+            <Label fx:id="iconLabel" styleClass="fa" />
+         </children>
+      </StackPane>
+      <VBox minWidth="0.0" HBox.hgrow="ALWAYS">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <Label fx:id="titleLabel" styleClass="fs-12, fw-b, c-s800" />
+                  <Label fx:id="typePill" styleClass="status, status-blue" />
+                  <Label fx:id="newPill" styleClass="status, status-green" text="Nouveau" />
+               </children>
+            </HBox>
+            <Label fx:id="textLabel" styleClass="fs-12, c-s500, pt-15" wrapText="true" />
+            <HBox alignment="CENTER_LEFT" spacing="16.0">
+               <children>
+                  <Label fx:id="timeLabel" styleClass="fs-11, c-s400" />
+                  <Label fx:id="actionLabel" styleClass="fs-11, fw-b, c-o600" />
+               </children>
+               <VBox.margin>
+                  <Insets top="8.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</HBox>

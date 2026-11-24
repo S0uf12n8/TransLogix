@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.PodController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="LIVRAISON" />
+                  <Label styleClass="section-sub" text="Photo, signature du réceptionnaire, quantité livrée et remarques (simulation)." />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <GridPane hgap="20.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="66.667" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <!-- Formulaire -->
+            <VBox spacing="16.0" styleClass="panel, p-5">
+               <children>
+                  <VBox spacing="6.0">
+                     <children>
+                        <Label styleClass="field-label" text="Mission" />
+                        <ComboBox fx:id="podMission" maxWidth="Infinity" styleClass="search" />
+                     </children>
+                  </VBox>
+                  <VBox spacing="6.0">
+                     <children>
+                        <Label styleClass="field-label" text="Photo de la livraison" />
+                        <HBox fx:id="podPhotoBox" maxWidth="Infinity" styleClass="search, file-input">
+                           <children>
+                              <Button fx:id="podPhotoBtn" focusTraversable="false" mnemonicParsing="false" styleClass="file-input-btn" text="Choisir un fichier" />
+                              <Label fx:id="podPhotoName" styleClass="file-input-name" text="Aucun fichier choisi" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  <StackPane fx:id="podPhotoPreviewBox" managed="false" maxHeight="-Infinity" maxWidth="-Infinity" styleClass="photo-preview" visible="false">
+                     <children>
+                        <ImageView fx:id="podPhotoPreview" fitHeight="192.0" pickOnBounds="true" preserveRatio="true" />
+                     </children>
+                  </StackPane>
+                  <VBox spacing="6.0">
+                     <children>
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                              <Label styleClass="field-label" text="Signature du réceptionnaire" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button mnemonicParsing="false" onAction="#clearSignature" styleClass="link-btn, link-orange" text="Effacer" />
+                           </children>
+                        </HBox>
+                        <Pane fx:id="sigPane" maxHeight="170.0" minHeight="170.0" prefHeight="170.0" styleClass="sig-canvas">
+                           <children>
+                              <Canvas fx:id="sigCanvas" height="170.0" width="600.0" />
+                           </children>
+                        </Pane>
+                     </children>
+                  </VBox>
+                  <GridPane hgap="16.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <VBox spacing="6.0">
+                           <children>
+                              <Label styleClass="field-label" text="Nom du réceptionnaire" />
+                              <TextField fx:id="podReceiver" promptText="Ex: Nom et prénom" styleClass="search" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="6.0" GridPane.columnIndex="1">
+                           <children>
+                              <Label styleClass="field-label" text="Quantité livrée (palettes)" />
+                              <TextField fx:id="podQty" promptText="Ex: 33" styleClass="search" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+                  <VBox spacing="6.0">
+                     <children>
+                        <Label styleClass="field-label" text="Remarques" />
+                        <TextArea fx:id="podRemarks" prefRowCount="3" promptText="Réserves, dégâts, écarts de quantité..." styleClass="search" wrapText="true" />
+                     </children>
+                  </VBox>
+                  <HBox alignment="CENTER_RIGHT">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#submitPod" styleClass="btn-primary" text="Transmettre la preuve">
+                           <graphic>
+                              <Label styleClass="fa, fs-12" text="&#xf1d8;" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            <!-- Preuves transmises -->
+            <VBox spacing="16.0" styleClass="panel, p-5" GridPane.columnIndex="1" GridPane.fillHeight="false" GridPane.valignment="TOP">
+               <children>
+                  <Label styleClass="h3" text="Preuves transmises" />
+                  <VBox fx:id="podList" spacing="12.0">
+                     <children>
+                        <Label fx:id="podEmpty" styleClass="fs-12, c-s400" text="Aucune preuve transmise pour le moment." />
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
+   </children>
+</VBox>

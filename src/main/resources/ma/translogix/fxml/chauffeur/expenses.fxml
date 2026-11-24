@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.ExpensesController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="FRAIS DE ROUTE &amp; JUSTIFICATIFS" />
+                  <Label styleClass="section-sub" text="Transmettez vos tickets de péage autoroutier, frais de gazole et dépenses d'urgence." />
+               </children>
+            </VBox>
+            <Button mnemonicParsing="false" onAction="#newReceipt" styleClass="btn-primary" text="Nouveau Reçu">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#x2b;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <GridPane hgap="16.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <VBox styleClass="panel, p-4">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="Reçus Validés (Ce mois)" />
+                  <Label fx:id="validatedAmount" styleClass="fs-24, fw-b, c-e600, pt-2" text="0 MAD" />
+               </children>
+            </VBox>
+            <VBox styleClass="panel, p-4" GridPane.columnIndex="1">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="En Attente Validation" />
+                  <Label fx:id="driverPendingAmount" styleClass="fs-24, fw-b, c-a600, pt-2" text="1 500 MAD" />
+               </children>
+            </VBox>
+            <VBox styleClass="panel, p-4" GridPane.columnIndex="2">
+               <children>
+                  <Label styleClass="fs-12, c-s500" text="Consommation Moyenne" />
+                  <Label fx:id="fuelConsumption" styleClass="fs-24, fw-b, c-s900, pt-2" text="—" />
+               </children>
+            </VBox>
+         </children>
+      </GridPane>
+      <VBox styleClass="panel">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel-head">
+               <children>
+                  <VBox HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label styleClass="h3" text="Historique de vos Justificatifs" />
+                        <Label styleClass="h3-sub" text="Suivez la validation par le comptable." />
+                     </children>
+                  </VBox>
+                  <TextField fx:id="searchField" maxWidth="320.0" prefWidth="320.0" promptText="Filtrer reçu..." styleClass="search" />
+               </children>
+            </HBox>
+            <TableView fx:id="table" styleClass="tbl">
+               <columns>
+                  <TableColumn fx:id="colRef" prefWidth="150.0" sortable="false" text="N° REÇU" />
+                  <TableColumn fx:id="colMission" prefWidth="110.0" sortable="false" text="MISSION" />
+                  <TableColumn fx:id="colType" prefWidth="200.0" sortable="false" text="TYPE DE DÉPENSE" />
+                  <TableColumn fx:id="colStation" prefWidth="250.0" sortable="false" text="FOURNISSEUR / STATION" />
+                  <TableColumn fx:id="colAmount" prefWidth="140.0" sortable="false" text="MONTANT (MAD)" />
+                  <TableColumn fx:id="colStatus" prefWidth="165.0" sortable="false" text="STATUT COMPTABLE" />
+               </columns>
+               <placeholder>
+                  <Label />
+               </placeholder>
+            </TableView>
+         </children>
+      </VBox>
+   </children>
+</VBox>

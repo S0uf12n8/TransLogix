@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="p-8" spacing="20.0" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.NotificationsController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow, pb-2" text="CENTRE DE MESSAGES" />
+                  <Label styleClass="section-sub" text="Nouvelles missions, instructions du Dispatching et alertes de conduite (données de démonstration)." />
+               </children>
+            </VBox>
+            <Button mnemonicParsing="false" onAction="#markAll" styleClass="btn-secondary" text="Tout marquer comme lu">
+               <graphic>
+                  <Label styleClass="fa, fs-12" text="&#xf560;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <VBox styleClass="panel">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="panel-head">
+               <children>
+                  <HBox fx:id="filterBar" spacing="8.0">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#onFilter" styleClass="btn-secondary, is-active" text="Toutes" userData="all" />
+                        <Button mnemonicParsing="false" onAction="#onFilter" styleClass="btn-secondary" text="Missions" userData="mission" />
+                        <Button mnemonicParsing="false" onAction="#onFilter" styleClass="btn-secondary" text="Instructions" userData="instruction" />
+                        <Button mnemonicParsing="false" onAction="#onFilter" styleClass="btn-secondary" text="Alertes" userData="alert" />
+                     </children>
+                  </HBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="notifCount" styleClass="fs-12, c-s400" />
+               </children>
+            </HBox>
+            <VBox fx:id="notifList" />
+         </children>
+      </VBox>
+   </children>
+</VBox>
