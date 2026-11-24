@@ -173,4 +173,46 @@ class EmployeServiceTest {
         assertEquals(0, e.essai());
         assertEquals(1, e.recrutementsDuMois());
     }
+
+    @Test
+    void employesParPosteCompteLesActifsDansLordreDesPostes() {
+        creer("A", "TEST-0001", Poste.CHAUFFEUR, LocalDate.of(2021, 1, 1));
+        creer("B", "TEST-0002", Poste.CHAUFFEUR, LocalDate.of(2021, 1, 1));
+        creer("C", "TEST-0003", Poste.MECANICIEN, LocalDate.of(2021, 1, 1));
+        creer("D", "TEST-0004", Poste.ADMINISTRATIF, LocalDate.of(2021, 1, 1));
+        Employe inactif = creer("E", "TEST-0005", Poste.CHAUFFEUR, LocalDate.of(2021, 1, 1));
+        service.desactiver(inactif.getId());
+
+        assertEquals(List.of(
+                new EmployeService.Part("Chauffeur", 2),
+                new EmployeService.Part("Agent de dépôt", 0),
+                new EmployeService.Part("Mécanicien", 1),
+                new EmployeService.Part("Administratif", 1)), service.employesParPoste());
+    }
+
+    @Test
+    void employesParPosteGardeLesQuatrePostesSansDonnees() {
+        assertEquals(List.of(
+                new EmployeService.Part("Chauffeur", 0),
+                new EmployeService.Part("Agent de dépôt", 0),
+                new EmployeService.Part("Mécanicien", 0),
+                new EmployeService.Part("Administratif", 0)), service.employesParPoste());
+    }
+
+    @Test
+    void employesParPosteSuitLesModificationsEtDesactivations() {
+        Employe a = creer("A", "TEST-0001", Poste.CHAUFFEUR, LocalDate.of(2021, 1, 1));
+        assertEquals(List.of(1L, 0L, 0L, 0L), nombres(service.employesParPoste()));
+
+        service.modifier(a.getId(), "A", "Test", "TEST-0001", null, Poste.AGENT_DEPOT, TypeContrat.CDI,
+                LocalDate.of(2021, 1, 1));
+        assertEquals(List.of(0L, 1L, 0L, 0L), nombres(service.employesParPoste()));
+
+        service.desactiver(a.getId());
+        assertEquals(List.of(0L, 0L, 0L, 0L), nombres(service.employesParPoste()));
+    }
+
+    private static List<Long> nombres(List<EmployeService.Part> parts) {
+        return parts.stream().map(EmployeService.Part::nombre).toList();
+    }
 }
