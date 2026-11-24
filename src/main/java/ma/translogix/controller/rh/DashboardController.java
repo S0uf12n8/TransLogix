@@ -149,12 +149,6 @@ public class DashboardController implements Imprimable {
         }
     }
 
-    /** As in rh.html: the quick action opens the "Paie & Prime Trajet" tab (a DÉMO page until Iteration 3). */
-    @FXML
-    private void ouvrirPrimes() {
-        Navigator.ouvrir("rh/primes.fxml");
-    }
-
     private void rafraichir() {
         EmployeService.Effectifs e = employes.effectifs();
         valeurEffectif.setText(String.valueOf(e.actifs()));
