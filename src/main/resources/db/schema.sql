@@ -91,3 +91,48 @@ CREATE TABLE IF NOT EXISTS paiements (
     INDEX idx_paiements_facture_id (facture_id),
     INDEX idx_paiements_date (date)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+-- RH: employees and compliance documents. Only these two RH tables are persisted in this task;
+-- leave requests stay in memory (Task 3). No StatutConformite column: the status is computed by ConformiteService.
+-- No FK from employes.utilisateur_id to utilisateurs: user accounts are still in memory (UtilisateurDao),
+-- only RH is persisted here. UNIQUE still enforces "one account = at most one employee"; NULL is allowed.
+CREATE TABLE IF NOT EXISTS employes (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    matricule       VARCHAR(20)  NOT NULL,
+    nom             VARCHAR(80)  NOT NULL,
+    prenom          VARCHAR(80)  NOT NULL,
+    cin             VARCHAR(20)  NOT NULL,
+    cnss            VARCHAR(20)  NULL,
+    poste           VARCHAR(30)  NOT NULL,
+    type_contrat    VARCHAR(20)  NOT NULL,
+    date_embauche   DATE         NOT NULL,
+    actif           BOOLEAN      NOT NULL DEFAULT TRUE,
+    utilisateur_id  BIGINT       NULL,
+    CONSTRAINT pk_employes PRIMARY KEY (id),
+    CONSTRAINT uk_employes_matricule UNIQUE (matricule),
+    CONSTRAINT uk_employes_cin UNIQUE (cin),
+    CONSTRAINT uk_employes_utilisateur_id UNIQUE (utilisateur_id),
+    CONSTRAINT ck_employes_poste CHECK (poste IN ('CHAUFFEUR', 'AGENT_DEPOT', 'MECANICIEN', 'ADMINISTRATIF')),
+    CONSTRAINT ck_employes_type_contrat CHECK (type_contrat IN ('CDI', 'CDD', 'ESSAI')),
+    -- findByPoste and the post/active filters of the RH screen.
+    INDEX idx_employes_poste (poste),
+    INDEX idx_employes_actif_poste (actif, poste),
+    INDEX idx_employes_type_contrat (type_contrat)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS documents_conformite (
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    employe_id       BIGINT      NOT NULL,
+    type_document    VARCHAR(30) NOT NULL,
+    numero           VARCHAR(50) NULL,
+    categorie        VARCHAR(10) NULL,
+    date_expiration  DATE        NOT NULL,
+    CONSTRAINT pk_documents_conformite PRIMARY KEY (id),
+    CONSTRAINT ck_documents_conformite_type_document
+        CHECK (type_document IN ('PERMIS', 'FIMC', 'VISITE_MEDICALE')),
+    CONSTRAINT fk_documents_conformite_employe_id FOREIGN KEY (employe_id) REFERENCES employes (id),
+    -- findByEmploye / document(employeId, type) and the expiry-ordered alerts.
+    INDEX idx_documents_conformite_employe_type (employe_id, type_document),
+    INDEX idx_documents_conformite_type_document (type_document),
+    INDEX idx_documents_conformite_date_expiration (date_expiration)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
