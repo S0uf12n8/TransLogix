@@ -113,6 +113,20 @@ public class FlotteController {
     }
 
     private void rafraichir() {
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            donnees.setAll(List.of());
+            table.refresh();
+            valeurEnService.setText("—");
+            totalVehicules.setText("");
+            valeurMaintenance.setText("—");
+            horsService.setText("");
+            valeurMissions.setText("—");
+            graphiqueDisponibilite.getData().clear();
+            sousTitreDisponibilite.setText("Données indisponibles");
+        }
+    }
+
+    private void actualiserDonnees() {
         List<Vehicule> vehicules = service.lister();
         donnees.setAll(vehicules.stream()
                 .map(v -> new Ligne(v, missions.missionEnCoursDuVehicule(v.getId()))).toList());

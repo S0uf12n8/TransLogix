@@ -120,7 +120,10 @@ public class MissionsController implements Imprimable {
     /** "Exporter la feuille de route": print / PDF or CSV of the missions to drive. */
     @FXML
     private void exporter() {
-        ExportRapport.proposer(documentAImprimer(), table.getScene().getWindow());
+        var document = DispatcherUi.charger(this::documentAImprimer, null);
+        if (document != null) {
+            ExportRapport.proposer(document, table.getScene().getWindow());
+        }
     }
 
     /**
@@ -163,7 +166,10 @@ public class MissionsController implements Imprimable {
 
     /** Modal status change: the service alone decides which transitions are allowed. */
     private void modifierStatut(Mission m) {
-        List<StatutMission> suivants = service.statutsSuivants(m.getId());
+        List<StatutMission> suivants = DispatcherUi.charger(() -> service.statutsSuivants(m.getId()), null);
+        if (suivants == null) {
+            return;
+        }
         if (suivants.isEmpty()) {
             Dialogues.info("Modifier le statut", "Aucune transition n'est possible depuis « "
                     + m.getStatut().getLibelle() + " » pour " + m.getReference() + ".");
@@ -259,6 +265,20 @@ public class MissionsController implements Imprimable {
     }
 
     private void rafraichir() {
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            donnees.setAll(List.of());
+            table.refresh();
+            valeurEnCours.setText("—");
+            piedEnCours.setText("Données indisponibles");
+            valeurDispo.setText("—");
+            totalVehicules.setText("");
+            progressionDispo.setProgress(0);
+            graphiqueStatuts.getData().clear();
+            sousTitreStatuts.setText("Données indisponibles");
+        }
+    }
+
+    private void actualiserDonnees() {
         vehicules = AppContext.vehiculeService().lister().stream()
                 .collect(Collectors.toMap(Vehicule::getId, Function.identity()));
         employes = AppContext.employeService().lister().stream()
@@ -275,7 +295,7 @@ public class MissionsController implements Imprimable {
     private void appliquerRecherche() {
         CritereMission critere = new CritereMission(recherche.getText(), filtreChauffeur.getText(),
                 filtreVille.getText());
-        List<Mission> missions = service.rechercher(critere);
+        List<Mission> missions = DispatcherUi.charger(() -> service.rechercher(critere), List.of());
         donnees.setAll(missions.stream().map(this::ligne).toList());
         table.refresh();
     }

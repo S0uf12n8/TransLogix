@@ -1,6 +1,7 @@
 package ma.translogix.controller.dispatcher;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -81,6 +82,13 @@ public class CarburantController {
     }
 
     private void rafraichir() {
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            donnees.setAll(List.of());
+            table.refresh();
+        }
+    }
+
+    private void actualiserDonnees() {
         Map<Long, Mission> missions = AppContext.missionService().lister().stream()
                 .collect(Collectors.toMap(Mission::getId, Function.identity()));
         Map<Long, Vehicule> vehicules = AppContext.vehiculeService().lister().stream()
@@ -107,7 +115,8 @@ public class CarburantController {
         if (id == null) {
             return null;
         }
-        return AppContext.missionService().lister().stream().filter(m -> m.getId().equals(id)).findFirst().orElse(null);
+        return DispatcherUi.charger(() -> AppContext.missionService().lister().stream()
+                .filter(m -> m.getId().equals(id)).findFirst().orElse(null), null);
     }
 
     private static String litres(BigDecimal valeur) {
