@@ -9,6 +9,9 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -69,6 +72,23 @@ final class DispatcherUi {
             n.setVisible(false);
             n.setManaged(false);
         }
+    }
+
+    /** Chart nodes are created lazily by JavaFX: run the action as soon as the node exists. */
+    static void quandAffiche(ReadOnlyObjectProperty<Node> propriete, Consumer<Node> action) {
+        if (propriete.get() != null) {
+            action.accept(propriete.get());
+            return;
+        }
+        propriete.addListener(new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Node> obs, Node ancien, Node noeud) {
+                if (noeud != null) {
+                    propriete.removeListener(this);
+                    action.accept(noeud);
+                }
+            }
+        });
     }
 
     static void pasEncoreLivre() {

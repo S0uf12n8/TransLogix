@@ -9,8 +9,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import ma.translogix.dao.CritereMission;
 import ma.translogix.dao.MissionDao;
 import ma.translogix.model.Mission;
@@ -39,6 +43,10 @@ public class JdbcMissionDao implements MissionDao {
             + " chauffeur_id = ?, ville_depart = ?, ville_arrivee = ?, cargaison = ?, poids_tonnes = ?,"
             + " date_debut = ?, date_fin = ?, statut = ? WHERE id = ?";
     private static final String DELETE = "DELETE FROM missions WHERE id = ?";
+    private static final String COMPTAGE_STATUTS =
+            "SELECT statut, COUNT(*) AS total FROM missions GROUP BY statut";
+    private static final String VEHICULES_EN_MISSION =
+            "SELECT DISTINCT vehicule_id FROM missions WHERE statut = ?";
 
     private final ConnexionBase base;
 
@@ -103,6 +111,50 @@ public class JdbcMissionDao implements MissionDao {
         }
         sql.append(" ORDER BY reference");
         return lister(sql.toString(), valeurs);
+    }
+
+    @Override
+    public Map<StatutMission, Long> compterParStatut() {
+        return SqlErreurs.executer(() -> {
+            Map<StatutMission, Long> comptages = new EnumMap<>(StatutMission.class);
+            for (StatutMission statut : StatutMission.values()) {
+                comptages.put(statut, 0L);
+            }
+            try (Connection c = base.ouvrir();
+                 PreparedStatement ps = c.prepareStatement(COMPTAGE_STATUTS);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String statut = rs.getString("statut");
+                    if (statut != null) {
+                        try {
+                            comptages.merge(StatutMission.valueOf(statut), rs.getLong("total"), Long::sum);
+                        } catch (IllegalArgumentException ignore) {
+                            // A status unknown to this version is not shown by the dispatch charts.
+                        }
+                    }
+                }
+            }
+            return comptages;
+        });
+    }
+
+    @Override
+    public Set<Long> findVehiculesEnMission() {
+        return SqlErreurs.executer(() -> {
+            Set<Long> ids = new LinkedHashSet<>();
+            try (Connection c = base.ouvrir(); PreparedStatement ps = c.prepareStatement(VEHICULES_EN_MISSION)) {
+                ps.setString(1, StatutMission.EN_COURS.name());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        long id = rs.getLong("vehicule_id");
+                        if (!rs.wasNull()) {
+                            ids.add(id);
+                        }
+                    }
+                }
+            }
+            return ids;
+        });
     }
 
     @Override

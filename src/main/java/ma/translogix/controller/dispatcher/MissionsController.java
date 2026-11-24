@@ -11,9 +11,13 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -59,6 +63,9 @@ public class MissionsController implements Imprimable {
     @FXML private TableColumn<Ligne, Ligne> colEta;
     @FXML private TableColumn<Ligne, Ligne> colStatut;
     @FXML private TableColumn<Ligne, Ligne> colActions;
+    @FXML private BarChart<String, Number> graphiqueStatuts;
+    @FXML private NumberAxis axeStatuts;
+    @FXML private Label sousTitreStatuts;
 
     private final MissionService service = AppContext.missionService();
     private final ObservableList<Ligne> donnees = FXCollections.observableArrayList();
@@ -175,6 +182,7 @@ public class MissionsController implements Imprimable {
                 .collect(Collectors.toMap(Client::getId, Function.identity()));
         missionsChargees = service.lister();
         mettreAJourIndicateurs();
+        remplirGraphiqueStatuts();
         appliquerRecherche();
     }
 
@@ -207,6 +215,32 @@ public class MissionsController implements Imprimable {
         valeurDispo.setText(String.valueOf(dispo));
         totalVehicules.setText("/ " + vehicules.size());
         progressionDispo.setProgress(vehicules.isEmpty() ? 0 : (double) dispo / vehicules.size());
+    }
+
+    /** "Missions par statut": the service asks the DAO for one count per status, the controller only draws them. */
+    private void remplirGraphiqueStatuts() {
+        List<MissionService.Part> parties = service.missionsParStatut();
+        graphiqueStatuts.getData().clear();
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        graphiqueStatuts.getData().add(serie);
+        long total = 0;
+        for (MissionService.Part partie : parties) {
+            total += partie.nombre();
+            XYChart.Data<String, Number> point = new XYChart.Data<>(partie.libelle(), partie.nombre());
+            serie.getData().add(point);
+            long nombre = partie.nombre();
+            String detail = partie.libelle() + " : " + nombre + " mission(s)";
+            DispatcherUi.quandAffiche(point.nodeProperty(),
+                    noeud -> Tooltip.install(noeud, new Tooltip(detail)));
+        }
+        axeStatuts.setTickUnit(1);
+        axeStatuts.setTickLabelFormatter(new NumberAxis.DefaultFormatter(axeStatuts) {
+            @Override
+            public String toString(Number valeur) {
+                return String.valueOf(valeur.intValue());
+            }
+        });
+        sousTitreStatuts.setText(total + (total > 1 ? " missions" : " mission") + " · cycle de vie");
     }
 
     static String nom(Employe e) {

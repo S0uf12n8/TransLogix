@@ -30,6 +30,10 @@ import ma.translogix.util.ValidationException;
  */
 public class MissionService {
 
+    /** One slice of a dispatcher chart: a label and its count, as in the other dashboards. */
+    public record Part(String libelle, long nombre) {
+    }
+
     /** First reference of a new database: TRJ-9081, as in dispatcher.html. */
     static final int PREMIER_NUMERO = 9081;
 
@@ -93,6 +97,37 @@ public class MissionService {
 
     public long compter(StatutMission statut) {
         return dao.findAll().stream().filter(m -> m.getStatut() == statut).count();
+    }
+
+    /** Counts for the "Missions par statut" bar chart, in lifecycle order, straight from the DAO. */
+    public List<Part> missionsParStatut() {
+        Map<StatutMission, Long> comptages = dao.compterParStatut();
+        return List.of(StatutMission.PLANIFIEE, StatutMission.EN_COURS, StatutMission.LIVREE).stream()
+                .map(statut -> new Part(statut.getLibelle(), comptages.getOrDefault(statut, 0L)))
+                .toList();
+    }
+
+    /**
+     * Slices for the truck availability pie chart. An EN_SERVICE vehicle is "En mission" when the DAO
+     * finds an in-progress mission for it, otherwise it is "Disponibles"; maintenance and out-of-service
+     * vehicles are "Indisponibles".
+     */
+    public List<Part> disponibiliteCamions() {
+        Set<Long> occupes = dao.findVehiculesEnMission();
+        long disponibles = 0;
+        long enMission = 0;
+        long indisponibles = 0;
+        for (Vehicule vehicule : vehicules.findAll()) {
+            if (vehicule.getStatut() != StatutVehicule.EN_SERVICE) {
+                indisponibles++;
+            } else if (occupes.contains(vehicule.getId())) {
+                enMission++;
+            } else {
+                disponibles++;
+            }
+        }
+        return List.of(new Part("Disponibles", disponibles), new Part("En mission", enMission),
+                new Part("Indisponibles", indisponibles));
     }
 
     /** The driver's mission in progress, otherwise his next planned one (the planning page). */

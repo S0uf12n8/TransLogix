@@ -1,14 +1,18 @@
 package ma.translogix.dao.memory;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import ma.translogix.dao.CritereMission;
 import ma.translogix.dao.MissionDao;
 import ma.translogix.model.Mission;
+import ma.translogix.model.StatutMission;
 import ma.translogix.util.Recherche;
 
 /** Keeps missions in a map. Used by tests and by the UI until the JDBC DAO of [H6] exists. */
@@ -47,6 +51,28 @@ public class InMemoryMissionDao implements MissionDao {
                 .filter(m -> sansChauffeur || idsChauffeurs.contains(m.getChauffeurId()))
                 .filter(m -> Recherche.correspond(critere.ville(), m.getVilleDepart(), m.getVilleArrivee()))
                 .toList();
+    }
+
+    @Override
+    public Map<StatutMission, Long> compterParStatut() {
+        Map<StatutMission, Long> comptages = new EnumMap<>(StatutMission.class);
+        for (StatutMission statut : StatutMission.values()) {
+            comptages.put(statut, 0L);
+        }
+        for (Mission mission : donnees.values()) {
+            if (mission.getStatut() != null) {
+                comptages.merge(mission.getStatut(), 1L, Long::sum);
+            }
+        }
+        return comptages;
+    }
+
+    @Override
+    public Set<Long> findVehiculesEnMission() {
+        return donnees.values().stream()
+                .filter(m -> m.getStatut() == StatutMission.EN_COURS && m.getVehiculeId() != null)
+                .map(Mission::getVehiculeId)
+                .collect(Collectors.toSet());
     }
 
     @Override
