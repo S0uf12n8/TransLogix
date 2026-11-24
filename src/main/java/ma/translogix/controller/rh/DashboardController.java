@@ -36,6 +36,7 @@ import ma.translogix.model.Employe;
 import ma.translogix.model.StatutConformite;
 import ma.translogix.model.TypeDocument;
 import ma.translogix.service.ConformiteService;
+import ma.translogix.service.CongeService;
 import ma.translogix.service.EmployeService;
 import ma.translogix.service.FiltreRapport;
 import ma.translogix.service.Rapport;
@@ -44,8 +45,7 @@ import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
 /**
- * "Tableau de bord RH". KPI 1-3 and "Statut rapide" come from EmployeService / ConformiteService
- * (real, in memory); "Congés en attente" is a static DÉMO card (Iteration 3).
+ * "Tableau de bord RH". Every KPI and chart comes from the RH services (real, in memory).
  */
 public class DashboardController implements Imprimable {
 
@@ -62,6 +62,8 @@ public class DashboardController implements Imprimable {
     @FXML private Label piedChauffeurs;
     @FXML private Label valeurAlertes;
     @FXML private Label piedAlertes;
+    @FXML private Label valeurConges;
+    @FXML private Label piedConges;
     @FXML private TableView<Employe> tableChauffeurs;
     @FXML private TableColumn<Employe, Employe> colEmploye;
     @FXML private TableColumn<Employe, String> colPoste;
@@ -77,6 +79,7 @@ public class DashboardController implements Imprimable {
 
     private final EmployeService employes = AppContext.employeService();
     private final ConformiteService conformite = AppContext.conformiteService();
+    private final CongeService conges = AppContext.congeService();
 
     @FXML
     private void initialize() {
@@ -135,7 +138,7 @@ public class DashboardController implements Imprimable {
 
     @FXML
     private void saisirConge() {
-        RhUi.pasEncoreLivre();
+        Navigator.ouvrir("rh/conges.fxml");
     }
 
     @FXML
@@ -171,6 +174,12 @@ public class DashboardController implements Imprimable {
         valeurAlertes.setText(String.valueOf(alertes.size()));
         piedAlertes.setText(alertes.isEmpty() ? "Aucune échéance sous 30 jours" : detailAlertes(alertes));
         piedAlertes.getStyleClass().setAll("label", alertes.isEmpty() ? "foot-green" : "foot-red");
+
+        int demandesAttente = conges.aValider();
+        valeurConges.setText(String.valueOf(demandesAttente));
+        piedConges.setText(demandesAttente == 0 ? "Aucune demande à traiter"
+                : demandesAttente + (demandesAttente > 1 ? " demandes à traiter" : " demande à traiter"));
+        piedConges.getStyleClass().setAll("label", demandesAttente == 0 ? "foot-green" : "foot-amber");
 
         tableChauffeurs.setItems(FXCollections.observableArrayList(employes.listerChauffeurs()));
         tableChauffeurs.refresh();

@@ -11,6 +11,7 @@ import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
 import ma.translogix.dao.memory.InMemoryAuditDao;
 import ma.translogix.dao.memory.InMemoryClientDao;
+import ma.translogix.dao.memory.InMemoryCongeDao;
 import ma.translogix.dao.memory.InMemoryDocumentConformiteDao;
 import ma.translogix.dao.memory.InMemoryEmployeDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
@@ -34,6 +35,7 @@ import ma.translogix.service.AuditService;
 import ma.translogix.service.AuthService;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.ConformiteService;
+import ma.translogix.service.CongeService;
 import ma.translogix.service.FactureService;
 import ma.translogix.service.MissionService;
 import ma.translogix.service.DashboardService;
@@ -62,6 +64,8 @@ public final class AppContext {
     private static final EmployeService EMPLOYE_SERVICE = new EmployeService(EMPLOYE_DAO, Clock.systemDefaultZone());
     private static final ConformiteService CONFORMITE_SERVICE =
             new ConformiteService(new InMemoryDocumentConformiteDao(), EMPLOYE_DAO, Clock.systemDefaultZone());
+    private static final CongeService CONGE_SERVICE =
+            new CongeService(new InMemoryCongeDao(), EMPLOYE_SERVICE, Clock.systemDefaultZone());
     // Comptable module ([C2], [C3]): in memory until the JDBC DAOs of [C5] exist.
     private static final InMemoryClientDao CLIENT_DAO = new InMemoryClientDao();
     private static final FactureDao FACTURE_DAO = new InMemoryFactureDao();
@@ -137,6 +141,10 @@ public final class AppContext {
 
     public static ConformiteService conformiteService() {
         return CONFORMITE_SERVICE;
+    }
+
+    public static CongeService congeService() {
+        return CONGE_SERVICE;
     }
 
     /**
