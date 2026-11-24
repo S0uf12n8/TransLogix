@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -186,6 +190,42 @@
                 </VBox>
                 <Label text="&#8250;" styleClass="chevron"/>
             </HBox>
+        </VBox>
+    </GridPane>
+
+    <GridPane hgap="20">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/>
+            <ColumnConstraints percentWidth="50"/>
+        </columnConstraints>
+
+        <VBox styleClass="panel" GridPane.columnIndex="0">
+            <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3">
+                    <Label text="Effectif par poste" styleClass="panel-title"/>
+                    <Label text="Salari&#233;s actifs r&#233;partis par poste." styleClass="panel-sub"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="totalPostes" text="&#8212;" styleClass="chart-total"/>
+            </HBox>
+            <PieChart fx:id="graphiquePostes" legendVisible="true" labelsVisible="false" animated="false"
+                      prefHeight="250" styleClass="dashboard-chart"/>
+        </VBox>
+
+        <VBox styleClass="panel" GridPane.columnIndex="1">
+            <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3">
+                    <Label text="Documents par statut" styleClass="panel-title"/>
+                    <Label text="Statut calcul&#233; &#224; partir de la date d'expiration." styleClass="panel-sub"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="totalConformite" text="&#8212;" styleClass="chart-total"/>
+            </HBox>
+            <BarChart fx:id="graphiqueConformite" legendVisible="false" animated="false" prefHeight="250"
+                      categoryGap="22" styleClass="dashboard-chart">
+                <xAxis><CategoryAxis tickMarkVisible="false"/></xAxis>
+                <yAxis><NumberAxis fx:id="axeConformite" minorTickVisible="false" tickMarkVisible="false"/></yAxis>
+            </BarChart>
         </VBox>
     </GridPane>
 </VBox>
