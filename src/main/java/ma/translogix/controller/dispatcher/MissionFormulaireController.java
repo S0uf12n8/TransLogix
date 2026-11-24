@@ -39,6 +39,8 @@ public class MissionFormulaireController implements DispatcherUi.Formulaire {
     private final MissionService service = AppContext.missionService();
     /** null when creating a new mission. */
     private Mission editee;
+    /** Assignment only changes the driver and the truck of an existing planned mission. */
+    private boolean affectation;
 
     @FXML
     private void initialize() {
@@ -83,8 +85,39 @@ public class MissionFormulaireController implements DispatcherUi.Formulaire {
         champHeureFin.setText(DispatcherUi.heure(mission.getDateFin()));
     }
 
+    /**
+     * Assignment mode (Planning Chauffeurs): the mission and its schedule stay fixed, only the driver and the
+     * truck can change. The dialog keeps its FXML fields; the unused ones are simply disabled.
+     */
+    void preparerAffectation(Mission mission, Employe chauffeur) {
+        affectation = true;
+        editee = mission;
+        titre.setText("Assigner " + mission.getReference());
+        description.setText("Choisissez le camion et le chauffeur pour cette mission planifiée.");
+        note.setText("Les dates de la mission sont inchangées. Un camion ou un chauffeur déjà affecté "
+                + "sur cette période est refusé.");
+        selectionner(champVehicule, mission.getVehiculeId(), Vehicule::getId);
+        Long chauffeurId = chauffeur == null ? mission.getChauffeurId() : chauffeur.getId();
+        selectionner(champChauffeur, chauffeurId, Employe::getId);
+        champClient.setDisable(true);
+        champDepart.setDisable(true);
+        champArrivee.setDisable(true);
+        champCargaison.setDisable(true);
+        champPoids.setDisable(true);
+        champDateDebut.setDisable(true);
+        champHeureDebut.setDisable(true);
+        champDateFin.setDisable(true);
+        champHeureFin.setDisable(true);
+    }
+
     @Override
     public void enregistrer() {
+        if (affectation) {
+            Long vehicule = champVehicule.getValue() == null ? null : champVehicule.getValue().getId();
+            Long chauffeur = champChauffeur.getValue() == null ? null : champChauffeur.getValue().getId();
+            service.assigner(editee.getId(), vehicule, chauffeur);
+            return;
+        }
         LocalDateTime debut = DispatcherUi.lireDateHeure(champDateDebut, champHeureDebut, "de départ");
         LocalDateTime fin = DispatcherUi.lireDateHeure(champDateFin, champHeureFin, "d'arrivée");
         var poids = DispatcherUi.lireTonnes(champPoids, "Poids");

@@ -239,4 +239,64 @@ class MissionServiceTest {
         assertEquals(plusTard.getId(), service.missionEnCoursDuVehicule(camion1.getId()).orElseThrow().getId());
         assertTrue(service.missionActuelleOuProchaine(chauffeur2.getId()).isEmpty());
     }
+
+    @Test
+    void assignerUneMissionValideChangeLeChauffeurEtLeCamion() {
+        Mission a = creer(camion1, chauffeur1, 14, 16);
+        creer(camion2, chauffeur2, 8, 12); // occupe les deux ressources plus tôt, sans chevauchement
+
+        Mission assignee = service.assigner(a.getId(), camion2.getId(), chauffeur2.getId());
+
+        assertEquals(camion2.getId(), assignee.getVehiculeId());
+        assertEquals(chauffeur2.getId(), assignee.getChauffeurId());
+        assertEquals("TRJ-9081", assignee.getReference());
+        assertEquals(StatutMission.PLANIFIEE, assignee.getStatut());
+        assertEquals(camion2.getId(), service.trouver(a.getId()).getVehiculeId()); // bien persisté dans le DAO
+        assertEquals(chauffeur2.getId(), service.trouver(a.getId()).getChauffeurId());
+    }
+
+    @Test
+    void assignerRefuseUnChauffeurDejaAffecteSurLaPeriode() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission cible = creer(camion2, chauffeur2, 10, 12); // même période, autres ressources
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion2.getId(), chauffeur1.getId()));
+
+        assertTrue(e.getMessage().startsWith("Chevauchement : le chauffeur Test Alpha est déjà affecté à TRJ-9081"),
+                e.getMessage());
+        assertEquals(chauffeur2.getId(), service.trouver(cible.getId()).getChauffeurId()); // rien n'a changé
+    }
+
+    @Test
+    void assignerRefuseUnCamionDejaAffecteSurLaPeriode() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission cible = creer(camion2, chauffeur2, 10, 12);
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion1.getId(), chauffeur2.getId()));
+
+        assertEquals("Chevauchement : le véhicule 11111-A-1 est déjà affecté à TRJ-9081 "
+                + "(Casablanca → Rabat, du 17/11/2026 08:00 au 17/11/2026 12:00).", e.getMessage());
+        assertEquals(camion2.getId(), service.trouver(cible.getId()).getVehiculeId());
+    }
+
+    @Test
+    void assignerAccepteUneMissionQuiSeToucheEtPeutGarderSesRessources() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission suivante = creer(camion2, chauffeur2, 12, 16);
+        service.assigner(suivante.getId(), camion1.getId(), chauffeur1.getId()); // fin = début : pas de conflit
+        Mission identique = service.assigner(suivante.getId(), camion1.getId(), chauffeur1.getId());
+
+        assertEquals(chauffeur1.getId(), identique.getChauffeurId());
+        assertEquals(camion1.getId(), identique.getVehiculeId());
+    }
+
+    @Test
+    void assignerRefuseUneMissionQuiNestPlusPlanifiee() {
+        Mission a = creer(camion1, chauffeur1, 8, 12);
+        service.demarrer(a.getId());
+        assertThrows(ValidationException.class,
+                () -> service.assigner(a.getId(), camion2.getId(), chauffeur2.getId()));
+    }
 }
