@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import ma.translogix.dao.CritereMission;
 import ma.translogix.dao.MissionDao;
 import ma.translogix.dao.VehiculeDao;
 import ma.translogix.model.Employe;
@@ -18,6 +20,7 @@ import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
 import ma.translogix.model.StatutVehicule;
 import ma.translogix.model.Vehicule;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -58,6 +61,27 @@ public class MissionService {
     /** All missions, by reference (TRJ-9081 first). */
     public List<Mission> lister() {
         return dao.findAll().stream().sorted(Comparator.comparing(Mission::getReference)).toList();
+    }
+
+    /**
+     * Missions matching every supplied criterion (reference, driver and city), by reference.
+     * The controller only builds the criteria: the actual filtering belongs to the DAO, which can
+     * express it as one dynamic, parameterized SQL WHERE clause. Driver names are resolved here so
+     * the DAO receives ids it can bind as parameters.
+     */
+    public List<Mission> rechercher(CritereMission critere) {
+        CritereMission c = critere == null ? CritereMission.TOUT : critere;
+        List<Long> idsChauffeurs = new ArrayList<>();
+        if (c.chauffeur() != null && !c.chauffeur().isBlank()) {
+            for (Employe employe : employes.lister()) {
+                if (Recherche.correspond(c.chauffeur(), employe.getNom(), employe.getPrenom(),
+                        employe.getNomComplet(), employe.getMatricule())) {
+                    idsChauffeurs.add(employe.getId());
+                }
+            }
+        }
+        CritereMission pourDao = new CritereMission(c.reference(), c.chauffeur(), c.ville(), idsChauffeurs);
+        return dao.search(pourDao).stream().sorted(Comparator.comparing(Mission::getReference)).toList();
     }
 
     public Mission trouver(Long id) {

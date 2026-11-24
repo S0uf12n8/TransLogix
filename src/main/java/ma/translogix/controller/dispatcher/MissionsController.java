@@ -10,7 +10,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -23,6 +22,7 @@ import ma.translogix.controller.common.Dialogues;
 import ma.translogix.controller.common.ExportRapport;
 import ma.translogix.controller.common.ImpressionRapport;
 import ma.translogix.controller.common.Imprimable;
+import ma.translogix.dao.CritereMission;
 import ma.translogix.model.Client;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Mission;
@@ -34,7 +34,6 @@ import ma.translogix.service.MissionService;
 import ma.translogix.service.Rapport;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.TypeRapport;
-import ma.translogix.util.Recherche;
 
 /** "Ordres & Trajets" ([H5]): Hamid's orders table on real missions, with the status actions of MissionService. */
 public class MissionsController implements Imprimable {
@@ -50,6 +49,8 @@ public class MissionsController implements Imprimable {
     @FXML private Label totalVehicules;
     @FXML private ProgressBar progressionDispo;
     @FXML private TextField recherche;
+    @FXML private TextField filtreChauffeur;
+    @FXML private TextField filtreVille;
     @FXML private TableView<Ligne> table;
     @FXML private TableColumn<Ligne, String> colReference;
     @FXML private TableColumn<Ligne, Ligne> colChauffeur;
@@ -61,6 +62,10 @@ public class MissionsController implements Imprimable {
 
     private final MissionService service = AppContext.missionService();
     private final ObservableList<Ligne> donnees = FXCollections.observableArrayList();
+    private Map<Long, Vehicule> vehicules = Map.of();
+    private Map<Long, Employe> employes = Map.of();
+    private Map<Long, Client> clients = Map.of();
+    private List<Mission> missionsChargees = List.of();
 
     @FXML
     private void initialize() {
@@ -82,12 +87,10 @@ public class MissionsController implements Imprimable {
         colActions.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         colActions.setCellFactory(col -> DispatcherUi.liens(this::actions));
 
-        FilteredList<Ligne> filtres = new FilteredList<>(donnees);
-        recherche.textProperty().addListener((obs, ancien, requete) ->
-                filtres.setPredicate(l -> Recherche.correspond(requete, l.mission().getReference(), l.chauffeur(),
-                        l.vehicule(), l.client(), l.mission().getVilleDepart(), l.mission().getVilleArrivee(),
-                        l.mission().getCargaison())));
-        table.setItems(filtres);
+        table.setItems(donnees);
+        recherche.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
+        filtreChauffeur.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
+        filtreVille.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
 
         if (DispatcherUi.lectureSeule()) {
             DispatcherUi.masquer(boutonNouvelle);
@@ -164,28 +167,41 @@ public class MissionsController implements Imprimable {
     }
 
     private void rafraichir() {
-        Map<Long, Vehicule> vehicules = AppContext.vehiculeService().lister().stream()
+        vehicules = AppContext.vehiculeService().lister().stream()
                 .collect(Collectors.toMap(Vehicule::getId, Function.identity()));
-        Map<Long, Employe> employes = AppContext.employeService().lister().stream()
+        employes = AppContext.employeService().lister().stream()
                 .collect(Collectors.toMap(Employe::getId, Function.identity()));
-        Map<Long, Client> clients = AppContext.clientService().lister().stream()
+        clients = AppContext.clientService().lister().stream()
                 .collect(Collectors.toMap(Client::getId, Function.identity()));
-        List<Mission> missions = service.lister();
+        missionsChargees = service.lister();
+        mettreAJourIndicateurs();
+        appliquerRecherche();
+    }
 
-        donnees.setAll(missions.stream().map(m -> new Ligne(m,
-                nom(employes.get(m.getChauffeurId())),
-                vehicule(vehicules.get(m.getVehiculeId())),
-                clients.containsKey(m.getClientId()) ? clients.get(m.getClientId()).getNom() : "—")).toList());
+    /** Builds the criteria only; the reference / driver / city filtering belongs to MissionService and the DAO. */
+    private void appliquerRecherche() {
+        CritereMission critere = new CritereMission(recherche.getText(), filtreChauffeur.getText(),
+                filtreVille.getText());
+        List<Mission> missions = service.rechercher(critere);
+        donnees.setAll(missions.stream().map(this::ligne).toList());
         table.refresh();
+    }
 
-        long enCours = service.compter(StatutMission.EN_COURS);
-        long planifiees = service.compter(StatutMission.PLANIFIEE);
+    private Ligne ligne(Mission m) {
+        return new Ligne(m, nom(employes.get(m.getChauffeurId())),
+                vehicule(vehicules.get(m.getVehiculeId())),
+                clients.containsKey(m.getClientId()) ? clients.get(m.getClientId()).getNom() : "—");
+    }
+
+    private void mettreAJourIndicateurs() {
+        long enCours = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS).count();
+        long planifiees = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.PLANIFIEE).count();
         valeurEnCours.setText(String.valueOf(enCours));
         piedEnCours.setText(planifiees == 0 ? "Aucune mission planifiée"
                 : planifiees + (planifiees > 1 ? " missions planifiées" : " mission planifiée"));
 
         long enService = vehicules.values().stream().filter(v -> v.getStatut() == StatutVehicule.EN_SERVICE).count();
-        long occupes = missions.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS)
+        long occupes = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS)
                 .map(Mission::getVehiculeId).distinct().count();
         long dispo = Math.max(0, enService - occupes);
         valeurDispo.setText(String.valueOf(dispo));
