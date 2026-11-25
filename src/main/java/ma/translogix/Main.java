@@ -20,10 +20,24 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         installerFiletDeSecurite();
+        // Decided before the first screen: connects to MySQL and applies the schema when DB_URL is set.
+        Persistance.Etat persistance = Persistance.etat();
         FXMLLoader loader = new FXMLLoader(Main.class.getResource("fxml/auth/login.fxml"));
         stage.setScene(new Scene(loader.load(), 900, 600));
         stage.setTitle("TransLogix");
         stage.show();
+        if (persistance.mode() == Persistance.Mode.MEMOIRE_SECOURS) {
+            Platform.runLater(() -> signalerModeSecours(persistance));
+        }
+    }
+
+    /** MySQL was configured but unreachable: say it once, clearly, instead of failing at the first login. */
+    private static void signalerModeSecours(Persistance.Etat persistance) {
+        Alert alerte = new Alert(Alert.AlertType.WARNING, persistance.detail(), ButtonType.OK);
+        alerte.setTitle("Base de données indisponible");
+        alerte.setHeaderText("MySQL est injoignable : mode démonstration");
+        alerte.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        alerte.showAndWait();
     }
 
     /**

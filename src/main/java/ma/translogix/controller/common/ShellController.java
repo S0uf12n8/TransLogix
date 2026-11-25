@@ -17,6 +17,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.SVGPath;
+import javafx.scene.control.Tooltip;
+import ma.translogix.AppContext;
+import ma.translogix.Persistance;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.Navigator;
@@ -39,6 +42,7 @@ public class ShellController implements Navigator.Hote {
     @FXML private Label titrePage;
     @FXML private Label dateDuJour;
     @FXML private Label metaDemo;
+    @FXML private Label modeStockage;
     @FXML private VBox menu;
     @FXML private StackPane contenu;
 
@@ -58,6 +62,7 @@ public class ShellController implements Navigator.Hote {
         nomUtilisateur.setText(utilisateur.getNomComplet());
         roleUtilisateur.setText(role.getLibelle());
         dateDuJour.setText(LocalDate.now().format(DATE));
+        afficherModeStockage(AppContext.persistance());
 
         String premiere = null;
         for (NavigationMenu.Entree entree : NavigationMenu.pour(role)) {
@@ -171,6 +176,18 @@ public class ShellController implements Navigator.Hote {
             bouton.getStyleClass().add("active");
         }
         boutonActif = bouton;
+    }
+
+    /** Sidebar line saying where the data is kept; orange when nothing is saved. */
+    private void afficherModeStockage(Persistance.Etat etat) {
+        modeStockage.setText(etat.libelle());
+        Tooltip aide = new Tooltip(etat.detail());
+        aide.setWrapText(true);
+        aide.setMaxWidth(320);
+        modeStockage.setTooltip(aide);
+        if (!etat.enregistre()) {
+            modeStockage.getStyleClass().add("storage-mode-warning");
+        }
     }
 
     private static String initialesDe(Utilisateur utilisateur) {
