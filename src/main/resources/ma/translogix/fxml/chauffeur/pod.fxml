@@ -57,7 +57,7 @@
                            <children>
                               <Label styleClass="field-label" text="Signature du réceptionnaire" />
                               <Region HBox.hgrow="ALWAYS" />
-                              <Button mnemonicParsing="false" onAction="#clearSignature" styleClass="link-btn, link-orange" text="Effacer" />
+                              <Button accessibleText="Effacer la signature dessinée" mnemonicParsing="false" onAction="#effacerSignature" styleClass="link-btn, link-orange" text="Effacer" />
                            </children>
                         </HBox>
                         <Pane fx:id="sigPane" maxHeight="170.0" minHeight="170.0" prefHeight="170.0" styleClass="sig-canvas">

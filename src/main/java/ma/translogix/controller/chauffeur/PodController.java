@@ -103,11 +103,18 @@ public class PodController {
         }
     }
 
-    @FXML
     private void clearSignature() {
         strokes.clear();
         sigDirty = false;
         redraw();
+    }
+
+    /** Effacement volontaire par le chauffeur : confirmation, contrairement au reset après envoi. */
+    @FXML
+    private void effacerSignature() {
+        if (sigDirty && !Dialogues.confirmer("Effacer la signature",
+                "Effacer la signature dessinée et recommencer ?")) return;
+        clearSignature();
     }
 
     private void previewPodPhoto(File f) {
