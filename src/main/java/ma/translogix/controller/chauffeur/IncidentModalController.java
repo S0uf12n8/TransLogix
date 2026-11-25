@@ -9,6 +9,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
+import ma.translogix.controller.common.Dialogues;
 
 /** Fenêtre « Signaler un Incident sur la Route » (mode « incident » de la modale d'origine). */
 public class IncidentModalController {
@@ -43,6 +44,8 @@ public class IncidentModalController {
         if (!Ui.requireText(locationField)) return;
         if (details.getText().isEmpty()) { Ui.invalid(details, "Veuillez renseigner ce champ."); return; }
         if (tripRef.getValue() == null) { Ui.invalid(tripRef, "Sélectionnez une mission."); return; }
+        if (!Dialogues.confirmer("Signaler un incident",
+                "Transmettre ce signalement en urgence au dispatching ?")) return;
         EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
         ctx.addIncident(tripRef.getValue(), incidentType.getValue(), severity.getValue(), locationField.getText(),
                 attachment.getFile() == null ? null : attachment.getFile().getName());

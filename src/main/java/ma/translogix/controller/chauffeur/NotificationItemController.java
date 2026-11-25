@@ -3,6 +3,7 @@ package ma.translogix.controller.chauffeur;
 import java.util.function.Consumer;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -14,6 +15,14 @@ public class NotificationItemController {
     @FXML private Label iconLabel, titleLabel, typePill, newPill, textLabel, timeLabel, actionLabel;
 
     public HBox getRoot() { return root; }
+
+    /** Menu contextuel propre à cette notification (les Pane n'ont pas de setContextMenu). */
+    public void setMenu(ContextMenu menu) {
+        root.setOnContextMenuRequested(e -> {
+            menu.show(root, e.getScreenX(), e.getScreenY());
+            e.consume();
+        });
+    }
 
     public void setData(Notification n, boolean last, Consumer<Notification> onClick) {
         String icon, tint, label, cls;

@@ -13,10 +13,13 @@
                   <Label styleClass="section-sub" text="Numéros d'urgence et déclaration d'aléa de transport." />
                </children>
             </VBox>
-            <Button mnemonicParsing="false" onAction="#reportProblem" styleClass="btn-primary, btn-danger" text="Signaler un Problème">
+            <Button accessibleText="Signaler un problème sur la route" mnemonicParsing="false" onAction="#reportProblem" styleClass="btn-primary, btn-danger" text="Signaler un Problème">
                <graphic>
                   <Label styleClass="fa, fs-12" text="&#xf071;" />
                </graphic>
+               <tooltip>
+                  <Tooltip text="Déclarer un incident et prévenir le dispatching." />
+               </tooltip>
             </Button>
          </children>
       </HBox>

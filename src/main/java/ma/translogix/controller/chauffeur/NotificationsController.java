@@ -7,7 +7,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -49,6 +51,7 @@ public class NotificationsController {
                     Node node = l.load();
                     NotificationItemController c = l.getController();
                     c.setData(n, i == shown, this::openNotification);
+                    c.setMenu(menuNotification(n));
                     notifList.getChildren().add(node);
                 } catch (IOException e) { throw new IllegalStateException(e); }
             }
@@ -56,6 +59,19 @@ public class NotificationsController {
         long unread = ctx.notifications.stream().filter(n -> !n.read).count();
         notifCount.setText(unread + " non lue(s) · " + ctx.notifications.size() + " au total");
         ctx.updateNotifBadges((int) unread);
+    }
+
+    /** Clic droit sur une notification : ouvrir (si possible) et basculer l'état de lecture. */
+    private ContextMenu menuNotification(Notification n) {
+        MenuItem ouvrir = new MenuItem("Ouvrir");
+        ouvrir.setDisable(n.actionRef == null && n.actionTab == null);
+        ouvrir.setOnAction(e -> openNotification(n));
+        MenuItem lecture = new MenuItem(n.read ? "Marquer comme non lue" : "Marquer comme lue");
+        lecture.setOnAction(e -> {
+            n.read = !n.read;
+            refresh();
+        });
+        return new ContextMenu(ouvrir, lecture);
     }
 
     @FXML
