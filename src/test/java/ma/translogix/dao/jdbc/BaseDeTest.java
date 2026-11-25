@@ -1,9 +1,15 @@
 package ma.translogix.dao.jdbc;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The real MySQL database of the integration tests, from DB_URL / DB_USER / DB_PASSWORD.
@@ -53,8 +59,21 @@ final class BaseDeTest {
         });
     }
 
-    /** The statements of db/schema.sql, cut exactly as the app does at startup. */
+    /** The statements of db/schema.sql: comment lines removed, split on ';' at the end of a line. */
     static List<String> instructions() {
-        return SchemaBase.instructions();
+        try (InputStream in = BaseDeTest.class.getResourceAsStream("/db/schema.sql")) {
+            if (in == null) {
+                throw new IllegalStateException("db/schema.sql introuvable");
+            }
+            String sansCommentaires = new String(in.readAllBytes(), StandardCharsets.UTF_8).lines()
+                    .filter(l -> !l.trim().startsWith("--"))
+                    .collect(Collectors.joining("\n"));
+            return Arrays.stream(sansCommentaires.split(";\\s*(\\n|$)"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

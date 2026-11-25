@@ -38,9 +38,7 @@
             <Region VBox.vgrow="ALWAYS"/>
             <VBox styleClass="sidebar-footer" spacing="8">
                 <Button text="D&#233;connexion" onAction="#deconnexion" maxWidth="Infinity" styleClass="logout"/>
-                <!-- Where the data is kept (Persistance): MySQL, or memory only (nothing saved). -->
-                <Label fx:id="modeStockage" styleClass="storage-mode" wrapText="true" maxWidth="Infinity"/>
-                <Label text="Translogix v3.0" styleClass="version"/>
+                <Label text="Translogix v2.0 &#183; D&#233;mo" styleClass="version"/>
             </VBox>
         </VBox>
     </left>

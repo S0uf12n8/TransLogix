@@ -28,30 +28,14 @@ docker compose up -d db
 > **Note on Ports:** The local MySQL container exposes host port **`3307`** (mapped internally to `3306`) to prevent collisions with any native MySQL/XAMPP services running locally.
 
 ### Step 3: Run the Application (JavaFX UI)
-
-The app uses MySQL only when `DB_URL` is set. It then creates its tables itself (`src/main/resources/db/schema.sql`, safe to replay) and creates the demo accounts on the very first start only.
-
-* **Windows (PowerShell):**
-  ```powershell
-  $env:DB_URL = "jdbc:mysql://localhost:3307/translogix_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  $env:DB_USER = "translogix_user"
-  $env:DB_PASSWORD = "translogix_pass"
+* **Windows (PowerShell / Command Prompt):**
+  ```cmd
   .\mvnw.cmd clean javafx:run
   ```
 * **Git Bash / Linux / macOS:**
   ```bash
-  export DB_URL="jdbc:mysql://localhost:3307/translogix_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  export DB_USER=translogix_user DB_PASSWORD=translogix_pass
   ./mvnw clean javafx:run
   ```
-
-The bottom of the sidebar shows where the data is kept:
-
-| Sidebar | Meaning |
-|---|---|
-| `Base MySQL connectée` | Accounts and audit log are saved in MySQL (other modules stay in memory until their MySQL storage is delivered). |
-| `Mode démonstration · non enregistré` | `DB_URL` is not set: everything is in memory and restarts from the demo data. |
-| `MySQL indisponible · non enregistré` (orange) | `DB_URL` is set but MySQL did not answer: a warning is shown at startup and nothing is saved. Start the container and relaunch. |
 
 ---
 
