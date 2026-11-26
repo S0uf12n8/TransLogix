@@ -5,14 +5,12 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import ma.translogix.dao.AuditDao;
 import ma.translogix.dao.DocumentConformiteDao;
 import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
-import ma.translogix.dao.jdbc.ConnexionBase;
 import ma.translogix.dao.jdbc.JdbcAuditDao;
 import ma.translogix.dao.jdbc.JdbcDocumentConformiteDao;
 import ma.translogix.dao.jdbc.JdbcEmployeDao;
@@ -74,14 +72,12 @@ public final class AppContext {
             new UtilisateurService(UTILISATEUR_DAO, AUDIT_SERVICE);
     private static final AuthService AUTH_SERVICE = new AuthService(UTILISATEUR_DAO);
 
-    // RH module ([M2], [M4]): MySQL when DB_URL is set, otherwise in memory (same services either way).
-    private static final Optional<ConnexionBase> BASE_RH = ConnexionBase.depuisEnvironnement();
-    private static final EmployeDao EMPLOYE_DAO = BASE_RH
-            .map(base -> (EmployeDao) new JdbcEmployeDao(base))
-            .orElseGet(InMemoryEmployeDao::new);
-    private static final DocumentConformiteDao DOCUMENT_CONFORMITE_DAO = BASE_RH
-            .map(base -> (DocumentConformiteDao) new JdbcDocumentConformiteDao(base))
-            .orElseGet(InMemoryDocumentConformiteDao::new);
+    // RH module ([M2], [M4]): employees and compliance documents in MySQL when the database is available
+    // (Persistance: DB_URL set and reachable), otherwise in memory. Leave requests stay in memory for now.
+    private static final EmployeDao EMPLOYE_DAO = PERSISTANCE.connexion()
+            .<EmployeDao>map(JdbcEmployeDao::new).orElseGet(InMemoryEmployeDao::new);
+    private static final DocumentConformiteDao DOCUMENT_CONFORMITE_DAO = PERSISTANCE.connexion()
+            .<DocumentConformiteDao>map(JdbcDocumentConformiteDao::new).orElseGet(InMemoryDocumentConformiteDao::new);
     private static final EmployeService EMPLOYE_SERVICE = new EmployeService(EMPLOYE_DAO, Clock.systemDefaultZone());
     private static final ConformiteService CONFORMITE_SERVICE =
             new ConformiteService(DOCUMENT_CONFORMITE_DAO, EMPLOYE_DAO, Clock.systemDefaultZone());

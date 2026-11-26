@@ -94,8 +94,8 @@ CREATE TABLE IF NOT EXISTS paiements (
 
 -- RH: employees and compliance documents. Only these two RH tables are persisted in this task;
 -- leave requests stay in memory (Task 3). No StatutConformite column: the status is computed by ConformiteService.
--- No FK from employes.utilisateur_id to utilisateurs: user accounts are still in memory (UtilisateurDao),
--- only RH is persisted here. UNIQUE still enforces "one account = at most one employee"; NULL is allowed.
+-- No FK from employes.utilisateur_id to utilisateurs: accounts (admin) and employees (RH) are managed
+-- separately. UNIQUE still enforces "one account = at most one employee"; NULL is allowed.
 CREATE TABLE IF NOT EXISTS employes (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     matricule       VARCHAR(20)  NOT NULL,
