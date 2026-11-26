@@ -11,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.DocumentConformite;
 import ma.translogix.model.Employe;
 import ma.translogix.model.StatutConformite;
@@ -120,7 +121,8 @@ public class ProfileController {
     @FXML private void requestAttestation() {
         Employe chauffeur = EspaceChauffeurUi.get().chauffeur();
         String nom = chauffeur == null ? "—" : nvl(chauffeur.getNomComplet());
-        EspaceChauffeurUi.get().toast("Demande d'attestation de travail transmise aux RH pour " + nom + ".");
+        Dialogues.info("Attestation de travail",
+                "Votre demande a été transmise aux RH pour " + nom + ".");
     }
 
     private static String nvl(String s) { return s == null || s.isBlank() ? "—" : s; }

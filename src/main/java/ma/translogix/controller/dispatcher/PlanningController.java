@@ -102,7 +102,11 @@ public class PlanningController {
 
     /** Picks the mission to assign from the service (no hardcoded mission). */
     private Mission choisirMission(Employe chauffeur) {
-        List<Mission> planifiees = missions.lister().stream()
+        List<Mission> toutes = DispatcherUi.charger(missions::lister, null);
+        if (toutes == null) {
+            return null;
+        }
+        List<Mission> planifiees = toutes.stream()
                 .filter(m -> m.getStatut() == StatutMission.PLANIFIEE)
                 .sorted(Comparator.comparing(Mission::getDateDebut,
                         Comparator.nullsLast(Comparator.naturalOrder())))
@@ -131,6 +135,12 @@ public class PlanningController {
     }
 
     private void rafraichir() {
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            table.setItems(FXCollections.observableArrayList());
+        }
+    }
+
+    private void actualiserDonnees() {
         LocalDateTime maintenant = LocalDateTime.now();
         table.setItems(FXCollections.observableArrayList(AppContext.employeService().listerChauffeurs().stream()
                 .map(e -> {

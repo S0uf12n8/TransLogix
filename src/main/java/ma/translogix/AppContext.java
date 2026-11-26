@@ -6,14 +6,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import ma.translogix.dao.AuditDao;
 import ma.translogix.dao.DocumentConformiteDao;
 import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
 import ma.translogix.dao.jdbc.ConnexionBase;
+import ma.translogix.dao.jdbc.JdbcAuditDao;
 import ma.translogix.dao.jdbc.JdbcDocumentConformiteDao;
 import ma.translogix.dao.jdbc.JdbcEmployeDao;
+import ma.translogix.dao.jdbc.JdbcUtilisateurDao;
 import ma.translogix.dao.memory.InMemoryAuditDao;
 import ma.translogix.dao.memory.InMemoryClientDao;
 import ma.translogix.dao.memory.InMemoryCongeDao;
@@ -30,7 +33,6 @@ import ma.translogix.model.Facture;
 import ma.translogix.model.Mission;
 import ma.translogix.model.ModePaiement;
 import ma.translogix.model.Poste;
-import ma.translogix.model.Role;
 import ma.translogix.model.StatutVehicule;
 import ma.translogix.model.TypeContrat;
 import ma.translogix.model.TypeDocument;
@@ -54,12 +56,20 @@ import ma.translogix.util.Session;
 
 /**
  * Builds the services once for the whole app.
- * When the JDBC DAOs exist, swap InMemory... for Jdbc... here and nowhere else.
+ * Persistance decides the mode at startup: in MySQL mode every module that has a JDBC DAO uses it, the others stay
+ * in memory until their JDBC DAO is delivered (then pick it here, the same way, and nowhere else).
  */
 public final class AppContext {
+    /** Must stay the first field: the DAOs below are chosen from it. */
+    private static final Persistance.Etat PERSISTANCE = Persistance.etat();
+
+    // Admin module: user accounts and audit log are in MySQL when the database is available.
+    private static final AuditDao AUDIT_DAO = PERSISTANCE.connexion()
+            .<AuditDao>map(JdbcAuditDao::new).orElseGet(InMemoryAuditDao::new);
     private static final AuditService AUDIT_SERVICE =
-            new AuditService(new InMemoryAuditDao(), Clock.systemDefaultZone(), AppContext::acteurCourant);
-    private static final UtilisateurDao UTILISATEUR_DAO = new InMemoryUtilisateurDao();
+            new AuditService(AUDIT_DAO, Clock.systemDefaultZone(), AppContext::acteurCourant);
+    private static final UtilisateurDao UTILISATEUR_DAO = PERSISTANCE.connexion()
+            .<UtilisateurDao>map(JdbcUtilisateurDao::new).orElseGet(InMemoryUtilisateurDao::new);
     private static final UtilisateurService UTILISATEUR_SERVICE =
             new UtilisateurService(UTILISATEUR_DAO, AUDIT_SERVICE);
     private static final AuthService AUTH_SERVICE = new AuthService(UTILISATEUR_DAO);
@@ -104,13 +114,9 @@ public final class AppContext {
     private static boolean demarrageTermine;
 
     static {
-        // Dev seed data only: one demo account per role (DEV PASSWORDS, never in production).
-        // They are real creations, so the audit log shows them once, done by "Système".
-        // The driver account m.bennani@translogix.ma is created in semerRh (linked to his employee record).
-        UTILISATEUR_SERVICE.creer("Principal", "Admin", "admin@translogix.ma", "admin1234", Role.GERANT);
-        UTILISATEUR_SERVICE.creer("Comptable", "Demo", "comptable@translogix.ma", "comptable1234", Role.COMPTABLE);
-        UTILISATEUR_SERVICE.creer("RH", "Demo", "rh@translogix.ma", "rh123456", Role.RH);
-        UTILISATEUR_SERVICE.creer("Dispatcher", "Demo", "dispatcher@translogix.ma", "dispatcher1234", Role.DISPATCHER);
+        // Dev seed data only. Accounts: only when there is none yet (ComptesDemo), so a restart in MySQL mode never
+        // recreates or resets them. The other modules are still in memory, so they are seeded at every start.
+        ComptesDemo.semer(UTILISATEUR_DAO, UTILISATEUR_SERVICE);
         semerRh(LocalDate.now());
         semerClients();
         LocalDateTime maintenant = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
@@ -132,6 +138,11 @@ public final class AppContext {
 
     public static EspaceChauffeurService espaceChauffeurService() {
         return ESPACE_CHAUFFEUR_SERVICE;
+    }
+
+    /** How this run stores its data (MySQL, memory, or memory because MySQL was unreachable). */
+    public static Persistance.Etat persistance() {
+        return PERSISTANCE;
     }
 
     public static AuditService auditService() {
@@ -188,9 +199,9 @@ public final class AppContext {
 
         CONFORMITE_SERVICE.renouveler(bouazzaoui.getId(), TypeDocument.PERMIS, "PRM-992011", "B", aujourdhui.plusYears(4));
 
-        Utilisateur compteChauffeur = UTILISATEUR_SERVICE.creer("Bennani", "Mohammed", "m.bennani@translogix.ma",
-                "chauffeur123", Role.CHAUFFEUR);
-        EMPLOYE_SERVICE.lierCompte(bennani.getId(), compteChauffeur.getId());
+        // The driver account may come from an earlier start (MySQL mode), or have been deleted by the Gérant.
+        UTILISATEUR_DAO.findByEmail(ComptesDemo.EMAIL_CHAUFFEUR)
+                .ifPresent(compte -> EMPLOYE_SERVICE.lierCompte(bennani.getId(), compte.getId()));
     }
 
     /** The RH seed is replayed on every start: with MySQL, the employees may already exist from a previous run. */

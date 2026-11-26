@@ -13,6 +13,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -21,6 +23,7 @@ import ma.translogix.controller.chauffeur.Rows.MissionRow;
 import ma.translogix.controller.common.Dialogues;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
+import ma.translogix.util.ValidationException;
 
 /** Section 2 : Mes Ordres de Transport. */
 public class MissionsController {
@@ -51,6 +54,8 @@ public class MissionsController {
             String query = q.trim().toLowerCase(Locale.FRENCH);
             filtered.setPredicate(r -> r.searchText().toLowerCase(Locale.FRENCH).contains(query));
         });
+        Ui.echap(searchField);
+        installerMenu();
         refresh();
     }
 
@@ -90,23 +95,63 @@ public class MissionsController {
         Button a = link(r.action1Label, cls);
         a.setDisable("—".equals(r.action1Label));
         a.setOnAction(e -> {
-            if ("Confirmer".equals(r.action1Label)) {
-                ctx.demarrer(r.ref);
-                ctx.toast(r.action1Toast);
-                refresh();
-            } else if ("Livrée".equals(r.action1Label)) {
-                if (!Dialogues.confirmer("Clôturer la mission",
-                        "Confirmer la livraison de la mission " + r.ref + " ?")) return;
-                ctx.livrer(r.ref);
-                ctx.toast(r.action1Toast);
-                refresh();
-            }
+            if ("Confirmer".equals(r.action1Label)) demarrerMission(r);
+            else if ("Livrée".equals(r.action1Label)) livrerMission(r);
         });
         Button d = link("Détails", "link-slate");
         d.setOnAction(e -> ctx.openMissionDetail(r.ref));
         HBox box = new HBox(12, a, d);
         box.setAlignment(Pos.CENTER_LEFT);
         return box;
+    }
+
+    /** Clic droit sur une mission : actions compatibles avec son statut, plus copie de la référence. */
+    private void installerMenu() {
+        TableMenu.installer(table, r -> {
+            MenuItem demarrer = new MenuItem("Démarrer la mission");
+            demarrer.setDisable(!"Confirmer".equals(r.action1Label));
+            demarrer.setOnAction(e -> demarrerMission(r));
+            MenuItem livrer = new MenuItem("Déclarer livrée…");
+            livrer.setDisable(!"Livrée".equals(r.action1Label));
+            livrer.setOnAction(e -> livrerMission(r));
+            MenuItem details = new MenuItem("Voir les détails");
+            details.setOnAction(e -> EspaceChauffeurUi.get().openMissionDetail(r.ref));
+            return List.of(demarrer, livrer, details, new SeparatorMenuItem(),
+                    TableMenu.copier("Copier la référence", r.ref));
+        }, r -> EspaceChauffeurUi.get().openMissionDetail(r.ref));
+    }
+
+    /** Action de démarrage, partagée par le bouton et le menu contextuel. */
+    private void demarrerMission(MissionRow r) {
+        if (!Dialogues.confirmer("Démarrer la mission",
+                "Démarrer la mission " + r.ref + " ?")) return;
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
+        try {
+            ctx.demarrer(r.ref);
+            ctx.toast(r.action1Toast);
+        } catch (ValidationException e) {
+            Dialogues.erreur(messageErreur(e, r.ref));
+        }
+        refresh();
+    }
+
+    /** Action de livraison, partagée par le bouton et le menu contextuel. */
+    private void livrerMission(MissionRow r) {
+        if (!Dialogues.confirmer("Clôturer la mission",
+                "Confirmer la livraison de la mission " + r.ref + " ?")) return;
+        EspaceChauffeurUi ctx = EspaceChauffeurUi.get();
+        try {
+            ctx.livrer(r.ref);
+            ctx.toast(r.action1Toast);
+        } catch (ValidationException e) {
+            Dialogues.erreur(messageErreur(e, r.ref));
+        }
+        refresh();
+    }
+
+    private static String messageErreur(ValidationException e, String ref) {
+        return e.getMessage() == null || e.getMessage().isBlank()
+                ? "Action impossible sur la mission " + ref + "." : e.getMessage();
     }
 
     private static String[] cmr(StatutMission statut) {

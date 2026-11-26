@@ -4,18 +4,27 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import ma.translogix.AppContext;
@@ -23,6 +32,7 @@ import ma.translogix.controller.common.Dialogues;
 import ma.translogix.controller.common.ExportRapport;
 import ma.translogix.controller.common.ImpressionRapport;
 import ma.translogix.controller.common.Imprimable;
+import ma.translogix.dao.CritereMission;
 import ma.translogix.model.Client;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Mission;
@@ -34,7 +44,6 @@ import ma.translogix.service.MissionService;
 import ma.translogix.service.Rapport;
 import ma.translogix.service.RapportService;
 import ma.translogix.service.TypeRapport;
-import ma.translogix.util.Recherche;
 
 /** "Ordres & Trajets" ([H5]): Hamid's orders table on real missions, with the status actions of MissionService. */
 public class MissionsController implements Imprimable {
@@ -50,6 +59,8 @@ public class MissionsController implements Imprimable {
     @FXML private Label totalVehicules;
     @FXML private ProgressBar progressionDispo;
     @FXML private TextField recherche;
+    @FXML private TextField filtreChauffeur;
+    @FXML private TextField filtreVille;
     @FXML private TableView<Ligne> table;
     @FXML private TableColumn<Ligne, String> colReference;
     @FXML private TableColumn<Ligne, Ligne> colChauffeur;
@@ -58,9 +69,16 @@ public class MissionsController implements Imprimable {
     @FXML private TableColumn<Ligne, Ligne> colEta;
     @FXML private TableColumn<Ligne, Ligne> colStatut;
     @FXML private TableColumn<Ligne, Ligne> colActions;
+    @FXML private BarChart<String, Number> graphiqueStatuts;
+    @FXML private NumberAxis axeStatuts;
+    @FXML private Label sousTitreStatuts;
 
     private final MissionService service = AppContext.missionService();
     private final ObservableList<Ligne> donnees = FXCollections.observableArrayList();
+    private Map<Long, Vehicule> vehicules = Map.of();
+    private Map<Long, Employe> employes = Map.of();
+    private Map<Long, Client> clients = Map.of();
+    private List<Mission> missionsChargees = List.of();
 
     @FXML
     private void initialize() {
@@ -82,12 +100,11 @@ public class MissionsController implements Imprimable {
         colActions.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         colActions.setCellFactory(col -> DispatcherUi.liens(this::actions));
 
-        FilteredList<Ligne> filtres = new FilteredList<>(donnees);
-        recherche.textProperty().addListener((obs, ancien, requete) ->
-                filtres.setPredicate(l -> Recherche.correspond(requete, l.mission().getReference(), l.chauffeur(),
-                        l.vehicule(), l.client(), l.mission().getVilleDepart(), l.mission().getVilleArrivee(),
-                        l.mission().getCargaison())));
-        table.setItems(filtres);
+        table.setItems(donnees);
+        installerMenuContextuel();
+        recherche.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
+        filtreChauffeur.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
+        filtreVille.textProperty().addListener((obs, avant, apres) -> appliquerRecherche());
 
         if (DispatcherUi.lectureSeule()) {
             DispatcherUi.masquer(boutonNouvelle);
@@ -103,7 +120,10 @@ public class MissionsController implements Imprimable {
     /** "Exporter la feuille de route": print / PDF or CSV of the missions to drive. */
     @FXML
     private void exporter() {
-        ExportRapport.proposer(documentAImprimer(), table.getScene().getWindow());
+        var document = DispatcherUi.charger(this::documentAImprimer, null);
+        if (document != null) {
+            ExportRapport.proposer(document, table.getScene().getWindow());
+        }
     }
 
     /**
@@ -137,10 +157,36 @@ public class MissionsController implements Imprimable {
         if (m.getStatut() == StatutMission.EN_COURS) {
             liens.add(new DispatcherUi.Lien("Livrée", "link-green", () -> changer(() -> service.livrer(m.getId()))));
         }
+        liens.add(new DispatcherUi.Lien("Modifier statut", "link-blue", () -> modifierStatut(m)));
         if (m.getStatut() == StatutMission.PLANIFIEE || m.getStatut() == StatutMission.EN_COURS) {
             liens.add(new DispatcherUi.Lien("Annuler", "link-red", () -> annuler(m)));
         }
         return liens;
+    }
+
+    /** Modal status change: the service alone decides which transitions are allowed. */
+    private void modifierStatut(Mission m) {
+        List<StatutMission> suivants = DispatcherUi.charger(() -> service.statutsSuivants(m.getId()), null);
+        if (suivants == null) {
+            return;
+        }
+        if (suivants.isEmpty()) {
+            Dialogues.info("Modifier le statut", "Aucune transition n'est possible depuis « "
+                    + m.getStatut().getLibelle() + " » pour " + m.getReference() + ".");
+            return;
+        }
+        ChoiceDialog<StatutMission> dialogue = new ChoiceDialog<>(suivants.get(0), suivants);
+        dialogue.setTitle("Modifier le statut");
+        dialogue.setHeaderText(m.getReference() + " · " + m.getItineraire());
+        dialogue.setContentText("Nouveau statut :");
+        if (table.getScene() != null) {
+            dialogue.initOwner(table.getScene().getWindow());
+        }
+        dialogue.showAndWait().ifPresent(nouveau -> {
+            if (DispatcherUi.executer(() -> service.changerStatut(m.getId(), nouveau))) {
+                rafraichir();
+            }
+        });
     }
 
     private void annuler(Mission m) {
@@ -163,34 +209,143 @@ public class MissionsController implements Imprimable {
         }
     }
 
+    /**
+     * Right-click menu on a mission row. The controller only selects the row and opens the existing dialogs:
+     * every rule (allowed transitions, assignment overlaps, eligible missions) stays in the services.
+     */
+    private void installerMenuContextuel() {
+        table.setRowFactory(vue -> {
+            TableRow<Ligne> ligne = new TableRow<>();
+            MenuItem modifier = new MenuItem("Modifier statut");
+            MenuItem assigner = new MenuItem("Assigner chauffeur");
+            MenuItem declarer = new MenuItem("Déclarer incident");
+            if (DispatcherUi.lectureSeule()) {
+                modifier.setDisable(true);
+                assigner.setDisable(true);
+                declarer.setDisable(true);
+            }
+            modifier.setOnAction(e -> actionSurLigne(ligne, this::modifierStatut));
+            assigner.setOnAction(e -> actionSurLigne(ligne, this::assignerChauffeur));
+            declarer.setOnAction(e -> actionSurLigne(ligne, this::declarerIncident));
+            ContextMenu menu = new ContextMenu(modifier, assigner, declarer);
+            // A right-click on an unselected row must still act on the row under the cursor.
+            ligne.setOnContextMenuRequested(e -> {
+                if (!ligne.isEmpty() && !ligne.isSelected() && ligne.getIndex() >= 0) {
+                    vue.getSelectionModel().select(ligne.getIndex());
+                }
+            });
+            // No menu on the empty area below the last mission.
+            ligne.contextMenuProperty().bind(
+                    Bindings.when(ligne.emptyProperty()).then((ContextMenu) null).otherwise(menu));
+            return ligne;
+        });
+    }
+
+    private void actionSurLigne(TableRow<Ligne> ligne, Consumer<Mission> action) {
+        Ligne selection = ligne.getItem();
+        if (selection != null) {
+            action.accept(selection.mission());
+        }
+    }
+
+    /** Same assignment dialog as Planning Chauffeurs, limited to the mission of the row. */
+    private void assignerChauffeur(Mission mission) {
+        if (DispatcherUi.<MissionFormulaireController>ouvrirFormulaire(table, MissionFormulaireController.FXML,
+                f -> f.preparerAffectation(mission, null))) {
+            rafraichir();
+        }
+    }
+
+    /** Same incident dialog as Incidents & Alertes, with the mission of the row pre-selected. */
+    private void declarerIncident(Mission mission) {
+        if (DispatcherUi.<IncidentFormulaireController>ouvrirFormulaire(table, IncidentFormulaireController.FXML,
+                f -> f.preparer(mission))) {
+            rafraichir();
+        }
+    }
+
     private void rafraichir() {
-        Map<Long, Vehicule> vehicules = AppContext.vehiculeService().lister().stream()
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            donnees.setAll(List.of());
+            table.refresh();
+            valeurEnCours.setText("—");
+            piedEnCours.setText("Données indisponibles");
+            valeurDispo.setText("—");
+            totalVehicules.setText("");
+            progressionDispo.setProgress(0);
+            graphiqueStatuts.getData().clear();
+            sousTitreStatuts.setText("Données indisponibles");
+        }
+    }
+
+    private void actualiserDonnees() {
+        vehicules = AppContext.vehiculeService().lister().stream()
                 .collect(Collectors.toMap(Vehicule::getId, Function.identity()));
-        Map<Long, Employe> employes = AppContext.employeService().lister().stream()
+        employes = AppContext.employeService().lister().stream()
                 .collect(Collectors.toMap(Employe::getId, Function.identity()));
-        Map<Long, Client> clients = AppContext.clientService().lister().stream()
+        clients = AppContext.clientService().lister().stream()
                 .collect(Collectors.toMap(Client::getId, Function.identity()));
-        List<Mission> missions = service.lister();
+        missionsChargees = service.lister();
+        mettreAJourIndicateurs();
+        remplirGraphiqueStatuts();
+        appliquerRecherche();
+    }
 
-        donnees.setAll(missions.stream().map(m -> new Ligne(m,
-                nom(employes.get(m.getChauffeurId())),
-                vehicule(vehicules.get(m.getVehiculeId())),
-                clients.containsKey(m.getClientId()) ? clients.get(m.getClientId()).getNom() : "—")).toList());
+    /** Builds the criteria only; the reference / driver / city filtering belongs to MissionService and the DAO. */
+    private void appliquerRecherche() {
+        CritereMission critere = new CritereMission(recherche.getText(), filtreChauffeur.getText(),
+                filtreVille.getText());
+        List<Mission> missions = DispatcherUi.charger(() -> service.rechercher(critere), List.of());
+        donnees.setAll(missions.stream().map(this::ligne).toList());
         table.refresh();
+    }
 
-        long enCours = service.compter(StatutMission.EN_COURS);
-        long planifiees = service.compter(StatutMission.PLANIFIEE);
+    private Ligne ligne(Mission m) {
+        return new Ligne(m, nom(employes.get(m.getChauffeurId())),
+                vehicule(vehicules.get(m.getVehiculeId())),
+                clients.containsKey(m.getClientId()) ? clients.get(m.getClientId()).getNom() : "—");
+    }
+
+    private void mettreAJourIndicateurs() {
+        long enCours = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS).count();
+        long planifiees = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.PLANIFIEE).count();
         valeurEnCours.setText(String.valueOf(enCours));
         piedEnCours.setText(planifiees == 0 ? "Aucune mission planifiée"
                 : planifiees + (planifiees > 1 ? " missions planifiées" : " mission planifiée"));
 
         long enService = vehicules.values().stream().filter(v -> v.getStatut() == StatutVehicule.EN_SERVICE).count();
-        long occupes = missions.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS)
+        long occupes = missionsChargees.stream().filter(m -> m.getStatut() == StatutMission.EN_COURS)
                 .map(Mission::getVehiculeId).distinct().count();
         long dispo = Math.max(0, enService - occupes);
         valeurDispo.setText(String.valueOf(dispo));
         totalVehicules.setText("/ " + vehicules.size());
         progressionDispo.setProgress(vehicules.isEmpty() ? 0 : (double) dispo / vehicules.size());
+    }
+
+    /** "Missions par statut": the service asks the DAO for one count per status, the controller only draws them. */
+    private void remplirGraphiqueStatuts() {
+        List<MissionService.Part> parties = service.missionsParStatut();
+        graphiqueStatuts.getData().clear();
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        graphiqueStatuts.getData().add(serie);
+        long total = 0;
+        for (MissionService.Part partie : parties) {
+            total += partie.nombre();
+            XYChart.Data<String, Number> point = new XYChart.Data<>(partie.libelle(), partie.nombre());
+            serie.getData().add(point);
+            long nombre = partie.nombre();
+            String detail = partie.libelle() + " : " + nombre + " mission(s)";
+            DispatcherUi.quandAffiche(point.nodeProperty(),
+                    noeud -> Tooltip.install(noeud, new Tooltip(detail)));
+        }
+        axeStatuts.setTickUnit(1);
+        axeStatuts.setTickLabelFormatter(new NumberAxis.DefaultFormatter(axeStatuts) {
+            @Override
+            public String toString(Number valeur) {
+                return String.valueOf(valeur.intValue());
+            }
+        });
+        sousTitreStatuts.setText(total + (total > 1 ? " missions" : " mission") + " · cycle de vie");
     }
 
     static String nom(Employe e) {

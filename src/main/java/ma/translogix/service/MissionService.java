@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import ma.translogix.dao.CritereMission;
 import ma.translogix.dao.MissionDao;
 import ma.translogix.dao.VehiculeDao;
 import ma.translogix.model.Employe;
@@ -18,6 +20,7 @@ import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
 import ma.translogix.model.StatutVehicule;
 import ma.translogix.model.Vehicule;
+import ma.translogix.util.Recherche;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -26,6 +29,10 @@ import ma.translogix.util.ValidationException;
  * Cancelled missions never block anything.
  */
 public class MissionService {
+
+    /** One slice of a dispatcher chart: a label and its count, as in the other dashboards. */
+    public record Part(String libelle, long nombre) {
+    }
 
     /** First reference of a new database: TRJ-9081, as in dispatcher.html. */
     static final int PREMIER_NUMERO = 9081;
@@ -60,6 +67,27 @@ public class MissionService {
         return dao.findAll().stream().sorted(Comparator.comparing(Mission::getReference)).toList();
     }
 
+    /**
+     * Missions matching every supplied criterion (reference, driver and city), by reference.
+     * The controller only builds the criteria: the actual filtering belongs to the DAO, which can
+     * express it as one dynamic, parameterized SQL WHERE clause. Driver names are resolved here so
+     * the DAO receives ids it can bind as parameters.
+     */
+    public List<Mission> rechercher(CritereMission critere) {
+        CritereMission c = critere == null ? CritereMission.TOUT : critere;
+        List<Long> idsChauffeurs = new ArrayList<>();
+        if (c.chauffeur() != null && !c.chauffeur().isBlank()) {
+            for (Employe employe : employes.lister()) {
+                if (Recherche.correspond(c.chauffeur(), employe.getNom(), employe.getPrenom(),
+                        employe.getNomComplet(), employe.getMatricule())) {
+                    idsChauffeurs.add(employe.getId());
+                }
+            }
+        }
+        CritereMission pourDao = new CritereMission(c.reference(), c.chauffeur(), c.ville(), idsChauffeurs);
+        return dao.search(pourDao).stream().sorted(Comparator.comparing(Mission::getReference)).toList();
+    }
+
     public Mission trouver(Long id) {
         if (id == null) {
             throw new ValidationException("Mission introuvable.");
@@ -69,6 +97,37 @@ public class MissionService {
 
     public long compter(StatutMission statut) {
         return dao.findAll().stream().filter(m -> m.getStatut() == statut).count();
+    }
+
+    /** Counts for the "Missions par statut" bar chart, in lifecycle order, straight from the DAO. */
+    public List<Part> missionsParStatut() {
+        Map<StatutMission, Long> comptages = dao.compterParStatut();
+        return List.of(StatutMission.PLANIFIEE, StatutMission.EN_COURS, StatutMission.LIVREE).stream()
+                .map(statut -> new Part(statut.getLibelle(), comptages.getOrDefault(statut, 0L)))
+                .toList();
+    }
+
+    /**
+     * Slices for the truck availability pie chart. An EN_SERVICE vehicle is "En mission" when the DAO
+     * finds an in-progress mission for it, otherwise it is "Disponibles"; maintenance and out-of-service
+     * vehicles are "Indisponibles".
+     */
+    public List<Part> disponibiliteCamions() {
+        Set<Long> occupes = dao.findVehiculesEnMission();
+        long disponibles = 0;
+        long enMission = 0;
+        long indisponibles = 0;
+        for (Vehicule vehicule : vehicules.findAll()) {
+            if (vehicule.getStatut() != StatutVehicule.EN_SERVICE) {
+                indisponibles++;
+            } else if (occupes.contains(vehicule.getId())) {
+                enMission++;
+            } else {
+                disponibles++;
+            }
+        }
+        return List.of(new Part("Disponibles", disponibles), new Part("En mission", enMission),
+                new Part("Indisponibles", indisponibles));
     }
 
     /** The driver's mission in progress, otherwise his next planned one (the planning page). */
@@ -159,12 +218,23 @@ public class MissionService {
         changerStatut(id, StatutMission.FACTUREE);
     }
 
+    /** Allowed next statuses, read from the service rule (never hardcoded in a dialog). */
+    public List<StatutMission> statutsSuivants(Long id) {
+        Mission m = trouver(id);
+        Set<StatutMission> possibles = m.getStatut() == null ? null : TRANSITIONS.get(m.getStatut());
+        return possibles == null ? List.of() : possibles.stream().toList();
+    }
+
     /** PLANIFIEE -> EN_COURS -> LIVREE -> FACTUREE, and PLANIFIEE / EN_COURS -> ANNULEE. */
     public void changerStatut(Long id, StatutMission nouveau) {
         Mission m = trouver(id);
-        if (nouveau == null || !TRANSITIONS.get(m.getStatut()).contains(nouveau)) {
+        Set<StatutMission> possibles = m.getStatut() == null ? null : TRANSITIONS.get(m.getStatut());
+        if (nouveau == null || possibles == null || !possibles.contains(nouveau)) {
+            String autorises = possibles == null || possibles.isEmpty() ? "aucun"
+                    : String.join(", ", possibles.stream().map(StatutMission::getLibelle).toList());
             throw new ValidationException("Changement de statut impossible pour " + m.getReference() + " : « "
-                    + m.getStatut().getLibelle() + " » → « " + (nouveau == null ? "?" : nouveau.getLibelle()) + " ».");
+                    + (m.getStatut() == null ? "?" : m.getStatut().getLibelle()) + " » → « "
+                    + (nouveau == null ? "?" : nouveau.getLibelle()) + " ». Autorisé(s) : " + autorises + ".");
         }
         m.setStatut(nouveau);
         dao.update(m);

@@ -1,11 +1,13 @@
 package ma.translogix.controller.chauffeur;
 
+import java.util.List;
 import java.util.Locale;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -38,6 +40,10 @@ public class ExpensesController {
         });
         // Le montant en attente suit les ajouts faits depuis la modale.
         ctx.expenseRows.addListener((ListChangeListener<ExpenseRow>) c -> refresh());
+        Ui.echap(searchField);
+        TableMenu.installer(table, r -> List.<MenuItem>of(
+                TableMenu.copier("Copier le numéro de reçu", r.ref),
+                TableMenu.copier("Copier le montant", r.amount)), null);
         refresh();
     }
 

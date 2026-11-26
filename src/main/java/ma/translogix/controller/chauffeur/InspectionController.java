@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
+import ma.translogix.controller.common.Dialogues;
 
 /** Section 9 : Inspection du camion (check-list avant départ). */
 public class InspectionController {
@@ -97,6 +98,8 @@ public class InspectionController {
 
     @FXML
     private void resetInspection() {
+        if (!Dialogues.confirmer("Réinitialiser le contrôle",
+                "Effacer les réponses et recommencer l'inspection du camion ?")) return;
         renderInspection();
         setInspStatus("gray", "Non effectuée");
     }
