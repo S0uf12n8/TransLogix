@@ -140,4 +140,44 @@ class ConformiteServiceTest {
         assertThrows(ValidationException.class, () -> service.renouveler(chauffeur.getId(), TypeDocument.FIMC,
                 "FIMC-1", null, AUJOURDHUI.plusDays(90)));
     }
+
+    @Test
+    void documentsParStatutCompteLesDocumentsSelonLeStatutCalcule() {
+        service.renouveler(chauffeur.getId(), TypeDocument.PERMIS, "PRM-TEST-1", "EC", AUJOURDHUI.minusDays(1));
+        service.renouveler(chauffeur.getId(), TypeDocument.FIMC, "FIMC-TEST", null, AUJOURDHUI.plusDays(15));
+        service.renouveler(chauffeur.getId(), TypeDocument.VISITE_MEDICALE, null, null, AUJOURDHUI.plusDays(31));
+
+        assertEquals(List.of(
+                new ConformiteService.Part("Expiré", 1),
+                new ConformiteService.Part("À renouveler", 1),
+                new ConformiteService.Part("Conforme", 1)), service.documentsParStatut());
+    }
+
+    @Test
+    void documentsParStatutGardeLesTroisStatutsSansDonnees() {
+        assertEquals(List.of(
+                new ConformiteService.Part("Expiré", 0),
+                new ConformiteService.Part("À renouveler", 0),
+                new ConformiteService.Part("Conforme", 0)), service.documentsParStatut());
+    }
+
+    @Test
+    void documentsParStatutIgnoreLesDocumentsDesEmployesDesactives() {
+        service.renouveler(chauffeur.getId(), TypeDocument.PERMIS, "PRM-TEST-1", "C", AUJOURDHUI.minusDays(1));
+        employes.desactiver(chauffeur.getId());
+        assertEquals(List.of(0L, 0L, 0L), nombres(service.documentsParStatut()));
+    }
+
+    @Test
+    void documentsParStatutSuitLeRenouvellement() {
+        service.renouveler(chauffeur.getId(), TypeDocument.PERMIS, "PRM-TEST-1", "C", AUJOURDHUI.minusDays(1));
+        assertEquals(List.of(1L, 0L, 0L), nombres(service.documentsParStatut()));
+
+        service.renouveler(chauffeur.getId(), TypeDocument.PERMIS, "PRM-TEST-2", "EC", AUJOURDHUI.plusDays(1000));
+        assertEquals(List.of(0L, 0L, 1L), nombres(service.documentsParStatut()));
+    }
+
+    private static List<Long> nombres(List<ConformiteService.Part> parts) {
+        return parts.stream().map(ConformiteService.Part::nombre).toList();
+    }
 }

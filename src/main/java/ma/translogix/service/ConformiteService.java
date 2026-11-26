@@ -4,7 +4,9 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import ma.translogix.dao.DocumentConformiteDao;
 import ma.translogix.dao.EmployeDao;
@@ -23,6 +25,10 @@ public class ConformiteService {
 
     /** A document expiring within this many days must be renewed. */
     public static final int SEUIL_RENOUVELLEMENT_JOURS = 30;
+
+    /** One bar of the compliance status chart, in {@link StatutConformite} order. */
+    public record Part(String libelle, long nombre) {
+    }
 
     private final DocumentConformiteDao dao;
     private final EmployeDao employes;
@@ -111,6 +117,20 @@ public class ConformiteService {
                 .filter(d -> employes.findById(d.getEmployeId()).map(Employe::isActif).orElse(false))
                 .filter(d -> statut(d) != StatutConformite.VALIDE)
                 .sorted(Comparator.comparing(DocumentConformite::getDateExpiration))
+                .toList();
+    }
+
+    /** Documents of active employees per computed status, in enum order, with zero for absent statuses. */
+    public List<Part> documentsParStatut() {
+        Map<StatutConformite, Long> comptes = new EnumMap<>(StatutConformite.class);
+        for (StatutConformite statut : StatutConformite.values()) {
+            comptes.put(statut, 0L);
+        }
+        dao.findAll().stream()
+                .filter(d -> employes.findById(d.getEmployeId()).map(Employe::isActif).orElse(false))
+                .forEach(d -> comptes.merge(statut(d), 1L, Long::sum));
+        return comptes.entrySet().stream()
+                .map(e -> new Part(e.getKey().getLibelle(), e.getValue()))
                 .toList();
     }
 
