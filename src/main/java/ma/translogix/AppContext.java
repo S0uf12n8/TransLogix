@@ -172,6 +172,12 @@ public final class AppContext {
      * Mohammed Bennani is linked to a demo driver account for the future "Mes ordres de transport" page ([O3]).
      */
     private static void semerRh(LocalDate aujourdhui) {
+        // With MySQL the staff survives restarts: seed it only into an empty table, like ComptesDemo. Replaying it
+        // would reset every document the RH user edited, and stop the app if a demo employee was deactivated
+        // (renouveler refuses a deactivated employee).
+        if (!EMPLOYE_SERVICE.lister().isEmpty()) {
+            return;
+        }
         Employe bennani = employeOuCree("Bennani", "Mohammed", "ZZ-000101", "900000101", Poste.CHAUFFEUR,
                 TypeContrat.CDI, LocalDate.of(2021, 3, 15));
         Employe elAmrani = employeOuCree("El Amrani", "Abderrahim", "ZZ-000102", "900000102",
