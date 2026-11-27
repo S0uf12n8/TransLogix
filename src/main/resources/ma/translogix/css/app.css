@@ -869,3 +869,41 @@
 .context-menu .menu-item.menu-danger .label {
     -fx-text-fill: #dc2626;
 }
+
+/* =================== COMPTABLE : CRÉANCES & RECOUVREMENT =================== */
+.comptable-recouvrement-bar .axis-label,
+.comptable-recouvrement-bar .tick-label {
+    -fx-font-size: 11px;
+}
+.comptable-recouvrement-bar .bar {
+    -fx-background-insets: 0;
+    -fx-background-radius: 4 4 0 0;
+}
+/* Colours follow meaning: pending blue, then progressively darker overdue reds. */
+.comptable-recouvrement-non-echue  { -fx-background-color: #93c5fd; }
+.comptable-recouvrement-j1-a-30    { -fx-background-color: #fca5a5; }
+.comptable-recouvrement-j31-a-60   { -fx-background-color: #f87171; }
+.comptable-recouvrement-j61-a-90   { -fx-background-color: #ef4444; }
+.comptable-recouvrement-plus-de-90 { -fx-background-color: #b91c1c; }
+
+/* =================== COMPTABLE : TRÉSORERIE & BILAN =================== */
+.comptable-tresorerie-bar .axis-label,
+.comptable-tresorerie-bar .tick-label {
+    -fx-font-size: 11px;
+}
+.comptable-tresorerie-bar .bar {
+    -fx-background-insets: 0;
+    -fx-background-radius: 4 4 0 0;
+}
+/* Two different series: invoiced = blue, cash-in = green. They are never summed. */
+.comptable-tresorerie-facture { -fx-background-color: #0284c7; }
+.comptable-tresorerie-encaisse { -fx-background-color: #16a34a; }
+.comptable-tresorerie-indisponible {
+    -fx-text-fill: #92400e;
+    -fx-font-size: 11px;
+    -fx-background-color: #fffbeb;
+    -fx-background-radius: 8;
+    -fx-border-color: #fde68a;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10;
+}

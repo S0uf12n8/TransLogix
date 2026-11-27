@@ -46,6 +46,13 @@ public class FacturesController {
     private static final String TOUS_LES_STATUTS = "Tous les statuts";
     private static final String TOUS_LES_CLIENTS = "Tous les clients";
 
+    /** One-shot preselection requested by the recouvrement page before navigating here. */
+    private static Long clientFiltreDemande;
+
+    static void preparerFiltreClient(Long clientId) {
+        clientFiltreDemande = clientId;
+    }
+
     @FXML private Button boutonNouvelle;
     @FXML private TextField recherche;
     @FXML private ComboBox<String> filtreStatut;
@@ -128,6 +135,14 @@ public class FacturesController {
         table.setItems(tries);
 
         preparerFiltres();
+        Long clientDemande = clientFiltreDemande;
+        clientFiltreDemande = null;
+        if (clientDemande != null) {
+            filtreClient.setValue(clients.lister().stream()
+                    .filter(c -> clientDemande.equals(c.getId()))
+                    .findFirst()
+                    .orElse(null));
+        }
         if (ComptableUi.lectureSeule()) {
             ComptableUi.masquer(boutonNouvelle);
         }
