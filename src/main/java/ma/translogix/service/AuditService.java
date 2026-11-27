@@ -37,15 +37,23 @@ public class AuditService {
     }
 
     public EvenementAudit enregistrer(String module, String action, ResultatAudit resultat) {
+        return enregistrer(acteur.get(), module, action, resultat);
+    }
+
+    /**
+     * Same, with an explicit actor: for events that happen before anyone is logged in (a login attempt is done
+     * by the email typed on the login screen, not by "Système").
+     */
+    public EvenementAudit enregistrer(String qui, String module, String action, ResultatAudit resultat) {
         if (estVide(module) || estVide(action)) {
             throw new ValidationException("Le module et l'action de l'audit sont obligatoires.");
         }
         if (resultat == null) {
             throw new ValidationException("Le résultat de l'audit est obligatoire.");
         }
-        String qui = acteur.get();
         EvenementAudit evenement = new EvenementAudit(null, LocalDateTime.now(horloge),
-                estVide(qui) ? "Inconnu" : qui, module.trim(), action.trim(), resultat);
+                estVide(qui) ? "Inconnu" : couper(qui.trim(), 150), couper(module.trim(), 60),
+                couper(action.trim(), 500), resultat);
         return dao.save(evenement);
     }
 
@@ -108,5 +116,10 @@ public class AuditService {
 
     private static boolean estVide(String valeur) {
         return valeur == null || valeur.isBlank();
+    }
+
+    /** Sizes of the audit_evenements columns: a long typed email never makes the audit insert fail. */
+    private static String couper(String texte, int max) {
+        return texte.length() <= max ? texte : texte.substring(0, max - 1) + "…";
     }
 }

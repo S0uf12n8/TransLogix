@@ -171,4 +171,23 @@ class AuditServiceTest {
         assertEquals(List.of("Factures", "Utilisateurs"), service.modules());
         assertEquals(3, service.filtrer(null).size());
     }
+
+    @Test
+    void unActeurExpliciteRemplaceLActeurCourant() {
+        EvenementAudit e = service.enregistrer("sara@translogix.ma", "Connexion", "Échec de connexion",
+                ResultatAudit.REFUSE);
+
+        assertEquals("sara@translogix.ma", e.getUtilisateur());
+    }
+
+    @Test
+    void lesTextesTropLongsSontCoupesALaTailleDesColonnes() {
+        String longEmail = "a".repeat(400) + "@exemple.ma";
+
+        EvenementAudit e = service.enregistrer(longEmail, "Connexion", "x".repeat(800), ResultatAudit.REFUSE);
+
+        assertEquals(150, e.getUtilisateur().length());
+        assertTrue(e.getUtilisateur().endsWith("…"));
+        assertEquals(500, e.getAction().length());
+    }
 }

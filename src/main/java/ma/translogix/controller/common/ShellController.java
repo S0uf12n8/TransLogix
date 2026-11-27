@@ -20,6 +20,7 @@ import javafx.scene.shape.SVGPath;
 import javafx.scene.control.Tooltip;
 import ma.translogix.AppContext;
 import ma.translogix.Persistance;
+import ma.translogix.model.ResultatAudit;
 import ma.translogix.model.Role;
 import ma.translogix.model.Utilisateur;
 import ma.translogix.util.Navigator;
@@ -33,6 +34,9 @@ public class ShellController implements Navigator.Hote {
 
     private static final DateTimeFormatter DATE =
             DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH);
+
+    /** Audit module of refused page accesses. */
+    static final String MODULE_SECURITE = "Sécurité";
 
     @FXML private Label sousTitre;
     @FXML private Label initiales;
@@ -93,6 +97,14 @@ public class ShellController implements Navigator.Hote {
 
     @Override
     public void afficher(String fxml) {
+        if (!NavigationMenu.autorise(role, fxml)) {
+            // Defence in depth: the menu never shows such a page, so reaching here means a link or a bug.
+            AppContext.auditService().enregistrer(MODULE_SECURITE, "Accès refusé à la page " + fxml,
+                    ResultatAudit.REFUSE);
+            Dialogues.erreur("Accès refusé : cette page n'est pas accessible avec le rôle « "
+                    + role.getLibelle() + " ».");
+            return;
+        }
         URL vue = getClass().getResource(Navigator.RACINE + fxml);
         try {
             FXMLLoader loader = new FXMLLoader(vue);
