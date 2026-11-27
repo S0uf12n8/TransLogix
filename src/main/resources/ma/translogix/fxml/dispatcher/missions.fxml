@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -94,8 +97,15 @@
                 <Label text="Consultez et modifiez les missions programm&#233;es" styleClass="panel-sub"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <TextField fx:id="recherche" promptText="Rechercher trajet, chauffeur, ville..." prefWidth="280"
-                       styleClass="search-field"/>
+            <!-- Multi-criteria search: every filter is combined with the others (AND). -->
+            <HBox alignment="CENTER_RIGHT" spacing="8">
+                <TextField fx:id="recherche" promptText="R&#233;f. mission (TRJ-...)" prefWidth="150"
+                           styleClass="search-field"/>
+                <TextField fx:id="filtreChauffeur" promptText="Chauffeur..." prefWidth="140"
+                           styleClass="search-field"/>
+                <TextField fx:id="filtreVille" promptText="Ville..." prefWidth="140"
+                           styleClass="search-field"/>
+            </HBox>
         </HBox>
         <TableView fx:id="table" fixedCellSize="56" prefHeight="380" styleClass="flat-table">
             <columnResizePolicy>
@@ -114,5 +124,19 @@
                 <TableColumn fx:id="colActions" text="ACTIONS" prefWidth="225" minWidth="225" sortable="false"/>
             </columns>
         </TableView>
+    </VBox>
+
+    <VBox styleClass="panel">
+        <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="3">
+                <Label text="Missions par statut" styleClass="panel-title"/>
+                <Label fx:id="sousTitreStatuts" text="" styleClass="panel-sub"/>
+            </VBox>
+        </HBox>
+        <BarChart fx:id="graphiqueStatuts" legendVisible="false" animated="false" prefHeight="240"
+                  styleClass="dashboard-chart">
+            <xAxis><CategoryAxis tickMarkVisible="false"/></xAxis>
+            <yAxis><NumberAxis fx:id="axeStatuts" minorTickVisible="false" tickMarkVisible="false"/></yAxis>
+        </BarChart>
     </VBox>
 </VBox>

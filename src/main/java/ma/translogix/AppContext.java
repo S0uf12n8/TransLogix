@@ -6,14 +6,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import ma.translogix.dao.AuditDao;
+import ma.translogix.dao.DocumentConformiteDao;
 import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
 import ma.translogix.dao.jdbc.JdbcAuditDao;
+import ma.translogix.dao.jdbc.JdbcDocumentConformiteDao;
+import ma.translogix.dao.jdbc.JdbcEmployeDao;
 import ma.translogix.dao.jdbc.JdbcUtilisateurDao;
 import ma.translogix.dao.memory.InMemoryAuditDao;
 import ma.translogix.dao.memory.InMemoryClientDao;
+import ma.translogix.dao.memory.InMemoryCongeDao;
 import ma.translogix.dao.memory.InMemoryDocumentConformiteDao;
 import ma.translogix.dao.memory.InMemoryEmployeDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
@@ -36,6 +40,7 @@ import ma.translogix.service.AuditService;
 import ma.translogix.service.AuthService;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.ConformiteService;
+import ma.translogix.service.CongeService;
 import ma.translogix.service.FactureService;
 import ma.translogix.service.MissionService;
 import ma.translogix.service.DashboardService;
@@ -68,11 +73,17 @@ public final class AppContext {
     private static final AuthService AUTH_SERVICE =
             new AuthService(UTILISATEUR_DAO, AUDIT_SERVICE, Clock.systemDefaultZone());
 
-    // RH module ([M2], [M4]): in memory until the JDBC DAOs of [M6] exist.
-    private static final EmployeDao EMPLOYE_DAO = new InMemoryEmployeDao();
+    // RH module ([M2], [M4]): employees and compliance documents in MySQL when the database is available
+    // (Persistance: DB_URL set and reachable), otherwise in memory. Leave requests stay in memory for now.
+    private static final EmployeDao EMPLOYE_DAO = PERSISTANCE.connexion()
+            .<EmployeDao>map(JdbcEmployeDao::new).orElseGet(InMemoryEmployeDao::new);
+    private static final DocumentConformiteDao DOCUMENT_CONFORMITE_DAO = PERSISTANCE.connexion()
+            .<DocumentConformiteDao>map(JdbcDocumentConformiteDao::new).orElseGet(InMemoryDocumentConformiteDao::new);
     private static final EmployeService EMPLOYE_SERVICE = new EmployeService(EMPLOYE_DAO, Clock.systemDefaultZone());
     private static final ConformiteService CONFORMITE_SERVICE =
-            new ConformiteService(new InMemoryDocumentConformiteDao(), EMPLOYE_DAO, Clock.systemDefaultZone());
+            new ConformiteService(DOCUMENT_CONFORMITE_DAO, EMPLOYE_DAO, Clock.systemDefaultZone());
+    private static final CongeService CONGE_SERVICE =
+            new CongeService(new InMemoryCongeDao(), EMPLOYE_SERVICE, Clock.systemDefaultZone());
     // Comptable module ([C2], [C3]): in memory until the JDBC DAOs of [C5] exist.
     private static final InMemoryClientDao CLIENT_DAO = new InMemoryClientDao();
     private static final FactureDao FACTURE_DAO = new InMemoryFactureDao();
@@ -151,6 +162,10 @@ public final class AppContext {
         return CONFORMITE_SERVICE;
     }
 
+    public static CongeService congeService() {
+        return CONGE_SERVICE;
+    }
+
     /**
      * Demo staff from rh.html (Majda's 4 sample people). Names, posts, hiring dates and licence numbers come
      * from the mockup; CIN and CNSS are obviously fictional (ZZ-..., 9000...). Expiry dates are relative to
@@ -158,13 +173,19 @@ public final class AppContext {
      * Mohammed Bennani is linked to a demo driver account for the future "Mes ordres de transport" page ([O3]).
      */
     private static void semerRh(LocalDate aujourdhui) {
-        Employe bennani = EMPLOYE_SERVICE.creer("Bennani", "Mohammed", "ZZ-000101", "900000101", Poste.CHAUFFEUR,
+        // With MySQL the staff survives restarts: seed it only into an empty table, like ComptesDemo. Replaying it
+        // would reset every document the RH user edited, and stop the app if a demo employee was deactivated
+        // (renouveler refuses a deactivated employee).
+        if (!EMPLOYE_SERVICE.lister().isEmpty()) {
+            return;
+        }
+        Employe bennani = employeOuCree("Bennani", "Mohammed", "ZZ-000101", "900000101", Poste.CHAUFFEUR,
                 TypeContrat.CDI, LocalDate.of(2021, 3, 15));
-        Employe elAmrani = EMPLOYE_SERVICE.creer("El Amrani", "Abderrahim", "ZZ-000102", "900000102",
+        Employe elAmrani = employeOuCree("El Amrani", "Abderrahim", "ZZ-000102", "900000102",
                 Poste.CHAUFFEUR, TypeContrat.CDI, LocalDate.of(2022, 6, 1));
-        Employe amrani = EMPLOYE_SERVICE.creer("Amrani", "Youssef", "ZZ-000103", "900000103", Poste.CHAUFFEUR,
+        Employe amrani = employeOuCree("Amrani", "Youssef", "ZZ-000103", "900000103", Poste.CHAUFFEUR,
                 TypeContrat.CDD, LocalDate.of(2020, 1, 10));
-        Employe bouazzaoui = EMPLOYE_SERVICE.creer("Bouazzaoui", "Karima", "ZZ-000104", "900000104",
+        Employe bouazzaoui = employeOuCree("Bouazzaoui", "Karima", "ZZ-000104", "900000104",
                 Poste.ADMINISTRATIF, TypeContrat.CDI, LocalDate.of(2023, 2, 1));
 
         CONFORMITE_SERVICE.renouveler(bennani.getId(), TypeDocument.PERMIS, "PRM-883920", "EC", aujourdhui.plusYears(2));
@@ -184,6 +205,15 @@ public final class AppContext {
         // The driver account may come from an earlier start (MySQL mode), or have been deleted by the Gérant.
         UTILISATEUR_DAO.findByEmail(ComptesDemo.EMAIL_CHAUFFEUR)
                 .ifPresent(compte -> EMPLOYE_SERVICE.lierCompte(bennani.getId(), compte.getId()));
+    }
+
+    /** The RH seed is replayed on every start: with MySQL, the employees may already exist from a previous run. */
+    private static Employe employeOuCree(String nom, String prenom, String cin, String cnss, Poste poste,
+                                         TypeContrat typeContrat, LocalDate dateEmbauche) {
+        return EMPLOYE_SERVICE.lister().stream()
+                .filter(e -> cin.equals(e.getCin()))
+                .findFirst()
+                .orElseGet(() -> EMPLOYE_SERVICE.creer(nom, prenom, cin, cnss, poste, typeContrat, dateEmbauche));
     }
 
     public static VehiculeService vehiculeService() {

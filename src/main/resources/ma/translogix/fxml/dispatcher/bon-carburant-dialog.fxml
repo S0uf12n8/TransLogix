@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- "Émettre un bon de carburant" dialog. The eligible missions come from BonCarburantService;
+     buttons are added by DispatcherUi. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.dispatcher.BonCarburantFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="520" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="GESTION CARBURANT" styleClass="eyebrow"/>
+            <Label text="Émettre un bon de carburant" styleClass="dialog-title"/>
+            <Label text="Le camion et le chauffeur sont repris de la mission en cours."
+                   wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <GridPane hgap="12" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0">
+                    <Label text="Mission en cours" styleClass="form-label"/>
+                    <ComboBox fx:id="champMission" promptText="Choisir une mission" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                    <Label text="Station / provider" styleClass="form-label"/>
+                    <TextField fx:id="champStation" promptText="Ex : Afriquia Casablanca" styleClass="search-field"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                    <Label text="Litres" styleClass="form-label"/>
+                    <TextField fx:id="champLitres" promptText="Ex : 250" styleClass="search-field"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <Label text="Montant (MAD)" styleClass="form-label"/>
+                    <TextField fx:id="champMontant" promptText="Ex : 3250" styleClass="search-field"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3">
+                    <Label text="Date du bon" styleClass="form-label"/>
+                    <HBox spacing="8">
+                        <DatePicker fx:id="champDate" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="form-combo"/>
+                    </HBox>
+                </VBox>
+            </GridPane>
+            <Label text="La référence BON-xxxx est attribuée automatiquement. Seule une mission en cours peut être ravitaillée."
+                   wrapText="true" styleClass="form-note"/>
+        </VBox>
+    </content>
+</DialogPane>

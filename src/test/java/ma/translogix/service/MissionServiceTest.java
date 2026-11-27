@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import ma.translogix.dao.CritereMission;
 import ma.translogix.dao.memory.InMemoryClientDao;
 import ma.translogix.dao.memory.InMemoryEmployeDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
@@ -238,5 +240,141 @@ class MissionServiceTest {
         assertEquals(plusTard.getId(), service.missionActuelleOuProchaine(chauffeur1.getId()).orElseThrow().getId());
         assertEquals(plusTard.getId(), service.missionEnCoursDuVehicule(camion1.getId()).orElseThrow().getId());
         assertTrue(service.missionActuelleOuProchaine(chauffeur2.getId()).isEmpty());
+    }
+
+    @Test
+    void assignerUneMissionValideChangeLeChauffeurEtLeCamion() {
+        Mission a = creer(camion1, chauffeur1, 14, 16);
+        creer(camion2, chauffeur2, 8, 12); // occupe les deux ressources plus tôt, sans chevauchement
+
+        Mission assignee = service.assigner(a.getId(), camion2.getId(), chauffeur2.getId());
+
+        assertEquals(camion2.getId(), assignee.getVehiculeId());
+        assertEquals(chauffeur2.getId(), assignee.getChauffeurId());
+        assertEquals("TRJ-9081", assignee.getReference());
+        assertEquals(StatutMission.PLANIFIEE, assignee.getStatut());
+        assertEquals(camion2.getId(), service.trouver(a.getId()).getVehiculeId()); // bien persisté dans le DAO
+        assertEquals(chauffeur2.getId(), service.trouver(a.getId()).getChauffeurId());
+    }
+
+    @Test
+    void assignerRefuseUnChauffeurDejaAffecteSurLaPeriode() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission cible = creer(camion2, chauffeur2, 10, 12); // même période, autres ressources
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion2.getId(), chauffeur1.getId()));
+
+        assertTrue(e.getMessage().startsWith("Chevauchement : le chauffeur Test Alpha est déjà affecté à TRJ-9081"),
+                e.getMessage());
+        assertEquals(chauffeur2.getId(), service.trouver(cible.getId()).getChauffeurId()); // rien n'a changé
+    }
+
+    @Test
+    void assignerRefuseUnCamionDejaAffecteSurLaPeriode() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission cible = creer(camion2, chauffeur2, 10, 12);
+
+        ValidationException e = assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion1.getId(), chauffeur2.getId()));
+
+        assertEquals("Chevauchement : le véhicule 11111-A-1 est déjà affecté à TRJ-9081 "
+                + "(Casablanca → Rabat, du 17/11/2026 08:00 au 17/11/2026 12:00).", e.getMessage());
+        assertEquals(camion2.getId(), service.trouver(cible.getId()).getVehiculeId());
+    }
+
+    @Test
+    void assignerAccepteUneMissionQuiSeToucheEtPeutGarderSesRessources() {
+        creer(camion1, chauffeur1, 8, 12);
+        Mission suivante = creer(camion2, chauffeur2, 12, 16);
+        service.assigner(suivante.getId(), camion1.getId(), chauffeur1.getId()); // fin = début : pas de conflit
+        Mission identique = service.assigner(suivante.getId(), camion1.getId(), chauffeur1.getId());
+
+        assertEquals(chauffeur1.getId(), identique.getChauffeurId());
+        assertEquals(camion1.getId(), identique.getVehiculeId());
+    }
+
+    @Test
+    void assignerRefuseUneMissionQuiNestPlusPlanifiee() {
+        Mission a = creer(camion1, chauffeur1, 8, 12);
+        service.demarrer(a.getId());
+        assertThrows(ValidationException.class,
+                () -> service.assigner(a.getId(), camion2.getId(), chauffeur2.getId()));
+    }
+
+    @Test
+    void rechercherCombineLesCriteresEtIgnoreLaCasseEtLesAccents() {
+        Mission rabat = creer(camion1, chauffeur1, 8, 12);
+        Mission fes = service.creer(client, camion2.getId(), chauffeur2.getId(), "Casablanca", "Fès", null,
+                BigDecimal.ONE, H8, H8.withHour(12));
+
+        assertEquals(List.of(rabat.getId()), service.rechercher(new CritereMission("9081", "alpha", "rabat"))
+                .stream().map(Mission::getId).toList());
+        assertEquals(List.of(fes.getId()), service.rechercher(new CritereMission("9082", "BETA", "fes"))
+                .stream().map(Mission::getId).toList());
+        assertTrue(service.rechercher(new CritereMission("9081", "beta", "rabat")).isEmpty());
+    }
+
+    @Test
+    void rechercherSansCritereRenvoieToutesLesMissionsTrieesParReference() {
+        creer(camion1, chauffeur1, 8, 12);
+        creer(camion2, chauffeur2, 8, 12);
+        List<Mission> toutes = service.rechercher(null);
+        assertEquals(List.of("TRJ-9081", "TRJ-9082"), toutes.stream().map(Mission::getReference).toList());
+        assertEquals(toutes.size(), service.rechercher(CritereMission.TOUT).size());
+    }
+
+    @Test
+    void statutsSuivantsRefleteLeCycleDeVieEtSeVideEnFinDeVie() {
+        Mission m = creer(camion1, chauffeur1, 8, 12);
+        assertEquals(List.of(StatutMission.EN_COURS, StatutMission.ANNULEE), service.statutsSuivants(m.getId()));
+        service.demarrer(m.getId());
+        assertEquals(List.of(StatutMission.LIVREE, StatutMission.ANNULEE), service.statutsSuivants(m.getId()));
+        service.livrer(m.getId());
+        assertEquals(List.of(StatutMission.FACTUREE), service.statutsSuivants(m.getId()));
+        service.marquerFacturee(m.getId());
+        assertTrue(service.statutsSuivants(m.getId()).isEmpty());
+    }
+
+    @Test
+    void changerStatutRefuseUnStatutNul() {
+        Mission m = creer(camion1, chauffeur1, 8, 12);
+        ValidationException e = assertThrows(ValidationException.class, () -> service.changerStatut(m.getId(), null));
+        assertTrue(e.getMessage().contains("Autorisé(s)"), e.getMessage());
+        assertEquals(StatutMission.PLANIFIEE, service.trouver(m.getId()).getStatut());
+    }
+
+    @Test
+    void assignerRefuseUnVehiculeIndisponibleOuUnChauffeurInactif() {
+        Mission cible = creer(camion1, chauffeur1, 14, 16);
+        vehicules.changerStatut(camion2.getId(), StatutVehicule.MAINTENANCE);
+        assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion2.getId(), chauffeur2.getId()));
+        employes.desactiver(chauffeur2.getId());
+        assertThrows(ValidationException.class,
+                () -> service.assigner(cible.getId(), camion1.getId(), chauffeur2.getId()));
+        assertEquals(camion1.getId(), service.trouver(cible.getId()).getVehiculeId());
+    }
+
+    @Test
+    void trouverRefuseUnIdentifiantInconnu() {
+        assertThrows(ValidationException.class, () -> service.trouver(null));
+        assertThrows(ValidationException.class, () -> service.trouver(999L));
+    }
+
+    @Test
+    void disponibiliteCamionsDistingueDisponibleEnMissionEtIndisponible() {
+        Mission m = creer(camion1, chauffeur1, 8, 12);
+        vehicules.changerStatut(camion2.getId(), StatutVehicule.MAINTENANCE);
+
+        List<MissionService.Part> avant = service.disponibiliteCamions();
+        assertEquals(new MissionService.Part("Disponibles", 1), avant.get(0));
+        assertEquals(new MissionService.Part("En mission", 0), avant.get(1));
+        assertEquals(new MissionService.Part("Indisponibles", 1), avant.get(2));
+
+        service.demarrer(m.getId());
+        List<MissionService.Part> apres = service.disponibiliteCamions();
+        assertEquals(new MissionService.Part("Disponibles", 0), apres.get(0));
+        assertEquals(new MissionService.Part("En mission", 1), apres.get(1));
     }
 }

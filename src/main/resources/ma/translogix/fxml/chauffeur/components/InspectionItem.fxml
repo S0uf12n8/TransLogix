@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" styleClass="insp-item" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.InspectionItemController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <StackPane maxHeight="40.0" maxWidth="40.0" minHeight="40.0" minWidth="40.0" prefHeight="40.0" prefWidth="40.0" styleClass="ib, ib-orange">
+                     <children>
+                        <Label fx:id="iconLabel" styleClass="fa" />
+                     </children>
+                  </StackPane>
+                  <VBox>
+                     <children>
+                        <Label fx:id="labelText" styleClass="fs-12, fw-b, c-s800" />
+                        <Label fx:id="hintText" styleClass="fs-11, c-s500, pt-05" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox spacing="8.0">
+               <children>
+                  <RadioButton fx:id="okRadio" mnemonicParsing="false" styleClass="insp-choice, ok" text="OK">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="choiceGroup" />
+                     </toggleGroup>
+                  </RadioButton>
+                  <RadioButton fx:id="koRadio" mnemonicParsing="false" styleClass="insp-choice, ko" text="Anomalie" toggleGroup="$choiceGroup" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+      <TextField fx:id="noteField" managed="false" promptText="Décrire l’anomalie constatée..." styleClass="search" visible="false">
+         <VBox.margin>
+            <Insets top="12.0" />
+         </VBox.margin>
+      </TextField>
+   </children>
+</VBox>

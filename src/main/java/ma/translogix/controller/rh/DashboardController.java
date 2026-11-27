@@ -4,14 +4,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
@@ -26,6 +36,7 @@ import ma.translogix.model.Employe;
 import ma.translogix.model.StatutConformite;
 import ma.translogix.model.TypeDocument;
 import ma.translogix.service.ConformiteService;
+import ma.translogix.service.CongeService;
 import ma.translogix.service.EmployeService;
 import ma.translogix.service.FiltreRapport;
 import ma.translogix.service.Rapport;
@@ -34,8 +45,7 @@ import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 
 /**
- * "Tableau de bord RH". KPI 1-3 and "Statut rapide" come from EmployeService / ConformiteService
- * (real, in memory); "Congés en attente" is a static DÉMO card (Iteration 3).
+ * "Tableau de bord RH". Every KPI and chart comes from the RH services (real, in memory).
  */
 public class DashboardController implements Imprimable {
 
@@ -52,6 +62,8 @@ public class DashboardController implements Imprimable {
     @FXML private Label piedChauffeurs;
     @FXML private Label valeurAlertes;
     @FXML private Label piedAlertes;
+    @FXML private Label valeurConges;
+    @FXML private Label piedConges;
     @FXML private TableView<Employe> tableChauffeurs;
     @FXML private TableColumn<Employe, Employe> colEmploye;
     @FXML private TableColumn<Employe, String> colPoste;
@@ -59,9 +71,15 @@ public class DashboardController implements Imprimable {
     @FXML private TableColumn<Employe, String> colVisite;
     @FXML private TableColumn<Employe, String> colStatut;
     @FXML private HBox actionRenouveler;
+    @FXML private PieChart graphiquePostes;
+    @FXML private Label totalPostes;
+    @FXML private BarChart<String, Number> graphiqueConformite;
+    @FXML private NumberAxis axeConformite;
+    @FXML private Label totalConformite;
 
     private final EmployeService employes = AppContext.employeService();
     private final ConformiteService conformite = AppContext.conformiteService();
+    private final CongeService conges = AppContext.congeService();
 
     @FXML
     private void initialize() {
@@ -120,7 +138,7 @@ public class DashboardController implements Imprimable {
 
     @FXML
     private void saisirConge() {
-        RhUi.pasEncoreLivre();
+        Navigator.ouvrir("rh/conges.fxml");
     }
 
     @FXML
@@ -129,12 +147,6 @@ public class DashboardController implements Imprimable {
                 f -> f.preparer(null, null))) {
             rafraichir();
         }
-    }
-
-    /** As in rh.html: the quick action opens the "Paie & Prime Trajet" tab (a DÉMO page until Iteration 3). */
-    @FXML
-    private void ouvrirPrimes() {
-        Navigator.ouvrir("rh/primes.fxml");
     }
 
     private void rafraichir() {
@@ -157,8 +169,73 @@ public class DashboardController implements Imprimable {
         piedAlertes.setText(alertes.isEmpty() ? "Aucune échéance sous 30 jours" : detailAlertes(alertes));
         piedAlertes.getStyleClass().setAll("label", alertes.isEmpty() ? "foot-green" : "foot-red");
 
+        int demandesAttente = conges.aValider();
+        valeurConges.setText(String.valueOf(demandesAttente));
+        piedConges.setText(demandesAttente == 0 ? "Aucune demande à traiter"
+                : demandesAttente + (demandesAttente > 1 ? " demandes à traiter" : " demande à traiter"));
+        piedConges.getStyleClass().setAll("label", demandesAttente == 0 ? "foot-green" : "foot-amber");
+
         tableChauffeurs.setItems(FXCollections.observableArrayList(employes.listerChauffeurs()));
         tableChauffeurs.refresh();
+        remplirGraphiques();
+    }
+
+    /** Pie and bar charts fed only by the two services; no figure is written in the FXML or here. */
+    private void remplirGraphiques() {
+        List<EmployeService.Part> postes = employes.employesParPoste();
+        long totalSalaries = postes.stream().mapToLong(EmployeService.Part::nombre).sum();
+        graphiquePostes.getData().clear();
+        for (EmployeService.Part part : postes) {
+            PieChart.Data tranche = new PieChart.Data(
+                    part.libelle() + " (" + part.nombre() + ")", part.nombre());
+            graphiquePostes.getData().add(tranche);
+            long pourcent = totalSalaries == 0 ? 0 : Math.round(part.nombre() * 100.0 / totalSalaries);
+            String detail = part.libelle() + " : " + part.nombre()
+                    + (part.nombre() > 1 ? " salariés" : " salarié") + ", " + pourcent + " %";
+            quandAffiche(tranche.nodeProperty(), noeud -> Tooltip.install(noeud, new Tooltip(detail)));
+        }
+        totalPostes.setText("Total : " + totalSalaries);
+
+        List<ConformiteService.Part> statuts = conformite.documentsParStatut();
+        long totalDocuments = statuts.stream().mapToLong(ConformiteService.Part::nombre).sum();
+        graphiqueConformite.getData().clear();
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        graphiqueConformite.getData().add(serie);
+        long max = statuts.stream().mapToLong(ConformiteService.Part::nombre).max().orElse(0);
+        double unite = max <= 12 ? 1 : Math.ceil(max / 6.0);
+        axeConformite.setTickUnit(unite);
+        axeConformite.setUpperBound(Math.max(unite, Math.ceil((max + 1) / unite) * unite));
+        axeConformite.setTickLabelFormatter(new NumberAxis.DefaultFormatter(axeConformite) {
+            @Override
+            public String toString(Number valeur) {
+                return String.valueOf(valeur.intValue());
+            }
+        });
+        for (ConformiteService.Part part : statuts) {
+            XYChart.Data<String, Number> barre = new XYChart.Data<>(part.libelle(), part.nombre());
+            serie.getData().add(barre);
+            String detail = part.libelle() + " : " + part.nombre()
+                    + (part.nombre() > 1 ? " documents" : " document");
+            quandAffiche(barre.nodeProperty(), noeud -> Tooltip.install(noeud, new Tooltip(detail)));
+        }
+        totalConformite.setText("Total : " + totalDocuments);
+    }
+
+    /** Chart nodes are created lazily by JavaFX: run the action as soon as the node exists. */
+    private static void quandAffiche(ReadOnlyObjectProperty<Node> propriete, Consumer<Node> action) {
+        if (propriete.get() != null) {
+            action.accept(propriete.get());
+            return;
+        }
+        propriete.addListener(new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Node> obs, Node ancien, Node noeud) {
+                if (noeud != null) {
+                    propriete.removeListener(this);
+                    action.accept(noeud);
+                }
+            }
+        });
     }
 
     /** "2 Permis + 1 Visite médicale", in the TypeDocument order. */

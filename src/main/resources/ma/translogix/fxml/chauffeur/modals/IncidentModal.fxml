@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.IncidentModalController">
+   <children>
+      <HBox alignment="TOP_LEFT" spacing="16.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow" text="ESPACE CHAUFFEUR" />
+                  <Label styleClass="modal-title" text="Signaler un Incident sur la Route" />
+                  <Label styleClass="modal-desc" text="Consignez immédiatement tout obstacle ou retard." wrapText="true" />
+               </children>
+            </VBox>
+            <Button focusTraversable="false" mnemonicParsing="false" onAction="#close" styleClass="icon-btn-close">
+               <graphic>
+                  <Label styleClass="fa" text="&#xf00d;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <VBox spacing="16.0">
+         <VBox.margin>
+            <Insets top="20.0" />
+         </VBox.margin>
+         <children>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Mission en cours" />
+                  <ComboBox fx:id="tripRef" maxWidth="Infinity" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Type d’Aléa" />
+                  <ComboBox fx:id="incidentType" maxWidth="Infinity" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Niveau de Gravité" />
+                  <ComboBox fx:id="severity" maxWidth="Infinity" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Localisation Précise (Point Kilométrique / Ville)" />
+                  <TextField fx:id="locationField" promptText="Ex: PK 42 Autoroute A1 près de Bouznika" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Détails &amp; Impact sur l’Heure de Livraison" />
+                  <TextArea fx:id="details" prefRowCount="3" promptText="Expliquez la situation et l’estimation du retard..." styleClass="search" wrapText="true" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Pièce jointe (photo, document — optionnel)" />
+                  <HBox fx:id="attachBox" maxWidth="Infinity" styleClass="search, file-input">
+                     <children>
+                        <Button fx:id="attachBtn" focusTraversable="false" mnemonicParsing="false" styleClass="file-input-btn" text="Choisir un fichier" />
+                        <Label fx:id="attachName" styleClass="file-input-name" text="Aucun fichier choisi" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+      <HBox alignment="CENTER_RIGHT" spacing="8.0">
+         <VBox.margin>
+            <Insets top="24.0" />
+         </VBox.margin>
+         <children>
+            <Button mnemonicParsing="false" onAction="#close" styleClass="btn-secondary" text="Annuler" />
+            <Button mnemonicParsing="false" onAction="#submit" styleClass="btn-primary" text="Transmettre" />
+         </children>
+      </HBox>
+      <Label styleClass="modal-note" text="Enregistré pour cette session uniquement : les frais et incidents n'ont pas encore de service côté serveur." />
+   </children>
+   <padding>
+      <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+   </padding>
+</VBox>

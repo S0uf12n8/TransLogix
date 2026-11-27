@@ -9,8 +9,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
 
-<!-- "Bons de Gazole & Cartes Autoroute" (dispatcher.html fuel-logs): Iteration 3. Hamid's FuelLogsView layout and
-     sample vouchers, shown as DÉMO; "Émettre Bon Gazole" says "Module pas encore livré (itération 3)". -->
+<!-- "Bons de Gazole & Cartes Autoroute" (dispatcher.html fuel-logs): Iteration 3. Hamid's FuelLogsView layout,
+     now filled from BonCarburantService; "Émettre Bon Gazole" opens a modal validated by the service. -->
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="ma.translogix.controller.dispatcher.CarburantController"
       stylesheets="@../../css/app.css"
@@ -18,15 +18,12 @@
 
     <HBox alignment="BOTTOM_LEFT" spacing="12">
         <VBox spacing="6">
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="GESTION CARBURANT &amp; P&#201;AGES" styleClass="eyebrow"/>
-                <Label text="D&#201;MO" styleClass="chip-demo"/>
-            </HBox>
+            <Label text="GESTION CARBURANT &amp; P&#201;AGES" styleClass="eyebrow"/>
             <Label text="Bons de Gazole &amp; Cartes Autoroute" styleClass="section-heading"/>
             <Label text="&#201;mission et suivi des bons de carburant par mission." styleClass="muted"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="&#201;mettre Bon Gazole" onAction="#emettre" styleClass="btn-primary">
+        <Button fx:id="boutonEmettre" text="&#201;mettre Bon Gazole" onAction="#emettre" styleClass="btn-primary">
             <graphic>
                 <SVGPath content="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z" styleClass="btn-icon-white"/>
             </graphic>
@@ -37,7 +34,7 @@
         <HBox styleClass="panel-header" alignment="CENTER_LEFT" spacing="12">
             <VBox spacing="3">
                 <Label text="Historique des Ravitaillements" styleClass="panel-title"/>
-                <Label text="Suivi des consommations moyennes par camion (donn&#233;es de d&#233;monstration)" styleClass="panel-sub"/>
+                <Label text="Suivi des consommations par camion, mission par mission" styleClass="panel-sub"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <TextField fx:id="recherche" promptText="Rechercher bon, station, chauffeur..." prefWidth="280" styleClass="search-field"/>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="root" stylesheets="@../../css/translogix.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.translogix.controller.chauffeur.ExpenseModalController">
+   <children>
+      <HBox alignment="TOP_LEFT" spacing="16.0">
+         <children>
+            <VBox HBox.hgrow="ALWAYS">
+               <children>
+                  <Label styleClass="eyebrow" text="ESPACE CHAUFFEUR" />
+                  <Label styleClass="modal-title" text="Saisir un Bon / Reçu" />
+                  <Label styleClass="modal-desc" text="Transmettez une dépense engagée pendant votre mission." wrapText="true" />
+               </children>
+            </VBox>
+            <Button focusTraversable="false" mnemonicParsing="false" onAction="#close" styleClass="icon-btn-close">
+               <graphic>
+                  <Label styleClass="fa" text="&#xf00d;" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <VBox spacing="16.0">
+         <VBox.margin>
+            <Insets top="20.0" />
+         </VBox.margin>
+         <children>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Mission associée" />
+                  <ComboBox fx:id="tripRef" maxWidth="Infinity" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Type de Frais" />
+                  <ComboBox fx:id="type" maxWidth="Infinity" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Station / Fournisseur" />
+                  <TextField fx:id="station" promptText="Ex: Afriquia Mohammedia / ADM Péage" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Montant (en MAD)" />
+                  <TextField fx:id="amount" promptText="Ex: 1500" styleClass="search" />
+               </children>
+            </VBox>
+            <VBox spacing="6.0">
+               <children>
+                  <Label styleClass="field-label" text="Volume (Litres gazole si applicable)" />
+                  <TextField fx:id="liters" promptText="Ex: 120" styleClass="search" />
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+      <HBox alignment="CENTER_RIGHT" spacing="8.0">
+         <VBox.margin>
+            <Insets top="24.0" />
+         </VBox.margin>
+         <children>
+            <Button mnemonicParsing="false" onAction="#close" styleClass="btn-secondary" text="Annuler" />
+            <Button mnemonicParsing="false" onAction="#submit" styleClass="btn-primary" text="Transmettre" />
+         </children>
+      </HBox>
+      <Label styleClass="modal-note" text="Enregistré pour cette session uniquement : les frais et incidents n'ont pas encore de service côté serveur." />
+   </children>
+   <padding>
+      <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+   </padding>
+</VBox>

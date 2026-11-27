@@ -36,11 +36,9 @@ public final class NavigationMenu {
             + "M15 17a2 2 0 1 0 4 0a2 2 0 1 0-4 0z";
     static final String ICONE_COLONNES = "M3 3h2v16h16v2H3z M7 11h3v6H7z M12 7h3v10h-3z M17 13h3v4h-3z";
     static final String ICONE_BOUCLIER = "M12 2l9 3.5v6c0 5.2-3.8 9.3-9 10.5c-5.2-1.2-9-5.3-9-10.5v-6z";
-    // RH icons (rh.html): id card, calendar, wallet, user-plus. Holes are drawn anticlockwise (non-zero fill).
+    // RH icons (rh.html): id card, calendar. Holes are drawn anticlockwise (non-zero fill).
     static final String ICONE_CARTE = "M2 5h20v14H2z M5 8v8h6V8z M13 9v2h6V9z M13 13v2h5v-2z";
     static final String ICONE_CALENDRIER = "M3 5h18v16H3z M5 10v9h14v-9z M7 2h2v4H7z M15 2h2v4h-2z M7 12h3v3H7z";
-    static final String ICONE_RECRUTEMENT = "M9 3a4 4 0 1 1 0 8a4 4 0 1 1 0-8z M2 21c0-4 3-7 7-7s7 3 7 7z "
-            + "M18 7h2v3h3v2h-3v3h-2v-3h-3v-2h3z";
     static final String ICONE_FACTURE = "M5 2h10l5 5v15H5z M8 10h9v2H8z M8 14h9v2H8z M8 18h6v1.5H8z";
     static final String ICONE_RECU = "M4 2h16v20l-2.7-1.8L14.7 22L12 20.2L9.3 22l-2.6-1.8L4 22z "
             + "M7 7h10v2H7z M7 11h10v2H7z M7 15h6v2H7z";
@@ -70,7 +68,8 @@ public final class NavigationMenu {
                     new Entree("Rapports & analytics", "admin/rapports.fxml", "Pilotage & indicateurs",
                             ICONE_COLONNES, false),
                     new Entree("Journal d'audit", "admin/audit.fxml", "Sécurité & traçabilité", ICONE_BOUCLIER, false));
-            // RH menu, in rh.html order. The last three pages are Iteration 3: DÉMO data, actions not delivered.
+            // RH menu: every delivered page reads the services. The DÉMO payroll and recruitment pages
+            // were removed in iteration 3 (no real data source behind them).
             case RH -> List.of(
                     new Entree("Tableau de bord RH", "rh/dashboard.fxml", "Vue synthétique", ICONE_TABLEAU, false),
                     new Entree("Chauffeurs & employés", "rh/employes.fxml", "Effectif & registre du personnel",
@@ -78,11 +77,7 @@ public final class NavigationMenu {
                     new Entree("Conformité & permis", "rh/conformite.fxml", "Sécurité & réglementation transport",
                             ICONE_BOUCLIER, false),
                     new Entree("Congés & absences", "rh/conges.fxml", "Suivi du temps de travail",
-                            ICONE_CALENDRIER, true),
-                    new Entree("Paie & prime trajet", "rh/primes.fxml", "Rémunération & primes logistiques",
-                            ICONE_PORTEFEUILLE, true),
-                    new Entree("Recrutement & onboarding", "rh/recrutement.fxml", "Pipeline RH & intégration",
-                            ICONE_RECRUTEMENT, true));
+                            ICONE_CALENDRIER, false));
             // Comptable menu, in contable.html order (+ "Clients", issue [C2]). Pages not delivered yet
             // stay clickable and show "Module pas encore livré" (Iteration 3 scope).
             case COMPTABLE -> List.of(
@@ -113,19 +108,33 @@ public final class NavigationMenu {
                             ICONE_ALERTE, true),
                     new Entree("Carburant & bons", "dispatcher/carburant.fxml", "Carburant & péages",
                             ICONE_CARBURANT, true));
-            // Driver menu, in chefaire.html order. Only "Mes ordres de transport" is built ([O3]);
-            // the other screens do not exist yet, so the shell shows "pas encore livré".
+            // Driver menu: the 12 screens of the espace-chauffeur integration. Missions, detail, history
+            // and the two administrative pages read the main services; the rest are still demo pages.
             case CHAUFFEUR -> List.of(
-                    new Entree("Tableau de bord", "chauffeur/accueil.fxml", "Cockpit chauffeur",
+                    new Entree("Tableau de bord", "chauffeur/dashboard.fxml", "Cockpit chauffeur",
                             ICONE_TABLEAU, false),
                     new Entree("Mes ordres de transport", "chauffeur/missions.fxml", "Carnet de route",
                             ICONE_CAMION, false),
-                    new Entree("Reçus & carburant", "chauffeur/frais.fxml", "Frais de route & justificatifs",
-                            ICONE_RECU, false),
-                    new Entree("Permis & documents", "chauffeur/documents.fxml", "Dossier administratif",
+                    new Entree("Reçus & carburant", "chauffeur/expenses.fxml", "Frais de route & justificatifs",
+                            ICONE_RECU, true),
+                    new Entree("Permis & documents", "chauffeur/profile.fxml", "Dossier administratif",
                             ICONE_CARTE, false),
                     new Entree("Incidents & support", "chauffeur/incidents.fxml", "Urgence & assistance routière",
-                            ICONE_ALERTE, false));
+                            ICONE_ALERTE, true),
+                    new Entree("Notifications", "chauffeur/notifications.fxml", "Centre de messages",
+                            ICONE_BOUCLIER, true),
+                    new Entree("Détail de mission", "chauffeur/mission-detail.fxml", "Fiche mission",
+                            ICONE_LIVRE, false),
+                    new Entree("Preuve de livraison", "chauffeur/pod.fxml", "Livraison",
+                            ICONE_LIVRE, true),
+                    new Entree("Inspection du camion", "chauffeur/inspection.fxml", "Sécurité véhicule",
+                            ICONE_POSITION, true),
+                    new Entree("Messagerie Dispatching", "chauffeur/chat.fxml", "Communication",
+                            ICONE_EQUIPE, true),
+                    new Entree("Intervention exceptionnelle", "chauffeur/exceptional.fxml", "Impossibilité justifiée",
+                            ICONE_ALERTE, true),
+                    new Entree("Historique des missions", "chauffeur/history.fxml", "Archives",
+                            ICONE_COLONNES, false));
         };
     }
 
