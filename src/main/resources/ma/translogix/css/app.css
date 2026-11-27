@@ -109,6 +109,18 @@
     -fx-padding: 0 13;
 }
 
+/* Where the data is kept (Persistance): muted when MySQL, orange when nothing is saved. */
+.storage-mode {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 10.5px;
+    -fx-padding: 0 13;
+}
+
+.storage-mode-warning {
+    -fx-text-fill: #fb923c;
+    -fx-font-weight: bold;
+}
+
 /* =========================== SHELL: TOP BAR =========================== */
 .topbar {
     -fx-background-color: white;

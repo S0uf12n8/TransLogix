@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- "Nouvelle demande de congé", shown by CongesController. Buttons are added by RhUi. -->
+<DialogPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.translogix.controller.rh.CongeFormulaireController"
+            stylesheets="@../../css/app.css"
+            prefWidth="520" styleClass="form-dialog">
+    <header>
+        <VBox spacing="4" styleClass="form-dialog-header">
+            <Label text="GESTION RH" styleClass="eyebrow"/>
+            <Label fx:id="titre" text="Nouvelle demande de cong&#233;" styleClass="dialog-title"/>
+            <Label text="Saisissez la p&#233;riode d'absence du salari&#233;." wrapText="true" styleClass="muted"/>
+        </VBox>
+    </header>
+    <content>
+        <VBox spacing="12">
+            <GridPane hgap="12" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="Salari&#233;" styleClass="form-label"/>
+                    <ComboBox fx:id="champEmploye" promptText="Choisir un salari&#233;" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="Type de cong&#233;" styleClass="form-label"/>
+                    <ComboBox fx:id="champType" promptText="Choisir un type" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Date de d&#233;but" styleClass="form-label"/>
+                    <DatePicker fx:id="champDebut" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="Date de fin" styleClass="form-label"/>
+                    <DatePicker fx:id="champFin" maxWidth="Infinity" styleClass="form-combo"/>
+                </VBox>
+                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
+                    <Label text="Motif (facultatif)" styleClass="form-label"/>
+                    <TextField fx:id="champMotif" maxWidth="Infinity" styleClass="search-field"/>
+                </VBox>
+            </GridPane>
+            <Label text="Le nombre de jours ouvr&#233;s est calcul&#233; automatiquement. La demande est enregistr&#233;e en attente de validation."
+                   wrapText="true" styleClass="form-note"/>
+        </VBox>
+    </content>
+</DialogPane>

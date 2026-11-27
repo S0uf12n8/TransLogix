@@ -9,6 +9,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -27,9 +31,11 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import ma.translogix.controller.common.Dialogues;
+import ma.translogix.dao.DonneesException;
 import ma.translogix.model.StatutMission;
 import ma.translogix.model.StatutVehicule;
 import ma.translogix.util.Formats;
+import ma.translogix.util.MessagesErreur;
 import ma.translogix.util.Navigator;
 import ma.translogix.util.Session;
 import ma.translogix.util.ValidationException;
@@ -71,13 +77,30 @@ final class DispatcherUi {
         }
     }
 
+    /** Chart nodes are created lazily by JavaFX: run the action as soon as the node exists. */
+    static void quandAffiche(ReadOnlyObjectProperty<Node> propriete, Consumer<Node> action) {
+        if (propriete.get() != null) {
+            action.accept(propriete.get());
+            return;
+        }
+        propriete.addListener(new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Node> obs, Node ancien, Node noeud) {
+                if (noeud != null) {
+                    propriete.removeListener(this);
+                    action.accept(noeud);
+                }
+            }
+        });
+    }
+
     static void pasEncoreLivre() {
         Dialogues.info("Pas encore livré", PAS_ENCORE_LIVRE);
     }
 
     /**
      * Opens a dialog form (dispatcher/xxx-dialog.fxml) with Annuler / Confirmer.
-     * A ValidationException (an overlap, for example) is shown and keeps the dialog open.
+     * A broken rule or a database error is shown as a clear French message and keeps the dialog open.
      * @return true when the form was saved
      */
     static <C extends Formulaire> boolean ouvrirFormulaire(Node proprietaire, String fxml, Consumer<C> preparer) {
@@ -86,7 +109,13 @@ final class DispatcherUi {
         try {
             panneau = loader.load();
         } catch (IOException e) {
-            Dialogues.erreur("Impossible d'ouvrir le formulaire : " + e.getMessage());
+            // FXMLLoader wraps a failure of the form's initialize() in an IOException; keep the DB message.
+            String message = MessagesErreur.pourUtilisateur(e);
+            Dialogues.erreur(MessagesErreur.MESSAGE_INATTENDU.equals(message)
+                    ? "Impossible d'ouvrir le formulaire : " + e.getMessage() : message);
+            return false;
+        } catch (DonneesException e) {
+            Dialogues.erreur(MessagesErreur.pourUtilisateur(e));
             return false;
         }
         C formulaire = loader.getController();
@@ -101,8 +130,8 @@ final class DispatcherUi {
         boutonConfirmer.addEventFilter(ActionEvent.ACTION, e -> {
             try {
                 formulaire.enregistrer();
-            } catch (ValidationException ex) {
-                Dialogues.erreur(ex.getMessage());
+            } catch (ValidationException | DonneesException ex) {
+                Dialogues.erreur(MessagesErreur.pourUtilisateur(ex));
                 e.consume();
             }
         });
@@ -116,14 +145,31 @@ final class DispatcherUi {
         return dialogue.showAndWait().orElse(annuler) == confirmer;
     }
 
-    /** Runs a service call from a row action and shows its ValidationException. @return true when it worked */
+    /**
+     * Runs a Dispatcher service call. A broken rule (ValidationException) or a database problem
+     * (DonneesException) is shown as a clear French message; no SQL and no stack trace reach the screen.
+     * @return true when the call worked
+     */
     static boolean executer(Runnable action) {
         try {
             action.run();
             return true;
-        } catch (ValidationException e) {
-            Dialogues.erreur(e.getMessage());
+        } catch (ValidationException | DonneesException e) {
+            Dialogues.erreur(MessagesErreur.pourUtilisateur(e));
             return false;
+        }
+    }
+
+    /**
+     * Same handling for a service read: on failure, show the message once and return a safe empty value
+     * so the screen can stay coherent instead of showing stale or faked rows.
+     */
+    static <T> T charger(Supplier<T> lecture, T valeurVide) {
+        try {
+            return lecture.get();
+        } catch (ValidationException | DonneesException e) {
+            Dialogues.erreur(MessagesErreur.pourUtilisateur(e));
+            return valeurVide;
         }
     }
 

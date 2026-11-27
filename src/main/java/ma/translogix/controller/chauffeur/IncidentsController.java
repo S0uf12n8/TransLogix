@@ -1,6 +1,9 @@
 package ma.translogix.controller.chauffeur;
 
+import java.util.List;
+
 import javafx.fxml.FXML;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import ma.translogix.controller.chauffeur.Rows.IncidentRow;
@@ -24,6 +27,9 @@ public class IncidentsController {
         TableUtil.node(colStatus, r -> Ui.pill(r.status, "amber"));
         table.setItems(ctx.incidentRows);
         TableUtil.fit(table, ctx.incidentRows, 82);   // ligne vide « Aucun signalement… » : py-8 = 82 px
+        TableMenu.installer(table, r -> List.<MenuItem>of(
+                TableMenu.copier("Copier le numéro de signalement", r.ref),
+                TableMenu.copier("Copier la localisation", r.location)), null);
     }
 
     /** Délègue au pont partagé : la ligne est ajoutée à incidentRows (et l'alerte notifiée). */

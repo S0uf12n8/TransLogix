@@ -8,12 +8,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import ma.translogix.AppContext;
 import ma.translogix.model.Mission;
 import ma.translogix.model.StatutMission;
@@ -43,6 +45,8 @@ public class FlotteController {
     @FXML private TableColumn<Ligne, String> colPosition;
     @FXML private TableColumn<Ligne, Ligne> colStatut;
     @FXML private TableColumn<Ligne, Ligne> colActions;
+    @FXML private PieChart graphiqueDisponibilite;
+    @FXML private Label sousTitreDisponibilite;
 
     private final VehiculeService service = AppContext.vehiculeService();
     private final MissionService missions = AppContext.missionService();
@@ -109,6 +113,20 @@ public class FlotteController {
     }
 
     private void rafraichir() {
+        if (!DispatcherUi.executer(this::actualiserDonnees)) {
+            donnees.setAll(List.of());
+            table.refresh();
+            valeurEnService.setText("—");
+            totalVehicules.setText("");
+            valeurMaintenance.setText("—");
+            horsService.setText("");
+            valeurMissions.setText("—");
+            graphiqueDisponibilite.getData().clear();
+            sousTitreDisponibilite.setText("Données indisponibles");
+        }
+    }
+
+    private void actualiserDonnees() {
         List<Vehicule> vehicules = service.lister();
         donnees.setAll(vehicules.stream()
                 .map(v -> new Ligne(v, missions.missionEnCoursDuVehicule(v.getId()))).toList());
@@ -120,6 +138,27 @@ public class FlotteController {
         long hs = service.compter(StatutVehicule.HORS_SERVICE);
         horsService.setText(hs == 0 ? "" : "+ " + hs + " hors service");
         valeurMissions.setText(String.valueOf(missions.compter(StatutMission.EN_COURS)));
+        remplirDisponibilite();
+    }
+
+    /**
+     * "Disponibilité des camions": the service combines the fleet with the vehicles the DAO reports as busy,
+     * the controller only turns the returned slices into a pie chart.
+     */
+    private void remplirDisponibilite() {
+        List<MissionService.Part> parties = missions.disponibiliteCamions();
+        graphiqueDisponibilite.getData().clear();
+        long total = parties.stream().mapToLong(MissionService.Part::nombre).sum();
+        for (MissionService.Part partie : parties) {
+            long nombre = partie.nombre();
+            PieChart.Data tranche = new PieChart.Data(partie.libelle() + " (" + nombre + ")", nombre);
+            graphiqueDisponibilite.getData().add(tranche);
+            long pourcent = total == 0 ? 0 : Math.round(nombre * 100.0 / total);
+            String detail = partie.libelle() + " : " + nombre + " camion(s), " + pourcent + " %";
+            DispatcherUi.quandAffiche(tranche.nodeProperty(),
+                    noeud -> Tooltip.install(noeud, new Tooltip(detail)));
+        }
+        sousTitreDisponibilite.setText(total + (total > 1 ? " camions" : " camion") + " · disponibilité");
     }
 
     /** "TRJ-9081 · Casablanca → Tanger Med", otherwise where a vehicle without a mission is. */

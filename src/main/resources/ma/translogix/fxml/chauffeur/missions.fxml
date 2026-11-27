@@ -13,10 +13,13 @@
                   <Label styleClass="section-sub" text="Consultez vos ordres planifiés, en cours et l'historique des livraisons." />
                </children>
             </VBox>
-            <Button mnemonicParsing="false" onAction="#syncOrders" styleClass="btn-secondary" text="Synchroniser Ordres">
+            <Button accessibleText="Synchroniser les ordres de transport" mnemonicParsing="false" onAction="#syncOrders" styleClass="btn-secondary" text="Synchroniser Ordres">
                <graphic>
                   <Label styleClass="fa, fs-12" text="&#xf2f9;" />
                </graphic>
+               <tooltip>
+                  <Tooltip text="Relire vos missions depuis le service TransLogix." />
+               </tooltip>
             </Button>
          </children>
       </HBox>
@@ -30,7 +33,11 @@
                         <Label styleClass="h3-sub" text="Recherchez par N° d'ordre, ville ou client." />
                      </children>
                   </VBox>
-                  <TextField fx:id="searchField" maxWidth="320.0" prefWidth="320.0" promptText="Rechercher mission..." styleClass="search" />
+                  <TextField fx:id="searchField" accessibleText="Rechercher une mission" maxWidth="320.0" prefWidth="320.0" promptText="Rechercher mission..." styleClass="search">
+                      <tooltip>
+                         <Tooltip text="Rechercher par référence, ville ou client. Échap pour effacer." />
+                      </tooltip>
+                   </TextField>
                </children>
             </HBox>
             <TableView fx:id="table" styleClass="tbl">
@@ -45,7 +52,7 @@
                   <TableColumn fx:id="colAction" prefWidth="164.0" sortable="false" text="ACTION" />
                </columns>
                <placeholder>
-                  <Label />
+                  <Label text="Aucune mission assignée pour ce filtre." />
                </placeholder>
             </TableView>
          </children>

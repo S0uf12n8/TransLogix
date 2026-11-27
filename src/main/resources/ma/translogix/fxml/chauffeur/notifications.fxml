@@ -13,7 +13,7 @@
                   <Label styleClass="section-sub" text="Nouvelles missions, instructions du Dispatching et alertes de conduite (données de démonstration)." />
                </children>
             </VBox>
-            <Button mnemonicParsing="false" onAction="#markAll" styleClass="btn-secondary" text="Tout marquer comme lu">
+            <Button accessibleText="Marquer toutes les notifications comme lues" mnemonicParsing="false" onAction="#markAll" styleClass="btn-secondary" text="Tout marquer comme lu">
                <graphic>
                   <Label styleClass="fa, fs-12" text="&#xf560;" />
                </graphic>

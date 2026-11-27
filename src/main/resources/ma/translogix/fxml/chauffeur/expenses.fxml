@@ -13,7 +13,7 @@
                   <Label styleClass="section-sub" text="Transmettez vos tickets de péage autoroutier, frais de gazole et dépenses d'urgence." />
                </children>
             </VBox>
-            <Button mnemonicParsing="false" onAction="#newReceipt" styleClass="btn-primary" text="Nouveau Reçu">
+            <Button accessibleText="Saisir un nouveau reçu" mnemonicParsing="false" onAction="#newReceipt" styleClass="btn-primary" text="Nouveau Reçu">
                <graphic>
                   <Label styleClass="fa, fs-12" text="&#x2b;" />
                </graphic>
@@ -60,7 +60,11 @@
                         <Label styleClass="h3-sub" text="Suivez la validation par le comptable." />
                      </children>
                   </VBox>
-                  <TextField fx:id="searchField" maxWidth="320.0" prefWidth="320.0" promptText="Filtrer reçu..." styleClass="search" />
+                  <TextField fx:id="searchField" accessibleText="Filtrer les reçus" maxWidth="320.0" prefWidth="320.0" promptText="Filtrer reçu..." styleClass="search">
+                         <tooltip>
+                            <Tooltip text="Filtrer par numéro, mission, type ou montant. Échap pour effacer." />
+                         </tooltip>
+                      </TextField>
                </children>
             </HBox>
             <TableView fx:id="table" styleClass="tbl">
@@ -73,7 +77,7 @@
                   <TableColumn fx:id="colStatus" prefWidth="165.0" sortable="false" text="STATUT COMPTABLE" />
                </columns>
                <placeholder>
-                  <Label />
+                  <Label text="Aucun reçu correspondant à votre recherche." />
                </placeholder>
             </TableView>
          </children>

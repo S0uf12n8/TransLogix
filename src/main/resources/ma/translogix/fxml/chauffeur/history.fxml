@@ -58,7 +58,11 @@
                   <HBox spacing="8.0">
                      <children>
                         <ComboBox fx:id="histStatus" onAction="#applyHistoryFilters" styleClass="search" />
-                        <TextField fx:id="histSearch" maxWidth="320.0" prefWidth="320.0" promptText="Rechercher mission..." styleClass="search" />
+                        <TextField fx:id="histSearch" accessibleText="Rechercher une mission archivée" maxWidth="320.0" prefWidth="320.0" promptText="Rechercher mission..." styleClass="search">
+                            <tooltip>
+                               <Tooltip text="Rechercher par référence, ville ou client. Échap pour effacer." />
+                            </tooltip>
+                         </TextField>
                      </children>
                   </HBox>
                </children>
@@ -74,7 +78,7 @@
                   <TableColumn fx:id="colAction" prefWidth="95.0" sortable="false" text="ACTION" />
                </columns>
                <placeholder>
-                  <Label />
+                  <Label text="Aucune mission archivée pour ce filtre." />
                </placeholder>
             </TableView>
          </children>

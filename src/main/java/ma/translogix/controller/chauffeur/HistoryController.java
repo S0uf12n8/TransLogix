@@ -13,6 +13,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -52,7 +53,18 @@ public class HistoryController {
         table.setItems(filtered);
         TableUtil.fit(table, filtered, 0);
         histSearch.textProperty().addListener((o, a, b) -> applyHistoryFilters());
+        Ui.echap(histSearch);
+        installerMenu();
         refresh();
+    }
+
+    /** Clic droit / double-clic sur une mission archivée. */
+    private void installerMenu() {
+        TableMenu.installer(table, r -> {
+            MenuItem details = new MenuItem("Voir les détails");
+            details.setOnAction(e -> EspaceChauffeurUi.get().openMissionDetail(r.ref));
+            return List.of(details, TableMenu.copier("Copier la référence", r.ref));
+        }, r -> EspaceChauffeurUi.get().openMissionDetail(r.ref));
     }
 
     /** Missions livrées / facturées / annulées, du plus récent au plus ancien. */

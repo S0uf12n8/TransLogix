@@ -3,6 +3,7 @@ package ma.translogix.service;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +32,10 @@ public class EmployeService {
     /** Head-count figures for the RH dashboard and the staff page (active employees only, except "chauffeurs"). */
     public record Effectifs(int actifs, int chauffeursActifs, int chauffeurs, int administratifEtDepot,
                             int cdi, int cdd, int essai, int recrutementsDuMois) {
+    }
+
+    /** One slice of the head-count pie chart, in {@link Poste} order. */
+    public record Part(String libelle, long nombre) {
     }
 
     /** Every employee, active or not, in creation order. */
@@ -127,6 +132,15 @@ public class EmployeService {
                 compter(actifs, TypeContrat.CDD),
                 compter(actifs, TypeContrat.ESSAI),
                 (int) actifs.stream().filter(e -> YearMonth.from(e.getDateEmbauche()).equals(moisCourant)).count());
+    }
+
+    /** Active employees per post, in enum order, with zero for posts that have nobody. */
+    public List<Part> employesParPoste() {
+        List<Employe> actifs = dao.findAll().stream().filter(Employe::isActif).toList();
+        return Arrays.stream(Poste.values())
+                .map(poste -> new Part(poste.getLibelle(),
+                        actifs.stream().filter(e -> e.getPoste() == poste).count()))
+                .toList();
     }
 
     /** MAT-YYYY-NN: YYYY = hiring year, NN = next free number for that year (2 digits minimum). */

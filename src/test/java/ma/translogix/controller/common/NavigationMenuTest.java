@@ -61,8 +61,7 @@ class NavigationMenuTest {
 
     @Test
     void leMenuRhSuitLOrdreDeLaMaquette() {
-        assertEquals(List.of("rh/dashboard.fxml", "rh/employes.fxml", "rh/conformite.fxml", "rh/conges.fxml",
-                        "rh/primes.fxml", "rh/recrutement.fxml"),
+        assertEquals(List.of("rh/dashboard.fxml", "rh/employes.fxml", "rh/conformite.fxml", "rh/conges.fxml"),
                 NavigationMenu.pour(Role.RH).stream().map(NavigationMenu.Entree::fxml).toList());
     }
 
@@ -75,13 +74,12 @@ class NavigationMenuTest {
         }
         assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/employe-dialog.fxml"));
         assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/document-dialog.fxml"));
+        assertNotNull(getClass().getResource(NavigationMenu.RACINE + "rh/conge-dialog.fxml"));
     }
 
     @Test
-    void seulesLesPagesRhDeLIteration3SontEnDemo() {
-        assertEquals(List.of("rh/conges.fxml", "rh/primes.fxml", "rh/recrutement.fxml"),
-                NavigationMenu.pour(Role.RH).stream().filter(NavigationMenu.Entree::demo)
-                        .map(NavigationMenu.Entree::fxml).toList());
+    void aucunePageRhNEstEnDemo() {
+        assertEquals(0, NavigationMenu.pour(Role.RH).stream().filter(NavigationMenu.Entree::demo).count());
     }
 
     @Test
