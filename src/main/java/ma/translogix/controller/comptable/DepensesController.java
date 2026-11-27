@@ -1,6 +1,5 @@
 package ma.translogix.controller.comptable;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -32,14 +31,12 @@ import javafx.scene.layout.Region;
 import javafx.util.StringConverter;
 import ma.translogix.AppContext;
 import ma.translogix.controller.common.Dialogues;
-import ma.translogix.dao.memory.InMemoryDepenseDao;
 import ma.translogix.model.Depense;
 import ma.translogix.model.Employe;
 import ma.translogix.model.StatutDepense;
 import ma.translogix.model.TypeDepense;
 import ma.translogix.service.DepenseService;
 import ma.translogix.util.Formats;
-import ma.translogix.util.Session;
 import ma.translogix.util.ValidationException;
 
 /**
@@ -56,13 +53,7 @@ public class DepensesController {
      * in-memory store and shares the same service instance with its dialogs, so a dépense entered during
      * the session is still there when the user comes back to the page.
      */
-    private static final DepenseService SERVICE = new DepenseService(
-            new InMemoryDepenseDao(),
-            AppContext.auditService(),
-            AppContext.missionService(),
-            AppContext.employeService(),
-            Clock.systemDefaultZone(),
-            () -> Session.estConnecte() ? Session.utilisateur().getEmail() : "Inconnu");
+    private static final DepenseService SERVICE = AppContext.depenseService();
 
     @FXML private Label kpiEnAttente;
     @FXML private Label kpiMontantAttente;

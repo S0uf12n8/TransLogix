@@ -11,7 +11,9 @@ import ma.translogix.dao.EmployeDao;
 import ma.translogix.dao.FactureDao;
 import ma.translogix.dao.UtilisateurDao;
 import ma.translogix.dao.VehiculeDao;
+import ma.translogix.dao.DepenseDao;
 import ma.translogix.dao.jdbc.JdbcAuditDao;
+import ma.translogix.dao.jdbc.JdbcDepenseDao;
 import ma.translogix.dao.jdbc.JdbcDocumentConformiteDao;
 import ma.translogix.dao.jdbc.JdbcEmployeDao;
 import ma.translogix.dao.jdbc.JdbcUtilisateurDao;
@@ -21,7 +23,9 @@ import ma.translogix.dao.memory.InMemoryCongeDao;
 import ma.translogix.dao.memory.InMemoryDocumentConformiteDao;
 import ma.translogix.dao.memory.InMemoryEmployeDao;
 import ma.translogix.dao.memory.InMemoryFactureDao;
+import ma.translogix.dao.memory.InMemoryDepenseDao;
 import ma.translogix.dao.memory.InMemoryMissionDao;
+import ma.translogix.dao.memory.InMemoryPaieDao;
 import ma.translogix.dao.memory.InMemoryPaiementDao;
 import ma.translogix.dao.memory.InMemoryUtilisateurDao;
 import ma.translogix.dao.memory.InMemoryVehiculeDao;
@@ -41,7 +45,10 @@ import ma.translogix.service.AuthService;
 import ma.translogix.service.ClientService;
 import ma.translogix.service.ConformiteService;
 import ma.translogix.service.CongeService;
+import ma.translogix.service.DepenseService;
 import ma.translogix.service.FactureService;
+import ma.translogix.service.PaieService;
+import ma.translogix.service.TresorerieService;
 import ma.translogix.service.MissionService;
 import ma.translogix.service.DashboardService;
 import ma.translogix.service.EmployeService;
@@ -95,6 +102,18 @@ public final class AppContext {
     // Invoices need MissionService: only a delivered mission is invoiced ([C3]).
     private static final FactureService FACTURE_SERVICE = new FactureService(FACTURE_DAO, CLIENT_DAO,
             new InMemoryPaiementDao(), MISSION_SERVICE, Clock.systemDefaultZone());
+    // Comptable expenses: driver fuel/toll vouchers. The depenses table exists, so this is in MySQL when available.
+    private static final DepenseDao DEPENSE_DAO = PERSISTANCE.connexion()
+            .<DepenseDao>map(JdbcDepenseDao::new).orElseGet(InMemoryDepenseDao::new);
+    private static final DepenseService DEPENSE_SERVICE = new DepenseService(DEPENSE_DAO, AUDIT_SERVICE,
+            MISSION_SERVICE, EMPLOYE_SERVICE, Clock.systemDefaultZone(),
+            () -> Session.estConnecte() ? Session.utilisateur().getEmail() : "Inconnu");
+    // Payroll: no JDBC DAO / table yet, so in memory (lost on restart) — wired here, not in the controller.
+    private static final PaieService PAIE_SERVICE = new PaieService(new InMemoryPaieDao(), EMPLOYE_SERVICE,
+            AUDIT_SERVICE, Clock.systemDefaultZone());
+    // Treasury: read-only aggregation over invoices and clients, no DAO of its own.
+    private static final TresorerieService TRESORERIE_SERVICE =
+            new TresorerieService(FACTURE_SERVICE, CLIENT_SERVICE, Clock.systemDefaultZone());
     // Driver space ([O3]): the logged-in account's own missions.
     private static final EspaceChauffeurService ESPACE_CHAUFFEUR_SERVICE = new EspaceChauffeurService(MISSION_SERVICE,
             EMPLOYE_DAO, () -> Session.utilisateur().getId());
@@ -229,6 +248,18 @@ public final class AppContext {
 
     public static FactureService factureService() {
         return FACTURE_SERVICE;
+    }
+
+    public static DepenseService depenseService() {
+        return DEPENSE_SERVICE;
+    }
+
+    public static PaieService paieService() {
+        return PAIE_SERVICE;
+    }
+
+    public static TresorerieService tresorerieService() {
+        return TRESORERIE_SERVICE;
     }
 
     /** Demo clients from contable.html (names, ICE, phones). */

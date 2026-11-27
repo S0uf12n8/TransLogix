@@ -1,6 +1,5 @@
 package ma.translogix.controller.comptable;
 
-import java.time.Clock;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -21,7 +20,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import ma.translogix.AppContext;
 import ma.translogix.controller.common.Dialogues;
-import ma.translogix.dao.memory.InMemoryPaieDao;
 import ma.translogix.model.Employe;
 import ma.translogix.model.Paie;
 import ma.translogix.model.StatutPaie;
@@ -40,8 +38,7 @@ public class PaieController {
     private static final DateTimeFormatter MOIS = DateTimeFormatter.ofPattern("MM/uuuu", Locale.FRENCH);
 
     /** Shared by the page, the creation dialog and the payment dialog. */
-    private static final PaieService SERVICE = new PaieService(new InMemoryPaieDao(),
-            AppContext.employeService(), AppContext.auditService(), Clock.systemDefaultZone());
+    private static final PaieService SERVICE = AppContext.paieService();
 
     static PaieService service() {
         return SERVICE;

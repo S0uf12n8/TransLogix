@@ -1,6 +1,5 @@
 package ma.translogix.controller.comptable;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -85,8 +84,7 @@ public class TresorerieController {
     @FXML private TableColumn<Encaissement, String> colReference;
     @FXML private TableColumn<Encaissement, String> colMontant;
 
-    private final TresorerieService service = new TresorerieService(
-            AppContext.factureService(), AppContext.clientService(), Clock.systemDefaultZone());
+    private final TresorerieService service = AppContext.tresorerieService();
     private final ObservableList<Encaissement> donnees = FXCollections.observableArrayList();
     private FilteredList<Encaissement> filtres;
 
