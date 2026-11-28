@@ -2,6 +2,8 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -19,7 +21,9 @@
     <left>
         <VBox styleClass="sidebar" prefWidth="258" minWidth="258">
             <HBox styleClass="sidebar-brand" spacing="12" alignment="CENTER_LEFT">
-                <Label text="TL" styleClass="logo-tile"/>
+                <ImageView fitWidth="44" fitHeight="44" preserveRatio="true" smooth="true">
+                    <Image url="@../../images/translogix-logo.jpeg"/>
+                </ImageView>
                 <VBox spacing="3">
                     <Label text="Translogix" styleClass="brand-title"/>
                     <Label fx:id="sousTitre" text="TRANSPORT &amp; LOGISTIQUE" styleClass="brand-subtitle"/>
